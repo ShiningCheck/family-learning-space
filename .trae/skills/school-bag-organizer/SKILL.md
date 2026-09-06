@@ -20,20 +20,24 @@ school-bag-organizer/
 │   ├── schedule.json            # 永久课表
 │   ├── course_requirements.json # 每门课的永久用具要求
 │   ├── notifications.json       # 历史通知记录
-│   └── holidays.json            # 中国法定节假日/调休/寒暑假（通用数据，非个人信息）
+│   ├── holidays.json            # 中国法定节假日/调休/寒暑假（通用数据，非个人信息）
+│   └── feedback/                # 用户反馈本地收件箱（运行时生成，不入库）
 ├── data-templates/              # 发布用的通用示例数据（不含任何个人信息）
 │   ├── config.json
 │   ├── schedule.json
 │   ├── course_requirements.json
 │   ├── notifications.json
-│   └── holidays.json
+│   ├── holidays.json
+│   └── feedback_channels.json   # 反馈通道配置（默认 relay.url 留空 = 不外发）
 └── web/                         # 交互式清单网页与本地预览服务器
     ├── checklist.html           # 主页面（双模式：动态fetch / 内嵌数据）
-    ├── preview_server.py        # 局域网预览服务器
+    ├── preview_server.py        # 局域网预览服务器（含 /api/feedback 反馈出口）
+    ├── feedback_backend.py      # 反馈本地后端（落盘 + 转发 + 补发 + 限流）
     ├── build_standalone.js      # 生成 Cloud 模式自包含单文件
     └── vendor/
         ├── pinyin-pro.js        # 本地拼音库（无需联网）
-        └── themes.js            # 主题配置
+        ├── themes.js            # 主题配置
+        └── feedback.js          # 页内「提建议」反馈组件（见「用户反馈通道」）
 ```
 
 **路径解析**：所有数据读写均相对技能根目录。例如数据文件路径为 `<技能根目录>/data/config.json`。
@@ -204,6 +208,36 @@ school-bag-organizer/
   }
 ]
 ```
+
+## 用户反馈通道（「提建议」组件，透明说明）
+
+`web/vendor/feedback.js` 是本项目自带的页内反馈组件（由 `checklist.html` 引入），
+供使用者在页面上点「提建议」把「哪里不好用 / 想要什么功能」反馈给**本项目的部署者**。
+它不是第三方追踪脚本，也不采集任何儿童个人信息。
+
+**它收集什么**（全部为用户主动提交或浏览器基本信息）：
+- 用户填写的反馈正文、期望效果，以及**可选的**截图（最多 3 张）；
+- 页面地址/标题、浏览器 UA、屏幕尺寸、语言、是否联网等调试信息；
+- 一个随机生成的**匿名安装 ID**（UUID，仅用于区分不同家庭，不含姓名/学校）。
+
+**数据流向（默认不外发）**：
+1. 浏览器 `feedback.js` → 本地 `preview_server.py` 的 `/api/feedback`；
+2. 本地服务器落盘到 `data/feedback/inbox/`，再转发到公网中转服务（`feedback-relay/`）；
+3. 中转服务自动在部署者自己的仓库建 GitHub Issue（截图存入仓库），并推送到飞书群。
+
+**关键：默认关闭**。`data-templates/feedback_channels.json` 里 `relay.url` 为**空字符串**，
+此时反馈**只保存在本机 `data/feedback/inbox/`，绝不外发**。只有当部署者主动部署了
+`feedback-relay/`（Cloudflare Worker）并把 Worker 地址填进 `relay.url` 后，反馈才会送达
+部署者本人。即：数据只流向「部署者自己的服务器/仓库/飞书」，不流向任何第三方。
+
+**隐私红线**：
+- 匿名安装 ID 随机生成、不含个人信息；主机指纹为 SHA-256 不可逆的前 8 位。
+- 组件不自动采集姓名、学校、班级等；若用户在正文里自行填写此类信息，属用户主动行为，
+  组件与中转服务的 Issue 正文里已提示「反馈中不应包含孩子的真实姓名/学校」。
+- 转发走本地服务器中转（浏览器直连会被 CORS 拦截），断网时先落盘、联网自动补发。
+
+部署者启用通道：见仓库根目录 `feedback-relay/README.md`（部署 Worker → 把地址填进
+`data/feedback_channels.json` 的 `relay.url`）。普通使用者无需做任何事。
 
 ## 打包发布
 

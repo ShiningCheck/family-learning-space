@@ -27,13 +27,15 @@ node .trae/skills/school-bag-organizer/web/build_standalone.js
 
 | 路径 | 说明 |
 |---|---|
-| `.trae/skills/school-bag-organizer/SKILL.md` | 技能完整说明（数据字段、首次引导、工作流程） |
+| `.trae/skills/school-bag-organizer/SKILL.md` | 技能完整说明（数据字段、首次引导、工作流程、反馈通道） |
 | `.trae/skills/school-bag-organizer/data-templates/` | 匿名初始模板（`data/` 由它生成，个人数据不入库） |
-| `.trae/skills/school-bag-organizer/web/` | 交互式清单页与本地服务器 |
+| `.trae/skills/school-bag-organizer/web/` | 交互式清单页、本地服务器与反馈后端 |
+| `.trae/skills/school-bag-organizer/web/vendor/feedback.js` | 页内「提建议」反馈组件 |
 
 ## 隐私
 
-个人数据存放在 `data/` 目录，已被 `.gitignore` 排除，不会进入仓库。模板为匿名示例数据。
+- **个人数据**：`data/` 目录存放孩子姓名、学校、课表等，已被 `.gitignore` 排除，不会进入仓库。模板为匿名示例数据。
+- **反馈组件**：`vendor/feedback.js` 是本项目自带的「提建议」组件，不是第三方追踪脚本。它只把用户主动提交的反馈（正文 + 可选截图）和浏览器基础调试信息（页面地址、UA、屏幕、匿名安装 ID）发往**部署者自己的**中转服务；`relay.url` 默认留空，未配置时反馈**只保存在本机、绝不外发**。详见 `SKILL.md` 的「用户反馈通道」一节。
 
 ## 许可
 

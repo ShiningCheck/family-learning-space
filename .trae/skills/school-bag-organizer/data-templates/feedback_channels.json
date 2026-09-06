@@ -1,0 +1,19 @@
+{
+  "_说明": "书包整理清单「用户反馈」通道配置。本文件在 data-templates/ 下是随技能分发的默认版本；真实值请写到 data/feedback_channels.json（该目录已被 .gitignore 忽略，不会入库）。",
+  "_读取顺序": "preview_server.py 先读 data/feedback_channels.json，读不到再回退到本模板。",
+  "_隐私说明": "relay.url 默认留空。留空时反馈只保存在本机 data/feedback/inbox/，绝不外发。只有部署者主动部署反馈中转服务（feedback-relay/）并填好 url，反馈才会送达部署者。反馈正文/截图由用户主动提交；自动附带的只有匿名安装ID、页面地址、UA/屏幕等调试信息，不含姓名/学校。",
+
+  "enabled": true,
+
+  "_relay说明": "公网中转服务（Cloudflare Worker，见仓库根目录 feedback-relay/）。它负责把反馈自动变成 GitHub Issue 并推送到飞书。部署完成后把 Worker 地址填进 url，普通用户零配置即可把建议送达部署者。留空则反馈只保存在本机，不会外发。",
+  "relay": {
+    "url": "",
+    "appKey": ""
+  },
+
+  "_lark说明": "可选。部署者本机专用：不经过 Worker、直接推送到飞书群机器人，方便自测和即时提醒。分发版必须留空，否则等于把 webhook 公开给所有人（任何人都能往群里发消息）。",
+  "lark": {
+    "webhook": "",
+    "secret": ""
+  }
+}

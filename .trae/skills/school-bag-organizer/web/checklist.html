@@ -467,18 +467,31 @@ function nextSchoolDay(fromDateStr) {
   return dateToStr(d);
 }
 
-// Target date rules:
-// - rest day        -> show "today is a rest day", no checklist
-// - before cutoff   -> target = today (morning bag check, list persists until ~9am)
-// - after cutoff    -> target = next school day (evening preparation)
+// Target date rules (checklist = "prepare the bag for the next school day"):
+// - school day, before cutoff     -> target = today (morning bag check, list lasts until ~9am)
+// - school day, after cutoff      -> if tomorrow is a school day, target = tomorrow (evening prep);
+//                                    otherwise (e.g. Friday night before a weekend) no checklist
+// - rest day                      -> if tomorrow is a school day (e.g. Sunday -> Monday),
+//                                    target = tomorrow; otherwise (e.g. Saturday) no checklist
 function computeTarget() {
   const now = new Date();
   const todayStr = dateToStr(now);
-  if (isRestDay(todayStr)) return { rest: true, todayStr, targetStr: null, morning: false };
+  const tomorrowStr = dateToStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  const todaySchool = !isRestDay(todayStr);
+  const tomorrowSchool = !isRestDay(tomorrowStr);
   const cutoff = (configData && configData.morningCutoff) || '09:00';
   const [ch, cm] = cutoff.split(':').map(Number);
   const morning = now.getHours() * 60 + now.getMinutes() < ch * 60 + cm;
-  return { rest: false, todayStr, targetStr: morning ? todayStr : nextSchoolDay(todayStr), morning };
+
+  if (todaySchool) {
+    if (morning) return { rest: false, todayStr, targetStr: todayStr, morning: true };
+    if (tomorrowSchool) return { rest: false, todayStr, targetStr: tomorrowStr, morning: false };
+    // today is a school day but tomorrow is rest -> no prep needed yet
+    return { rest: true, restReason: 'ahead', todayStr, targetStr: null, morning: false };
+  }
+  // today is a rest day
+  if (tomorrowSchool) return { rest: false, todayStr, targetStr: tomorrowStr, morning: false };
+  return { rest: true, restReason: 'rest', todayStr, targetStr: null, morning: false };
 }
 
 function dayNameFor(dateStr) {
@@ -948,7 +961,9 @@ function updateHeader() {
 
   const titleEl = document.getElementById('mainTitle');
   if (TARGET.rest) {
-    titleEl.innerHTML = makeRuby('今日休息', getPinyin('今日休息'));
+    titleEl.innerHTML = TARGET.restReason === 'ahead'
+      ? makeRuby('明天休息啦', getPinyin('明天休息啦'))
+      : makeRuby('今日休息', getPinyin('今日休息'));
   } else if (TARGET.morning) {
     titleEl.innerHTML = makeRuby('今天的书包检查', getPinyin('今天的书包检查'));
   } else {
@@ -978,9 +993,11 @@ function renderRestView() {
   const next = nextSchoolDay(TARGET.todayStr);
   const nd = new Date(next + 'T00:00:00');
   const nextTxt = `${nd.getMonth() + 1}月${nd.getDate()}日 · ${dayNameFor(next)}`;
+  const isAhead = TARGET.restReason === 'ahead';
+  const subLabel = isAhead ? '下个上学日是' : '下个上学日';
   document.getElementById('cards').innerHTML =
     '<div class="rest-card"><span class="big-emoji">🎈</span>' +
-    '<div class="next-day">' + makeRuby('下个上学日', getPinyin('下个上学日')) + '：' +
+    '<div class="next-day">' + makeRuby(subLabel, getPinyin(subLabel)) + '：' +
     makeRuby(nextTxt, getPinyin(nextTxt)) + '</div></div>';
 }
 

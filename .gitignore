@@ -1,0 +1,35 @@
+# ===== 个人数据层（永不入库）=====
+# 个人规划文档、真实姓名/学校/班级等一切家庭私有内容
+personal/
+# 各技能的真实运行数据（config、学情报告、课表、通知等）；匿名模板在 data-templates/
+.trae/skills/*/data/
+# 孩子画作档案（画作图片、录音、描述、生成的画册）
+画作档案/
+.trae/skills/xiaoshan-art-archive/images/
+.trae/skills/xiaoshan-art-archive/audio/
+.trae/skills/xiaoshan-art-archive/output/
+# 由书包清单技能生成的内嵌个人数据单文件
+school_checklist_standalone.html
+
+# ===== 超大版权教材（不入库，用 tools/ 下载脚本自行获取）=====
+textbooks/pdf/科学.pdf
+textbooks/pages/科学/
+
+# ===== 工具脚本的调试中间产物 =====
+tools/detail.html
+tools/detail_yuwen.json
+tools/grade1_books.json
+tools/target_books.json
+
+# ===== 反馈中转服务（Cloudflare Worker）=====
+# 本地开发用的密钥文件与依赖，绝不能入库
+feedback-relay/.dev.vars
+feedback-relay/node_modules/
+feedback-relay/.wrangler/
+
+# ===== 通用 =====
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+Thumbs.db

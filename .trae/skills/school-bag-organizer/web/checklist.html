@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>书包整理清单</title>
+<script src="vendor/pinyin-pro.js"></script>
+<script src="vendor/themes.js"></script>
+<script src="vendor/feedback.js"></script>
+<style>
+  :root {
+    --bg: #FFF8F0;
+    --accent: #FF6B6B;
+    --accent2: #4ECDC4;
+    --text: #2D3436;
+    --text-light: #636E72;
+    --shadow: 0 6px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+    --radius: 28px;
+    --radius-sm: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,107,107,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 90%, rgba(78,205,196,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255,230,109,0.06) 0%, transparent 50%);
+    min-height: 100vh;
+    padding: 24px 20px 40px;
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .container { max-width: 520px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .header .mascot {
+    font-size: 64px; display: block; margin-bottom: 4px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  .header .child-name {
+    font-size: 18px; font-weight: 700; color: var(--accent);
+    background: rgba(255,107,107,0.1);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    padding: 4px 16px;
+    border-radius: 20px; display: inline-block; margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 32px; font-weight: 900;
+    background: linear-gradient(135deg, var(--grad-a, #FF6B6B), var(--grad-b, #FF8E53));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: 2px;
+  }
+  .header .date {
+    font-size: 17px; color: var(--text-light); margin-top: 4px; font-weight: 500;
+  }
+
+  /* Read All Button */
+  .read-all-wrap {
+    text-align: center; margin-bottom: 20px;
+    animation: fadeIn 0.6s ease 0.1s both;
+  }
+  .btn-read-all {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px;
+    font-size: 18px; font-weight: 700; color: white;
+    background: linear-gradient(135deg, var(--accent2, #4ECDC4), color-mix(in srgb, var(--accent2, #4ECDC4) 75%, #000));
+    border: none; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .btn-read-all:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.22); }
+  .btn-read-all:active { transform: scale(0.95); }
+  .btn-read-all.speaking {
+    background: linear-gradient(135deg, var(--grad-a, #FF6B6B), var(--grad-b, #FF8E53));
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  .btn-read-all .speaker-icon { font-size: 22px; }
+
+  /* Voice Selector */
+  .voice-selector {
+    text-align: center; margin-bottom: 8px;
+    animation: fadeIn 0.6s ease 0.15s both;
+  }
+  .voice-selector select {
+    font-size: 14px; font-weight: 500; color: var(--text-light);
+    padding: 8px 32px 8px 14px; border-radius: 20px;
+    border: 2px solid #E0E0E0; background: var(--card, white);
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23636E72' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    cursor: pointer; max-width: 260px; width: 100%;
+    font-family: inherit;
+  }
+  .voice-selector select:focus { outline: none; border-color: var(--accent2); }
+  .voice-selector .voice-label {
+    font-size: 12px; color: #BDBDBD; margin-bottom: 4px; font-weight: 500;
+  }
+
+  /* Progress Ring */
+  .progress-wrap {
+    display: flex; justify-content: center; margin-bottom: 28px;
+    animation: fadeIn 0.6s ease 0.2s both;
+  }
+  .progress-ring { position: relative; width: 140px; height: 140px; }
+  .progress-ring svg { transform: rotate(-90deg); }
+  .progress-ring .bg-circle { fill: none; stroke: #EDE7F6; stroke-width: 12; }
+  #progGrad stop:first-child { stop-color: var(--grad-a, #FF6B6B); }
+  #progGrad stop:last-child { stop-color: var(--grad-b, #FF8E53); }
+  .progress-ring .fg-circle {
+    fill: none; stroke: url(#progGrad); stroke-width: 12; stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .progress-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .progress-inner .big-num { font-size: 48px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .progress-inner .sub { font-size: 14px; color: var(--text-light); font-weight: 500; margin-top: 2px; }
+
+  /* Cards */
+  .cards { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+  .card {
+    background: var(--card, white); border-radius: var(--radius); padding: 20px 22px;
+    box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeInUp 0.5s ease both; border-left: 6px solid transparent;
+    position: relative; overflow: hidden;
+  }
+  .card:active { transform: scale(0.985); }
+  .card.type-art { border-left-color: #FF8A80; }
+  .card.type-sport { border-left-color: #69F0AE; }
+  .card.type-other { border-left-color: #FFD740; }
+  .card.type-empty { border-left-color: #CFD8DC; opacity: 0.7; }
+
+  .card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .card-header .emoji { font-size: 36px; line-height: 1; }
+  .card-header .name { font-size: 22px; font-weight: 700; }
+  .card-header .badge {
+    font-size: 13px; background: #F5F5F5; color: #999;
+    padding: 4px 12px; border-radius: 20px; font-weight: 500;
+  }
+  .card-header .badge-warn {
+    background: #FFF3E0; color: #E65100; font-weight: 700;
+  }
+
+  /* Ruby / Pinyin */
+  ruby { ruby-align: center; }
+  rt {
+    font-size: 11px; font-weight: 500; color: var(--text-light, #999);
+    letter-spacing: 0.5px; line-height: 1.2;
+  }
+  .item-label ruby { display: inline-flex; flex-direction: column; align-items: center; }
+  .item-label rt { font-size: 10px; }
+
+  .items { display: flex; flex-direction: column; gap: 12px; }
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 6px; cursor: pointer; border-radius: var(--radius-sm);
+    transition: background 0.15s;
+  }
+  .item:active { background: rgba(0,0,0,0.03); }
+
+  .checkbox {
+    width: 48px; height: 48px; min-width: 48px;
+    border-radius: 16px; border: 3px solid #E0E0E0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: #FAFAFA; position: relative;
+  }
+  .checkbox svg {
+    width: 26px; height: 26px; opacity: 0;
+    transform: scale(0.3) rotate(-45deg);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .item.checked .checkbox {
+    background: #4CAF50; border-color: #4CAF50;
+    animation: popCheck 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .item.checked .checkbox svg { opacity: 1; transform: scale(1) rotate(0deg); }
+
+  .item-label {
+    font-size: 20px; font-weight: 500; transition: all 0.3s; flex: 1;
+    line-height: 1.5;
+  }
+  .item.checked .item-label {
+    text-decoration: line-through; text-decoration-color: #4CAF50;
+    text-decoration-thickness: 2px; color: #BDBDBD;
+  }
+  .item.checked .item-label rt { color: #CCC; }
+
+  /* Speaker button */
+  .btn-speak {
+    width: 44px; height: 44px; min-width: 44px;
+    border-radius: 14px; border: 2px solid #E0E0E0;
+    background: #FAFAFA; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-speak:active { background: #E8F5E9; border-color: #4CAF50; transform: scale(0.92); }
+  .btn-speak.speaking {
+    background: #E8F5E9; border-color: #4CAF50;
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+
+  /* Card speak button */
+  .card-speak-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-card-speak {
+    width: 36px; height: 36px; min-width: 36px;
+    border-radius: 12px; border: 2px solid #E0E0E0;
+    background: #FAFAFA; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-card-speak:active { background: #E8F5E9; border-color: #4CAF50; transform: scale(0.92); }
+  .btn-card-speak.speaking {
+    background: #E8F5E9; border-color: #4CAF50;
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+
+  .card-empty-msg {
+    font-size: 16px; color: #BDBDBD; font-weight: 500; padding: 4px 0;
+  }
+
+  /* Big Button */
+  .btn-wrap { text-align: center; margin-bottom: 20px; animation: fadeIn 0.6s ease 0.6s both; }
+  .btn-finish {
+    display: inline-block; padding: 18px 52px; font-size: 22px; font-weight: 700;
+    color: white; background: linear-gradient(135deg, var(--grad-a, #FF6B6B), var(--grad-b, #FF8E53));
+    border: none; border-radius: 60px; cursor: pointer;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); letter-spacing: 1px;
+  }
+  .btn-finish:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(0,0,0,0.26); }
+  .btn-finish:active { transform: scale(0.95); }
+  .btn-finish.done {
+    background: linear-gradient(135deg, #4CAF50, #69F0AE);
+    box-shadow: 0 8px 28px rgba(76,175,80,0.35);
+  }
+
+  .footer { text-align: center; font-size: 14px; color: #BDBDBD; font-weight: 500; padding-top: 8px; }
+
+  .rest-card {
+    background: var(--card, white); border-radius: 28px; padding: 48px 24px;
+    text-align: center; box-shadow: var(--shadow); animation: fadeInUp 0.5s ease;
+  }
+  .rest-card .big-emoji { font-size: 72px; display: block; animation: bounce 1.6s ease-in-out infinite; }
+  .rest-card .next-day { font-size: 17px; color: var(--text-light); font-weight: 600; margin-top: 12px; }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; animation: fadeIn 0.3s ease;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--card, white); border-radius: 36px; padding: 40px 32px;
+    text-align: center; max-width: 360px; width: 90%;
+    box-shadow: var(--shadow-lg);
+    animation: modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal .big-emoji { font-size: 80px; display: block; animation: bounce 1s ease-in-out infinite; }
+  .modal h2 { font-size: 28px; font-weight: 900; margin: 12px 0 8px; color: var(--accent); }
+  .modal p { font-size: 17px; color: var(--text-light); margin-bottom: 20px; }
+  .modal .btn-close {
+    padding: 14px 48px; font-size: 18px; font-weight: 700;
+    color: white; background: linear-gradient(135deg, #4CAF50, #69F0AE);
+    border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s;
+  }
+  .modal .btn-close:active { transform: scale(0.95); }
+
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: #2D3436; color: white; padding: 14px 28px; border-radius: 50px;
+    font-size: 17px; font-weight: 600; z-index: 998;
+    animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards; pointer-events: none;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  @keyframes popCheck {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.7) translateY(40px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <span class="mascot">🎒</span>
+    <div class="child-name" id="childName"></div>
+    <h1 id="mainTitle">
+      <ruby>明<rt>míng</rt>天<rt>tiān</rt>带<rt>dài</rt>什<rt>shén</rt>么<rt>me</rt>？</ruby>
+    </h1>
+    <div class="date" id="dateLine">加载中…</div>
+  </div>
+
+  <div class="read-all-wrap">
+    <button class="btn-read-all" id="btnReadAll" onclick="readAllItems()">
+      <span class="speaker-icon">🔊</span>
+      <ruby>朗<rt>lǎng</rt>读<rt>dú</rt>全<rt>quán</rt>部<rt>bù</rt></ruby>
+    </button>
+  </div>
+
+  <div class="voice-selector" id="voiceSelector" style="display:none">
+    <div class="voice-label">🎙️ 选择音色</div>
+    <select id="voiceSelect" onchange="onVoiceChange()"></select>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <defs>
+          <linearGradient id="progGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF6B6B"/>
+            <stop offset="100%" stop-color="#FF8E53"/>
+          </linearGradient>
+        </defs>
+        <circle class="bg-circle" cx="70" cy="70" r="58"/>
+        <circle class="fg-circle" id="progCircle" cx="70" cy="70" r="58"
+          stroke-dasharray="364.42" stroke-dashoffset="364.42"/>
+      </svg>
+      <div class="progress-inner">
+        <span class="big-num" id="progNum">0</span>
+        <span class="sub" id="progTotal">/ 0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="btn-wrap">
+    <button class="btn-finish" id="btnFinish" onclick="checkAllDone()">
+      <ruby>全<rt>quán</rt>部<rt>bù</rt>完<rt>wán</rt>成<rt>chéng</rt>！</ruby>
+    </button>
+  </div>
+
+  <div class="footer" id="footerInfo"></div>
+</div>
+
+<canvas id="confetti"></canvas>
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <span class="big-emoji">🌟</span>
+    <h2 id="modalTitle"></h2>
+    <p id="modalSub"><ruby>书<rt>shū</rt>包<rt>bāo</rt>整<rt>zhěng</rt>理<rt>lǐ</rt>完<rt>wán</rt>毕<rt>bì</rt>！</ruby><br><ruby>明<rt>míng</rt>天<rt>tiān</rt>上<rt>shàng</rt>学<rt>xué</rt>开<rt>kāi</rt>心<rt>xīn</rt>哦<rt>o</rt>～</ruby></p>
+    <button class="btn-close" onclick="closeModal()">
+      <ruby>知<rt>zhī</rt>道<rt>dào</rt>了<rt>le</rt>！</ruby>
+    </button>
+  </div>
+</div>
+
+<script>
+// === Data Loading ===
+const DAY_MAP = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const DATA_URLS = {
+  config: '../data/config.json',
+  schedule: '../data/schedule.json',
+  requirements: '../data/course_requirements.json',
+  notifications: '../data/notifications.json',
+  holidays: '../data/holidays.json'
+};
+
+// Standalone mode: when generated as a single file (e.g. for TraeWork Cloud mode),
+// the agent replaces null with the actual data object:
+// const EMBEDDED_DATA = { config: {...}, schedule: {...}, requirements: {...}, notifications: {...}, holidays: {...} };
+const EMBEDDED_DATA = null;
+
+let configData = null;
+let scheduleData = null;
+let requirementsData = null;
+let notificationsData = null;
+let holidaysData = null;
+let TARGET = null; // { rest, todayStr, targetStr, morning }
+
+async function loadAllData() {
+  if (EMBEDDED_DATA) {
+    configData = EMBEDDED_DATA.config;
+    scheduleData = EMBEDDED_DATA.schedule;
+    requirementsData = EMBEDDED_DATA.requirements;
+    notificationsData = EMBEDDED_DATA.notifications;
+    holidaysData = EMBEDDED_DATA.holidays || null;
+    return true;
+  }
+  try {
+    const [cfg, sch, req, notif, hol] = await Promise.all([
+      fetch(DATA_URLS.config).then(r => r.json()),
+      fetch(DATA_URLS.schedule).then(r => r.json()),
+      fetch(DATA_URLS.requirements).then(r => r.json()),
+      fetch(DATA_URLS.notifications).then(r => r.json()),
+      fetch(DATA_URLS.holidays).then(r => r.json()).catch(() => null)
+    ]);
+    configData = cfg;
+    scheduleData = sch;
+    requirementsData = req;
+    notificationsData = notif;
+    holidaysData = hol;
+    return true;
+  } catch (e) {
+    console.error('Failed to load data:', e);
+    return false;
+  }
+}
+
+// Rest day = official holiday, or weekend that is not a make-up workday, or inside a school break.
+function isRestDay(dateStr) {
+  const h = holidaysData || {};
+  if ((h.holidays || []).includes(dateStr)) return true;
+  for (const b of (h.breaks || [])) {
+    if (dateStr >= b.from && dateStr <= b.to) return true;
+  }
+  const dow = new Date(dateStr + 'T00:00:00').getDay();
+  if (dow === 0 || dow === 6) return !(h.workdays || []).includes(dateStr);
+  return false;
+}
+
+function nextSchoolDay(fromDateStr) {
+  const d = new Date(fromDateStr + 'T00:00:00');
+  do { d.setDate(d.getDate() + 1); } while (isRestDay(dateToStr(d)));
+  return dateToStr(d);
+}
+
+// Target date rules:
+// - rest day        -> show "today is a rest day", no checklist
+// - before cutoff   -> target = today (morning bag check, list persists until ~9am)
+// - after cutoff    -> target = next school day (evening preparation)
+function computeTarget() {
+  const now = new Date();
+  const todayStr = dateToStr(now);
+  if (isRestDay(todayStr)) return { rest: true, todayStr, targetStr: null, morning: false };
+  const cutoff = (configData && configData.morningCutoff) || '09:00';
+  const [ch, cm] = cutoff.split(':').map(Number);
+  const morning = now.getHours() * 60 + now.getMinutes() < ch * 60 + cm;
+  return { rest: false, todayStr, targetStr: morning ? todayStr : nextSchoolDay(todayStr), morning };
+}
+
+function dayNameFor(dateStr) {
+  return DAY_MAP[new Date(dateStr + 'T00:00:00').getDay()];
+}
+
+function getTomorrowDayName() {
+  return dayNameFor(TARGET.targetStr);
+}
+
+function getTomorrowCourses() {
+  const dayName = getTomorrowDayName();
+  const sched = scheduleData && scheduleData.schedule;
+  if (!sched || !sched[dayName]) return [];
+  return sched[dayName];
+}
+
+function getCourseItems(courseName) {
+  if (!requirementsData) return [];
+  // Direct match
+  if (requirementsData[courseName]) return requirementsData[courseName];
+  // Fuzzy match
+  for (const key of Object.keys(requirementsData)) {
+    if (key.includes(courseName) || courseName.includes(key)) {
+      return requirementsData[key];
+    }
+  }
+  return [];
+}
+
+function dateToStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function getStorageKey() {
+  const name = configData ? configData.childName : 'child';
+  return 'school_checklist_' + (TARGET.targetStr || '').replace(/-/g, '') + '_' + name;
+}
+
+function storageKeyFor(dateStr) {
+  const name = configData ? configData.childName : 'child';
+  return 'school_checklist_' + dateStr.replace(/-/g, '') + '_' + name;
+}
+
+// One-time notif rollover: the notif keeps appearing every day until the child
+// actually checked all its items on some day's checklist (= brought to school).
+function isNotifBrought(notif, targetDateStr) {
+  if (!notif.items_to_bring || notif.items_to_bring.length === 0) return false;
+  const startStr = notif.deadline || notif.date;
+  if (!startStr) return false;
+  const start = new Date(startStr + 'T00:00:00');
+  const target = new Date(targetDateStr + 'T00:00:00');
+  const itemIds = notif.items_to_bring.map((_, i) => 'notif_' + notif.id + '_' + i);
+  for (const d = new Date(start); d < target; d.setDate(d.getDate() + 1)) {
+    let rec = {};
+    try { const raw = localStorage.getItem(storageKeyFor(dateToStr(d))); rec = raw ? JSON.parse(raw) : {}; } catch {}
+    if (itemIds.length > 0 && itemIds.every(id => rec[id])) return true;
+  }
+  return false;
+}
+
+function postponedDays(notif, targetDateStr) {
+  if (!notif.deadline) return 0;
+  const diff = Math.round((new Date(targetDateStr + 'T00:00:00') - new Date(notif.deadline + 'T00:00:00')) / 86400000);
+  return diff > 0 ? diff : 0;
+}
+
+function getPinyin(text) {
+  // Remove parenthetical notes for cleaner pinyin lookup
+  const cleanText = text.replace(/[（(].*?[）)]/g, '').trim();
+  // Simple pinyin data for common school items (hand-tuned for accuracy)
+  const map = {
+    '语文课本': 'yǔ wén kè běn', '语文练习册': 'yǔ wén liàn xí cè',
+    '36K生字本1个': '36K shēng zì běn yī gè', '36K拼音本1个': '36K pīn yīn běn yī gè',
+    '36K田格本1个': '36K tián gé běn yī gè',
+    '数学课本': 'shù xué kè běn', '数学练习册': 'shù xué liàn xí cè',
+    '10根小棒': 'shí gēn xiǎo bàng', '圆形10个': 'yuán xíng shí gè',
+    '三角形10个': 'sān jiǎo xíng shí gè', '正方形10个': 'zhèng fāng xíng shí gè',
+    '英语课本': 'yīng yǔ kè běn', '英语练习册': 'yīng yǔ liàn xí cè',
+    '体育课本': 'tǐ yù kè běn', '跳绳': 'tiào shéng', '运动鞋': 'yùn dòng xié',
+    '女生不穿裙子': 'nǚ shēng bù chuān qún zi',
+    '美术课本': 'měi shù kè běn',
+    '24色水彩笔': '24 sè shuǐ cǎi bǐ', '24色油画棒': '24 sè yóu huà bàng',
+    '音乐课本': 'yīn yuè kè běn',
+    '科学课本': 'kē xué kè běn',
+    '道德与法治课本': 'dào dé yǔ fǎ zhì kè běn',
+    '劳动课本': 'láo dòng kè běn',
+    '记事本1个': 'jì shì běn yī gè',
+    '纸巾': 'zhǐ jīn', '湿纸巾': 'shī zhǐ jīn', '水壶': 'shuǐ hú',
+    '预防接种本': 'yù fáng jiē zhòng běn',
+    '既往病史采集表': 'jì wǎng bìng shǐ cǎi jí biǎo'
+  };
+  if (map[text]) return map[text];
+  if (map[cleanText]) return map[cleanText];
+  // Try partial match in map
+  for (const [k, v] of Object.entries(map)) {
+    if (text.includes(k) || cleanText.includes(k)) return v;
+  }
+  // Fallback: use local pinyin-pro library for unknown items (with tone marks)
+  if (typeof pinyinPro !== 'undefined' && pinyinPro.pinyin) {
+    try {
+      return pinyinPro.pinyin(text).trim();
+    } catch(e) { /* conversion failed */ }
+  }
+  return '';
+}
+
+function buildCourseData() {
+  const courses = getTomorrowCourses();
+  const data = [];
+  const seen = new Set();
+
+  courses.forEach(name => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    const items = getCourseItems(name);
+    let type = 'other';
+    if (name === '美术' || name.includes('美术')) type = 'art';
+    else if (name === '体育' || name.includes('体育')) type = 'sport';
+    else if (items.length === 0) type = 'empty';
+
+    const coursePyMap = {
+      '语文': 'yǔ wén', '数学': 'shù xué', '英语': 'yīng yǔ',
+      '体育': 'tǐ yù', '美术': 'měi shù', '音乐': 'yīn yuè',
+      '书法': 'shū fǎ', '科学': 'kē xué', '劳动': 'láo dòng',
+      '道德与法治': 'dào dé yǔ fǎ zhì', '综合实践': 'zōng hé shí jiàn',
+      '口语交际': 'kǒu yǔ jiāo jì', '班队会': 'bān duì huì',
+      '智能/巧思': 'zhì néng qiǎo sī', '阅读活动': 'yuè dú huó dòng'
+    };
+    const emojiMap = {
+      '语文': '📝', '数学': '🔢', '英语': '🌍', '体育': '🏃',
+      '美术': '🎨', '音乐': '🎵', '书法': '✍️', '科学': '🔬',
+      '劳动': '🧹', '道德与法治': '📖', '综合实践': '🛠️',
+      '口语交际': '🗣️', '班队会': '🏫', '智能/巧思': '🧠', '阅读活动': '📚'
+    };
+
+    data.push({
+      id: name,
+      emoji: emojiMap[name] || '📋',
+      name: name,
+      namePy: coursePyMap[name] || '',
+      type: type,
+      items: items.map(item => ({
+        text: item,
+        py: getPinyin(item)
+      }))
+    });
+  });
+
+  // Add "其他" items
+  const otherItems = getCourseItems('其他');
+  if (otherItems.length > 0) {
+    data.push({
+      id: '其他',
+      emoji: '📓',
+      name: '其他',
+      namePy: 'qí tā',
+      type: 'other',
+      items: otherItems.map(item => ({
+        text: item,
+        py: getPinyin(item)
+      }))
+    });
+  }
+
+  // Add notification items.
+  // One-time notifs roll over day by day until the child actually checks all
+  // items on some day's checklist (= brought to school), or the agent marks
+  // the notif as done in notifications.json.
+  const tomorrowStr = TARGET.targetStr;
+  const pendingNotifs = (notificationsData || []).filter(n => {
+    if (n.status !== 'pending' || !n.items_to_bring || n.items_to_bring.length === 0) return false;
+    if (n.type === 'one_time' && isNotifBrought(n, tomorrowStr)) return false;
+    return true;
+  });
+  if (pendingNotifs.length > 0) {
+    pendingNotifs.forEach(notif => {
+      data.push({
+        id: 'notif_' + notif.id,
+        emoji: '📋',
+        name: '通知：' + notif.title,
+        namePy: 'tōng zhī：' + (getPinyin(notif.title) || ''),
+        type: 'art',
+        postponed: (notif.type === 'one_time') ? postponedDays(notif, tomorrowStr) : 0,
+        items: notif.items_to_bring.map(item => ({
+          text: item,
+          py: getPinyin(item)
+        }))
+      });
+    });
+  }
+
+  return data;
+}
+
+// === Speech synthesis ===
+const synth = window.speechSynthesis;
+let zhVoice = null;
+let zhVoices = [];
+let isSpeakingAll = false;
+const speechSupported = !!synth;
+const VOICE_KEY = 'school_checklist_voice_uri';
+
+function getSavedVoiceURI() { try { return localStorage.getItem(VOICE_KEY); } catch { return null; } }
+function saveVoiceURI(uri) { try { localStorage.setItem(VOICE_KEY, uri); } catch {} }
+
+function populateVoiceSelector() {
+  if (!speechSupported) return;
+  const voices = synth.getVoices();
+  zhVoices = voices.filter(v =>
+    v.lang.startsWith('zh-CN') || v.lang.startsWith('zh-TW') ||
+    v.lang.startsWith('zh-HK') || v.lang === 'zh'
+  );
+  const sel = document.getElementById('voiceSelect');
+  sel.innerHTML = '';
+  if (zhVoices.length === 0) { document.getElementById('voiceSelector').style.display = 'none'; return; }
+  document.getElementById('voiceSelector').style.display = 'block';
+  const savedURI = getSavedVoiceURI();
+  zhVoices.sort((a, b) => {
+    const aN = a.name.includes('Google') || a.name.includes('Natural') || a.name.includes('Siri') || a.name.includes('Premium');
+    const bN = b.name.includes('Google') || b.name.includes('Natural') || b.name.includes('Siri') || b.name.includes('Premium');
+    if (aN && !bN) return -1; if (!aN && bN) return 1; return a.name.localeCompare(b.name);
+  });
+  let selIdx = 0;
+  zhVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = v.voiceURI;
+    opt.textContent = v.name.replace(/^Google /, '').replace(/^Microsoft /, '') + ' (' + v.lang + ')';
+    sel.appendChild(opt);
+    if (v.voiceURI === savedURI) selIdx = i;
+  });
+  sel.selectedIndex = selIdx;
+  setVoiceFromSelect();
+}
+function setVoiceFromSelect() {
+  const sel = document.getElementById('voiceSelect');
+  const uri = sel.value;
+  zhVoice = zhVoices.find(v => v.voiceURI === uri) || zhVoices[0] || null;
+  saveVoiceURI(uri);
+}
+function onVoiceChange() {
+  setVoiceFromSelect();
+  if (zhVoice && speechSupported) {
+    try { synth.cancel(); } catch(e) {}
+    setTimeout(() => {
+      const u = new SpeechSynthesisUtterance('你好，这是我选择的音色');
+      u.lang = 'zh-CN'; u.rate = 0.85; u.pitch = 1.1; u.volume = 1; u.voice = zhVoice;
+      synth.speak(u);
+    }, 50);
+  }
+}
+function initSpeech() {
+  if (!synth) return;
+  populateVoiceSelector();
+  const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; dummy.rate = 1;
+  synth.speak(dummy);
+}
+if (speechSupported) { initSpeech(); synth.onvoiceschanged = populateVoiceSelector; }
+if (!speechSupported) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#FFF3E0;color:#E65100;text-align:center;padding:12px 16px;font-size:15px;font-weight:600;border-radius:16px;margin-bottom:16px;line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto';
+    banner.innerHTML = '⚠️ 当前浏览器不支持朗读<br>请用 <b>Chrome 浏览器</b> 打开本页面';
+    const container = document.querySelector('.container');
+    container.insertBefore(banner, container.firstChild);
+    document.getElementById('btnReadAll').style.display = 'none';
+    document.querySelectorAll('.btn-speak, .btn-card-speak').forEach(b => b.style.display = 'none');
+  });
+}
+
+function speak(text, btnEl) {
+  if (!speechSupported) { showToast('请用Chrome浏览器打开以启用朗读'); return; }
+  document.querySelectorAll('.btn-speak.speaking, .btn-card-speak.speaking, .btn-read-all.speaking').forEach(b => b.classList.remove('speaking'));
+  isSpeakingAll = false;
+  try { synth.cancel(); } catch(e) {}
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.85; u.pitch = 1.1; u.volume = 1;
+    if (zhVoice) u.voice = zhVoice;
+    if (btnEl) {
+      btnEl.classList.add('speaking');
+      u.onend = () => btnEl.classList.remove('speaking');
+      u.onerror = (e) => { btnEl.classList.remove('speaking'); if (e.error !== 'canceled' && e.error !== 'interrupted') showToast('朗读失败，请检查手机音量'); };
+    }
+    synth.speak(u);
+    if (synth.paused) setTimeout(() => { try { synth.resume(); } catch(e) {} }, 50);
+  }, 50);
+}
+
+function readAllItems() {
+  if (!speechSupported) { showToast('请用Chrome浏览器打开以启用朗读'); return; }
+  if (isSpeakingAll) { try { synth.cancel(); } catch(e) {} isSpeakingAll = false; document.getElementById('btnReadAll').classList.remove('speaking'); return; }
+  const allItems = [];
+  const cd = window._courseData || [];
+  cd.forEach(c => { if (c.items.length > 0) { allItems.push(c.name); c.items.forEach(i => allItems.push(i.text)); } });
+  if (allItems.length === 0) return;
+  document.querySelectorAll('.btn-speak.speaking, .btn-card-speak.speaking').forEach(b => b.classList.remove('speaking'));
+  try { synth.cancel(); } catch(e) {}
+  const btn = document.getElementById('btnReadAll');
+  setTimeout(() => {
+    isSpeakingAll = true; btn.classList.add('speaking');
+    let idx = 0;
+    function speakNext() {
+      if (!isSpeakingAll || idx >= allItems.length) { isSpeakingAll = false; btn.classList.remove('speaking'); return; }
+      const u = new SpeechSynthesisUtterance(allItems[idx]);
+      u.lang = 'zh-CN'; u.rate = 0.85; u.pitch = 1.1; u.volume = 1;
+      if (zhVoice) u.voice = zhVoice;
+      u.onend = () => { idx++; speakNext(); };
+      u.onerror = (e) => { if (e.error === 'canceled' || e.error === 'interrupted') { isSpeakingAll = false; btn.classList.remove('speaking'); } else { idx++; speakNext(); } };
+      synth.speak(u);
+      if (synth.paused) setTimeout(() => { try { synth.resume(); } catch(e) {} }, 50);
+    }
+    speakNext();
+  }, 50);
+}
+
+// === UI Building ===
+let totalItems = 0;
+let STORAGE_KEY = '';
+
+function makeRuby(text, pinyin) {
+  if (!pinyin) return text;
+  return `<ruby>${text}<rt>${pinyin}</rt></ruby>`;
+}
+
+function getChecked() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+}
+function saveChecked(obj) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch {} }
+
+function buildCards() {
+  const container = document.getElementById('cards');
+  container.innerHTML = '';
+  const courseData = window._courseData || [];
+  const checked = getChecked();
+
+  courseData.forEach((course, ci) => {
+    const card = document.createElement('div');
+    card.className = 'card type-' + course.type;
+    card.style.animationDelay = (0.2 + ci * 0.08) + 's';
+
+    const header = document.createElement('div');
+    header.className = 'card-header';
+    header.innerHTML = `<span class="emoji">${course.emoji}</span><span class="name">${makeRuby(course.name, course.namePy)}</span>`;
+    if (course.postponed) {
+      header.innerHTML += `<span class="badge badge-warn">${makeRuby('已顺延', 'yǐ shùn yán')} ${course.postponed} ${makeRuby('天', 'tiān')}</span>`;
+    }
+
+    if (course.items.length === 0) {
+      header.innerHTML += '<span class="badge">无需准备</span>';
+      card.appendChild(header);
+      card.appendChild(Object.assign(document.createElement('div'), { className: 'card-empty-msg', innerHTML: makeRuby('暂无特殊用具要求', 'zàn wú tè shū yòng jù yāo qiú') }));
+    } else {
+      if (speechSupported) {
+        const sw = document.createElement('span'); sw.className = 'card-speak-wrap';
+        const btn = document.createElement('button'); btn.className = 'btn-card-speak'; btn.innerHTML = '🔊';
+        btn.addEventListener('click', e => { e.stopPropagation(); speak(course.name + '，' + course.items.map(i => i.text).join('，'), btn); });
+        sw.appendChild(btn); header.appendChild(sw);
+      }
+      card.appendChild(header);
+      const itemsDiv = document.createElement('div'); itemsDiv.className = 'items';
+      course.items.forEach((itemData, ii) => {
+        const itemId = course.id + '_' + ii;
+        const isChecked = !!checked[itemId];
+        const item = document.createElement('div'); item.className = 'item' + (isChecked ? ' checked' : ''); item.setAttribute('data-id', itemId);
+        const cb = document.createElement('div'); cb.className = 'checkbox';
+        cb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        cb.addEventListener('click', e => { e.stopPropagation(); toggleItem(item, itemId); });
+        item.appendChild(cb);
+        const label = document.createElement('span'); label.className = 'item-label';
+        label.innerHTML = makeRuby(itemData.text, itemData.py);
+        label.addEventListener('click', () => toggleItem(item, itemId));
+        item.appendChild(label);
+        if (speechSupported) {
+          const btnS = document.createElement('button'); btnS.className = 'btn-speak'; btnS.innerHTML = '🔊';
+          btnS.addEventListener('click', e => { e.stopPropagation(); speak(itemData.text, btnS); });
+          item.appendChild(btnS);
+        }
+        itemsDiv.appendChild(item);
+      });
+      card.appendChild(itemsDiv);
+    }
+    container.appendChild(card);
+  });
+}
+
+function toggleItem(el, itemId) {
+  const checked = getChecked();
+  if (checked[itemId]) { delete checked[itemId]; el.classList.remove('checked'); }
+  else { checked[itemId] = true; el.classList.add('checked'); }
+  saveChecked(checked);
+  updateProgress();
+}
+
+function updateProgress() {
+  const checked = getChecked();
+  const done = Object.keys(checked).length;
+  const pct = totalItems > 0 ? done / totalItems : 0;
+  const offset = 364.42 * (1 - pct);
+  document.getElementById('progNum').textContent = done;
+  document.getElementById('progTotal').textContent = '/' + totalItems;
+  document.getElementById('progCircle').style.strokeDashoffset = offset;
+  const btn = document.getElementById('btnFinish');
+  if (done === totalItems && totalItems > 0) {
+    btn.classList.add('done');
+    btn.innerHTML = '🌟 ' + makeRuby('全部完成！', 'quán bù wán chéng');
+  } else {
+    btn.classList.remove('done');
+    btn.innerHTML = '🎉 ' + makeRuby('全部完成！', 'quán bù wán chéng');
+  }
+}
+
+function checkAllDone() {
+  const checked = getChecked();
+  const done = Object.keys(checked).length;
+  if (done < totalItems) { showToast('还有 ' + (totalItems - done) + ' 样没装好哦～'); return; }
+  showCelebration();
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast'); if (existing) existing.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
+}
+
+function showCelebration() {
+  document.getElementById('modalOverlay').classList.remove('hidden');
+  launchConfetti();
+  const name = configData ? configData.childName : '小朋友';
+  speak('太棒了' + name + '，书包整理完毕，' + (TARGET.morning ? '今天' : '明天') + '上学开心哦');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); try { synth.cancel(); } catch(e) {} }
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#FF6B6B','#FFE66D','#4ECDC4','#FF8E53','#A8E6CF','#FF8A80','#69F0AE','#FFD740','#40C4FF','#B388FF'];
+  const particles = [];
+  for (let i = 0; i < 120; i++) {
+    particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height, w: 8 + Math.random() * 10, h: 5 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)], vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 5, rot: Math.random() * 360, rotV: (Math.random() - 0.5) * 12, opacity: 1 });
+  }
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotV; p.vy += 0.08; p.opacity -= 0.003;
+      if (p.opacity <= 0 || p.y > canvas.height + 50) return;
+      alive = true;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180); ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+    });
+    frame++;
+    if (alive && frame < 200) requestAnimationFrame(animate); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(animate);
+}
+
+// === Init ===
+function updateHeader() {
+  const name = (configData && configData.childName) || '小朋友';
+  document.getElementById('childName').innerHTML = makeRuby(name, getPinyin(name));
+  document.getElementById('modalTitle').innerHTML = makeRuby('太棒了，' + name + '！', getPinyin('太棒了，' + name + '！'));
+  document.title = name + '的书包清单';
+
+  const titleEl = document.getElementById('mainTitle');
+  if (TARGET.rest) {
+    titleEl.innerHTML = makeRuby('今日休息', getPinyin('今日休息'));
+  } else if (TARGET.morning) {
+    titleEl.innerHTML = makeRuby('今天的书包检查', getPinyin('今天的书包检查'));
+  } else {
+    titleEl.innerHTML = makeRuby('明天带什么？', getPinyin('明天带什么？'));
+  }
+
+  const line1 = '书包整理完毕！';
+  const line2 = TARGET.morning ? '今天上学开心哦～' : '明天上学开心哦～';
+  document.getElementById('modalSub').innerHTML =
+    makeRuby(line1, getPinyin(line1)) + '<br>' + makeRuby(line2, getPinyin(line2));
+
+  if (configData) {
+    const school = configData.school || '';
+    const gradeClass = (configData.grade || '') + (configData.className || '');
+    document.getElementById('footerInfo').innerHTML =
+      makeRuby(school, getPinyin(school)) + ' · ' + makeRuby(gradeClass, getPinyin(gradeClass));
+  }
+}
+
+function renderRestView() {
+  document.querySelector('.read-all-wrap').style.display = 'none';
+  document.getElementById('voiceSelector').style.display = 'none';
+  document.querySelector('.progress-wrap').style.display = 'none';
+  document.querySelector('.btn-wrap').style.display = 'none';
+  const d = new Date(TARGET.todayStr + 'T00:00:00');
+  document.getElementById('dateLine').textContent = `${d.getMonth() + 1}月${d.getDate()}日 · ${dayNameFor(TARGET.todayStr)}`;
+  const next = nextSchoolDay(TARGET.todayStr);
+  const nd = new Date(next + 'T00:00:00');
+  const nextTxt = `${nd.getMonth() + 1}月${nd.getDate()}日 · ${dayNameFor(next)}`;
+  document.getElementById('cards').innerHTML =
+    '<div class="rest-card"><span class="big-emoji">🎈</span>' +
+    '<div class="next-day">' + makeRuby('下个上学日', getPinyin('下个上学日')) + '：' +
+    makeRuby(nextTxt, getPinyin(nextTxt)) + '</div></div>';
+}
+
+async function init() {
+  const ok = await loadAllData();
+  if (!ok) {
+    document.getElementById('cards').innerHTML = '<p style="text-align:center;color:#999;padding:40px">数据加载失败，请检查 JSON 文件</p>';
+    return;
+  }
+  TARGET = computeTarget();
+  updateHeader();
+  if (TARGET.rest) {
+    renderRestView();
+    return;
+  }
+  const courseData = buildCourseData();
+  window._courseData = courseData;
+  totalItems = courseData.reduce((sum, c) => sum + c.items.length, 0);
+  STORAGE_KEY = getStorageKey();
+
+  const d = new Date(TARGET.targetStr + 'T00:00:00');
+  const dayName = dayNameFor(TARGET.targetStr);
+  document.getElementById('dateLine').textContent =
+    `${d.getMonth() + 1}月${d.getDate()}日 · ${dayName}` + (TARGET.morning ? ' · 早上检查' : '');
+
+  buildCards();
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

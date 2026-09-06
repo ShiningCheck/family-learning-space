@@ -1,0 +1,31 @@
+MIT License
+
+Copyright (c) 2026 Shan_Learn contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+附注 / Note:
+
+1. `textbooks/` 内的电子教材来源于国家中小学智慧教育平台（官方公开资源），
+   版权归原作者与出版社所有，仅供家庭个人学习使用，请勿再分发或商用。
+2. `tools/tchsrc/` 为第三方项目 tchMaterial-parser，适用其自带的 MIT 许可。
+3. `personal/`、`.trae/skills/*/data/` 等目录为使用者个人数据，不在版本库中，
+   不适用本许可的再分发条款。

@@ -1,0 +1,42 @@
+name: privacy-check
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  privacy-guard:
+    name: 个人信息检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 1) 个人数据路径不得进入仓库（防止 .gitignore 被绕过）
+      #    规则与 tools/privacy_guard.py 的 FORBIDDEN/ARTIFACT 路径保持一致
+      - name: 检查禁止路径
+        run: |
+          set -e
+          BAD=$(git ls-files | grep -E '^personal/|^\.trae/skills/[^/]+/data/|^\.trae/skills/[^/]+/(images|audio|output)/|^画作档案/|_standalone\.html$|^textbooks/pdf/科学\.pdf$|^textbooks/pages/科学/|^dist/|^\.trae-html-share-packages/|^\.workbuddy/' || true)
+          if [ -n "$BAD" ]; then
+            echo "以下个人数据 / 构建产物文件被 git 跟踪，必须移除："
+            echo "$BAD"
+            exit 1
+          fi
+          echo "禁止路径检查通过"
+
+      # 2) 全量扫描公开文件（CI 无真实敏感词表，做格式类 PII 检查）
+      - name: 隐私守卫全量扫描
+        run: python tools/privacy_guard.py --all
+
+      # 3) gitleaks：密钥 + 手机号/身份证自定义规则
+      - name: gitleaks 扫描
+        run: |
+          set -e
+          VERSION=8.24.3
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks detect --redact --exit-code 1 -c .gitleaks.toml --log-opts="--all"

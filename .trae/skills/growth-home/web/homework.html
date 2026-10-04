@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作业管理</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 90px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+  .hero {
+    margin: 16px 0 18px;
+    background: #845EF7;
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff; text-align: center; padding: 22px 16px 20px;
+    position: relative; overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 24px; opacity: 0.5; }
+  .hero-emoji { font-size: 56px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 32px; font-weight: 900; margin-top: 4px; line-height: 1.7; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .goal { font-size: 16px; margin-top: 4px; font-weight: 700; opacity: 0.96; line-height: 1.8; }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 16px; margin-bottom: 16px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .sec-title { font-size: 19px; font-weight: 900; margin-bottom: 12px; line-height: 1.8; }
+  .sec-title .sub { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  /* 今日学习作业 */
+  .learn-item {
+    display: flex; align-items: center; gap: 10px;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 10px 12px; margin-bottom: 10px; background: var(--card, #FFFDF7);
+  }
+  .learn-item .l-day { flex: none; font-size: 12px; font-weight: 800; color: #fff; background: #845EF7; border-radius: 999px; padding: 4px 9px; white-space: nowrap; }
+  .learn-item .l-body { flex: 1; min-width: 0; }
+  .learn-item .l-name { font-size: 17px; font-weight: 800; line-height: 1.6; }
+  .learn-item .l-detail { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; line-height: 1.5; }
+  .l-add {
+    flex: none; font-family: inherit; font-size: 14px; font-weight: 900;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 14px;
+    padding: 8px 12px; cursor: pointer; box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+    background: #69DB7C; color: #2B8A3E; white-space: nowrap;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .l-add:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .l-add.added { background: var(--line, #FFF1DB); color: var(--soft, #8D7357); }
+
+  /* 作业卡 */
+  .hw-card {
+    border: 4px solid var(--edge, #4A3B2A); border-radius: 26px;
+    background: var(--card, #fff); margin-bottom: 18px; overflow: hidden;
+    box-shadow: 0 7px 0 rgba(0,0,0,0.18);
+  }
+  .hw-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: var(--hc, #845EF7); color: #fff;
+    border-bottom: 4px solid var(--edge, #4A3B2A);
+  }
+  .hw-head .hw-emoji { font-size: 36px; flex: none; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .hw-head .hw-title { flex: 1; min-width: 0; }
+  .hw-head .hw-name { font-size: 22px; font-weight: 900; line-height: 1.7; text-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  .hw-head .hw-name rt { color: rgba(255,255,255,0.85); }
+  .hw-head .hw-valid { font-size: 13px; font-weight: 800; opacity: 0.95; line-height: 1.5; }
+  .hw-tools { flex: none; display: flex; gap: 6px; }
+  .hw-tool {
+    border: none; background: rgba(0,0,0,0.14); color: #fff; font-size: 18px;
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  }
+
+  .hw-body { padding: 14px 16px; }
+  .hw-desc { font-size: 15px; line-height: 1.8; color: var(--ink, #4A3B2A); margin-bottom: 10px; }
+  .hw-teacher { font-size: 14px; line-height: 1.7; color: #B0570F; background: #FFF3D6; border-radius: 12px; padding: 9px 12px; margin-bottom: 12px; }
+  .hw-progress { margin-top: 12px; font-size: 15px; font-weight: 800; color: var(--acc-deep, #E8590C); }
+
+  .media-grid { display: flex; flex-direction: column; gap: 10px; }
+  .media {
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 16px; overflow: hidden;
+    background: var(--line, #FFF9DB);
+  }
+  .media video { display: block; width: 100%; max-height: 200px; background: #000; }
+  .media img { display: block; width: 100%; max-height: 200px; object-fit: contain; cursor: zoom-in; background: var(--line, #FFF9DB); }
+  .media .media-label { font-size: 13px; font-weight: 800; color: var(--soft, #8D7357); padding: 7px 10px; background: var(--card, #fff); }
+  .media-ph {
+    display: flex; align-items: center; gap: 10px;
+    border: 3px dashed var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 12px 14px; background: var(--line, #FFF9DB);
+    font-size: 14px; font-weight: 800; color: var(--soft, #8D7357);
+  }
+  .media-ph .ph-ico { font-size: 22px; }
+
+  .hw-empty { text-align: center; color: var(--soft, #8D7357); font-size: 15px; padding: 14px 0; line-height: 1.9; }
+
+  /* 悬浮添加按钮 */
+  .fab {
+    position: fixed; right: 18px; bottom: 20px; z-index: 40;
+    display: flex; align-items: center; gap: 8px;
+    border: 4px solid var(--edge, #4A3B2A); border-radius: 999px;
+    background: #845EF7; color: #fff; font-family: inherit;
+    font-size: 18px; font-weight: 900; padding: 12px 20px; cursor: pointer;
+    box-shadow: 0 7px 0 var(--edge, #4A3B2A);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .fab:active { transform: translateY(4px); box-shadow: 0 3px 0 var(--edge, #4A3B2A); }
+
+  /* 弹层 */
+  .overlay {
+    position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.4);
+    display: flex; align-items: flex-end; justify-content: center; padding: 12px;
+  }
+  .overlay.hidden { display: none; }
+  .sheet {
+    width: min(100%, 520px); max-height: 92dvh; overflow-y: auto;
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 26px;
+    box-shadow: 0 10px 0 rgba(0,0,0,0.25); padding: 18px 18px 22px;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .sheet h3 { text-align: center; font-size: 20px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 16px; font-weight: 800; margin-bottom: 6px; line-height: 1.7; }
+  .field input[type=text], .field input[type=date], .field textarea, .field select {
+    width: 100%; font-size: 17px; font-family: inherit; color: var(--ink, #4A3B2A);
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 14px;
+    padding: 11px 13px; background: var(--card, #FFFDF7);
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .date-row { display: flex; gap: 10px; align-items: center; }
+  .date-row .sep { font-size: 16px; font-weight: 900; color: var(--soft, #8D7357); }
+  .quick-row { display: flex; gap: 8px; margin-top: 8px; }
+  .quick {
+    flex: 1; font-family: inherit; font-size: 14px; font-weight: 900; color: var(--ink, #4A3B2A);
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 12px; padding: 8px 4px; cursor: pointer;
+    background: var(--line, #FFF1DB);
+  }
+  .quick.on { background: #FFD43B; }
+  .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .file-btn {
+    font-family: inherit; font-size: 15px; font-weight: 900;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 14px; padding: 10px 14px; cursor: pointer;
+    background: #4DABF7; color: #fff; box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+  }
+  .file-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .uploading { font-size: 14px; font-weight: 800; color: var(--soft, #8D7357); }
+  .att-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .att-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .att-item .att-del { border: none; background: none; font-size: 18px; cursor: pointer; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .sheet-btn {
+    flex: 1; font-family: inherit; font-size: 18px; font-weight: 900;
+    border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px; padding: 13px;
+    cursor: pointer; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .sheet-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .sheet-btn.primary { background: #845EF7; color: #fff; }
+  .sheet-btn.ghost { background: var(--line, #FFF1DB); color: var(--ink, #4A3B2A); }
+
+  #lightbox {
+    position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out;
+  }
+  #lightbox.hidden { display: none; }
+  #lightbox img { max-width: 100%; max-height: 92dvh; border-radius: 10px; }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero">
+      <span class="deco" style="left:12px;top:12px">🗂️</span>
+      <span class="deco" style="right:14px;bottom:12px">✨</span>
+      <div class="hero-emoji">🗂️</div>
+      <h1 id="heroName">作业管理</h1>
+      <div class="goal" id="heroGoal"></div>
+    </header>
+
+    <div class="card" id="learnCard" style="display:none">
+      <div class="sec-title">📚 今日学习作业<span class="sub" id="learnSub"></span></div>
+      <div id="learnList"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🗂️ 作业列表<span class="sub" id="hwCount"></span></div>
+      <div id="hwList"></div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fabAdd" type="button">＋ 添加作业</button>
+
+<div class="overlay hidden" id="addOverlay">
+  <div class="sheet">
+    <h3 id="sheetTitle">➕ 添加作业</h3>
+    <div class="field">
+      <label>科目（决定它出现在哪个学科页）</label>
+      <select id="fSubject"></select>
+    </div>
+    <div class="field">
+      <label>作业名称</label>
+      <input type="text" id="fName" maxlength="20" placeholder="例如：握笔练习">
+    </div>
+    <div class="field">
+      <label>说明（老师的话）</label>
+      <textarea id="fDesc" maxlength="200" placeholder="写一点要求或提醒…"></textarea>
+    </div>
+    <div class="field">
+      <label>有效期（这段时间每天打卡）</label>
+      <div class="date-row">
+        <input type="date" id="fStart">
+        <span class="sep">到</span>
+        <input type="date" id="fEnd">
+      </div>
+      <div class="quick-row">
+        <button class="quick" data-days="0" type="button">今天</button>
+        <button class="quick" data-days="7" type="button">一周</button>
+        <button class="quick" data-days="30" type="button">一个月</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>图片 / 视频</label>
+      <div class="file-row">
+        <button class="file-btn" id="fPickFile" type="button">📎 选择文件</button>
+        <span class="uploading" id="fUploading"></span>
+      </div>
+      <input type="file" id="fFile" accept="image/*,video/*" multiple style="display:none">
+      <div class="att-list" id="fAttList"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn ghost" id="fCancel" type="button">取消</button>
+      <button class="sheet-btn primary" id="fSave" type="button">保存作业</button>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox" class="hidden"><img id="lightboxImg" alt="预览"></div>
+
+<script>
+let CONFIG = { childName: '' };
+let ITEMS = [];
+let LEARN_DAYS = [];
+let SUBJECTS = [];
+
+// 作业卡按「科目」分发到各学科页（语文 / 数学 / 辅导班英语 / 学校英语），
+// 科目清单来自 activities.json 的 subjects，由 /api/homework 一并下发。
+const SUBJECT_FALLBACK = [
+  { id: 'chinese', name: '语文', emoji: '📖', color: '#E8590C' },
+  { id: 'math', name: '数学', emoji: '🧮', color: '#1C7ED6' },
+  { id: 'class-english', name: '辅导班英语', emoji: '🏫', color: '#F76707' },
+  { id: 'school-english', name: '学校英语', emoji: '🎧', color: '#12B886' }
+];
+function subjectMeta(id) {
+  return SUBJECTS.find(s => s.id === id) || SUBJECT_FALLBACK.find(s => s.id === id) || null;
+}
+function subjectLabel(id) {
+  const s = subjectMeta(id);
+  return s ? ((s.emoji || '📝') + ' ' + s.name) : '📝 未分科';
+}
+// 从学习看板加入作业时，尽力猜一个科目（看板习惯项的 id 一直带 yuwen/math 这类线索）
+function guessSubject(text) {
+  const t = String(text || '').toLowerCase();
+  if (/(^|[-_ ])(yuwen|chinese)([-_ ]|$)|语文/.test(t)) return 'chinese';
+  if (/(^|[-_ ])(math|shuxue)([-_ ]|$)|数学/.test(t)) return 'math';
+  if (/(^|[-_ ])(english|yingyu)([-_ ]|$)|英语/.test(t)) return 'class-english';
+  return '';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else out += escapeHtml(ch);
+  }
+  return out;
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStr(new Date()); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+function daysBetween(a, b) {
+  return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000) + 1;
+}
+
+// ---- 打卡记录（只读统计，与各学科页共享同一份记录）----
+// 记录格式：{ 作业id: { "YYYY-MM-DD": { v: 0|1, ts: 毫秒 } } }；
+// 服务器上的 data/homework_checkins.json 为准（换台设备打的卡也算数），本机只作缓存。
+function storeKey() { return 'hw_' + (CONFIG.childName || 'child'); }
+let records = {};
+function normMark(m) {
+  if (m && typeof m === 'object') return { v: m.v ? 1 : 0, ts: Number(m.ts) || 0 };
+  return m ? { v: 1, ts: 0 } : null;
+}
+function mergeDay(lv, rv) {
+  if (!lv) return rv;
+  if (!rv) return lv;
+  if (!lv.ts && !rv.ts) return { v: (lv.v || rv.v) ? 1 : 0, ts: 0 };
+  return rv.ts >= lv.ts ? rv : lv;
+}
+function loadRecords() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(storeKey()) || '{}');
+    const out = {};
+    Object.keys(raw || {}).forEach(id => {
+      const days = raw[id];
+      if (!days || typeof days !== 'object') return;
+      const o = {};
+      Object.keys(days).forEach(d => { const m = normMark(days[d]); if (m) o[d] = m; });
+      if (Object.keys(o).length) out[id] = o;
+    });
+    records = out;
+  } catch (e) { records = {}; }
+}
+/** 并进服务器上的打卡记录；取不到就只用本机那份，不影响页面 */
+async function loadServerRecords() {
+  try {
+    const res = await fetch('/api/homework/checkins', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.ok) return;
+    Object.keys(data.records || {}).forEach(id => {
+      const remote = data.records[id] || {};
+      if (!records[id]) records[id] = {};
+      Object.keys(remote).forEach(d => {
+        const rv = normMark(remote[d]);
+        if (rv) records[id][d] = mergeDay(records[id][d], rv);
+      });
+    });
+  } catch (e) { /* 忽略，用本机缓存 */ }
+}
+function checkedInRange(item) {
+  const s = item.start || '1970-01-01';
+  const e = item.end || '9999-12-31';
+  const days = records[item.id] || {};
+  return Object.keys(days).filter(d => d >= s && d <= e && days[d] && days[d].v);
+}
+function itemTotalDays(item) {
+  if (item.start && item.end) return Math.max(1, daysBetween(item.start, item.end));
+  return 0;
+}
+function itemActive(item) {
+  const t = todayStr();
+  return (!item.start || item.start <= t) && (!item.end || item.end >= t);
+}
+
+// ---- 语音 ----
+let voices = [];
+function loadVoices() {
+  if (!('speechSynthesis' in window)) return;
+  voices = speechSynthesis.getVoices();
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function speak(text) {
+  // 优先播放电脑端预生成的配音音频（data/tts/），没有对应音频时自动降级浏览器朗读
+  if (window.TTS) { TTS.speak(text, 'zh'); return; }
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    const zh = voices.filter(v => v.lang && v.lang.toLowerCase().indexOf('zh') === 0);
+    if (zh.length) u.voice = zh[0];
+    u.lang = zh.length ? zh[0].lang : 'zh-CN';
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }, 50);
+}
+
+function mediaHtml(m) {
+  if (m.url) {
+    if (m.type === 'image') {
+      return '<div class="media"><img src="' + escapeHtml(m.url) + '" data-img="' + escapeHtml(m.url) + '" alt="' + escapeHtml(m.label || '图片') + '">' +
+        (m.label ? '<div class="media-label">🖼️ ' + escapeHtml(m.label) + '</div>' : '') + '</div>';
+    }
+    return '<div class="media"><video controls loop playsinline preload="metadata" src="' + escapeHtml(m.url) + '"></video>' +
+      (m.label ? '<div class="media-label">🎬 ' + escapeHtml(m.label) + '</div>' : '') + '</div>';
+  }
+  return '<div class="media-ph"><span class="ph-ico">' + (m.type === 'image' ? '🖼️' : '🎬') + '</span>' +
+    '<span>' + escapeHtml(m.label || '附件') + '（待添加，点右上角 ✏️ 编辑补传）</span></div>';
+}
+
+function cardHtml(item) {
+  const active = itemActive(item);
+  const doneCnt = checkedInRange(item).length;
+  const total = itemTotalDays(item);
+  const validTxt = item.start || item.end
+    ? (fmtDate(item.start) + (item.end && item.end !== item.start ? ' ~ ' + fmtDate(item.end) : ''))
+    : '长期有效';
+  const media = (item.media || []).map(mediaHtml).join('');
+  return '<div class="hw-card" data-id="' + escapeHtml(item.id) + '" style="--hc:' + escapeHtml(item.color || '#845EF7') + '">' +
+    '<div class="hw-head">' +
+    '<span class="hw-emoji">' + escapeHtml(item.emoji || '📝') + '</span>' +
+    '<div class="hw-title">' +
+    '<div class="hw-name">' + rubyHtml(item.name) + '</div>' +
+    '<div class="hw-valid">' + (active ? '📅 ' : '⏸️ ') + escapeHtml(validTxt) + ' · ' + escapeHtml(subjectLabel(item.subject)) + '</div>' +
+    '</div>' +
+    '<div class="hw-tools">' +
+    '<button class="hw-tool" data-edit="' + escapeHtml(item.id) + '" title="编辑">✏️</button>' +
+    '<button class="hw-tool" data-del="' + escapeHtml(item.id) + '" title="删除">🗑️</button>' +
+    '</div>' +
+    '</div>' +
+    '<div class="hw-body">' +
+    (item.desc ? '<div class="hw-desc">' + escapeHtml(item.desc) + '</div>' : '') +
+    (item.teacherNote ? '<div class="hw-teacher">👩‍🏫 ' + escapeHtml(item.teacherNote) + '</div>' : '') +
+    (media ? '<div class="media-grid">' + media + '</div>' : '') +
+    '<div class="hw-progress">已打卡 ' + doneCnt + (total ? ' / ' + total + ' 天' : ' 天') + '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+function renderList() {
+  const box = document.getElementById('hwList');
+  document.getElementById('hwCount').textContent = ITEMS.length ? ('共 ' + ITEMS.length + ' 项') : '';
+  if (!ITEMS.length) {
+    box.innerHTML = '<div class="hw-empty">还没有作业卡。<br>点右下角「＋ 添加作业」并选好科目，或把上面「今日学习作业」加入进来。</div>';
+    return;
+  }
+  box.innerHTML = ITEMS.map(cardHtml).join('');
+  bindCardEvents(box);
+}
+
+function bindCardEvents(box) {
+  box.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-edit');
+      const item = ITEMS.find(i => i.id === id);
+      if (item) openEdit(item);
+    });
+  });
+  box.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-del');
+      if (!confirm('确定删除这项作业吗？打卡记录也会一起删除。')) return;
+      await apiPost('/api/homework', { op: 'delete', id: id });
+      await refresh();
+    });
+  });
+  box.querySelectorAll('img[data-img]').forEach(img => {
+    img.addEventListener('click', () => {
+      document.getElementById('lightboxImg').src = img.getAttribute('data-img');
+      document.getElementById('lightbox').classList.remove('hidden');
+    });
+  });
+}
+
+// ---- 今日学习作业 ----
+function renderLearn() {
+  const box = document.getElementById('learnCard');
+  const list = document.getElementById('learnList');
+  const candidates = [];
+  const seen = new Set();
+  (LEARN_DAYS || []).slice().reverse().forEach(day => {
+    const date = day.date || '';
+    const items = [];
+    ((day.habits) || []).forEach(h => items.push({ name: h.name, detail: h.detail || '', date: date }));
+    ((day.homework) || []).forEach(h => {
+      const nm = typeof h === 'string' ? h : (h.name || h.content || h.title || '');
+      const dt = typeof h === 'object' ? (h.detail || '') : '';
+      items.push({ name: nm, detail: dt, date: date });
+    });
+    items.forEach(it => {
+      if (!it.name) return;
+      if (seen.has(it.name)) return;
+      seen.add(it.name);
+      candidates.push(it);
+    });
+  });
+  if (!candidates.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  document.getElementById('learnSub').textContent = '从学习看板提取，点右侧加入作业列表（会自动归到对应科目）';
+  const addedNames = new Set(ITEMS.map(i => i.name));
+  list.innerHTML = candidates.slice(0, 12).map(c => {
+    const added = addedNames.has(c.name);
+    return '<div class="learn-item">' +
+      '<span class="l-day">' + (c.date ? c.date.slice(5).replace('-', '/') : '今日') + '</span>' +
+      '<div class="l-body">' +
+      '<div class="l-name">' + rubyHtml(c.name) + '</div>' +
+      (c.detail ? '<div class="l-detail">' + escapeHtml(c.detail) + '</div>' : '') +
+      '</div>' +
+      '<button class="l-add' + (added ? ' added' : '') + '" data-learn="' + escapeHtml(c.name) + '" data-detail="' + escapeHtml(c.detail) + '"' + (added ? ' disabled' : '') + '>' + (added ? '已加入' : '＋加入') + '</button>' +
+      '</div>';
+  }).join('');
+  list.querySelectorAll('[data-learn]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = btn.getAttribute('data-learn');
+      const detail = btn.getAttribute('data-detail');
+      // 从看板加进来的作业同样要归科，否则学科页里看不到它
+      const sub = guessSubject(name + ' ' + detail);
+      const sm = subjectMeta(sub);
+      await apiPost('/api/homework', { op: 'add', item: {
+        name: name, emoji: (sm && sm.emoji) || '📝', color: (sm && sm.color) || '#845EF7',
+        subject: sub, desc: detail || '', teacherNote: '',
+        repeat: 'daily', start: todayStr(), end: todayStr(), media: []
+      }});
+      speak('加入作业啦！');
+      await refresh();
+    });
+  });
+}
+
+// ---- 添加 / 编辑弹层 ----
+let pendingAtts = [];
+let editingId = null;
+// 科目下拉：选项来自 activities.json 的 subjects（取不到时用兜底清单）
+function fillSubjectOptions(id) {
+  const list = SUBJECTS.length ? SUBJECTS : SUBJECT_FALLBACK;
+  const sel = document.getElementById('fSubject');
+  sel.innerHTML = list.map(s =>
+    '<option value="' + escapeHtml(s.id) + '">' + escapeHtml((s.emoji || '📝') + ' ' + (s.name || s.id)) + '</option>').join('');
+  sel.value = (id && list.some(s => s.id === id)) ? id : (list[0] ? list[0].id : '');
+}
+
+function openAdd() {
+  editingId = null;
+  pendingAtts = [];
+  document.getElementById('sheetTitle').textContent = '➕ 添加作业';
+  fillSubjectOptions('');
+  document.getElementById('fName').value = '';
+  document.getElementById('fDesc').value = '';
+  const t = todayStr();
+  document.getElementById('fStart').value = t;
+  document.getElementById('fEnd').value = t;
+  setQuick(0);
+  renderAtts();
+  document.getElementById('addOverlay').classList.remove('hidden');
+}
+function openEdit(item) {
+  editingId = item.id;
+  pendingAtts = (item.media || []).map(m => ({ id: m.id, type: m.type, url: m.url, label: m.label }));
+  document.getElementById('sheetTitle').textContent = '✏️ 编辑作业';
+  fillSubjectOptions(item.subject || '');
+  document.getElementById('fName').value = item.name || '';
+  document.getElementById('fDesc').value = item.desc || '';
+  document.getElementById('fStart').value = item.start || todayStr();
+  document.getElementById('fEnd').value = item.end || todayStr();
+  setQuick(-1);
+  renderAtts();
+  document.getElementById('addOverlay').classList.remove('hidden');
+}
+function closeAdd() { document.getElementById('addOverlay').classList.add('hidden'); }
+function setQuick(days) {
+  document.querySelectorAll('.quick').forEach(q => q.classList.toggle('on', parseInt(q.getAttribute('data-days'), 10) === days));
+  if (days < 0) return;
+  const s = document.getElementById('fStart').value || todayStr();
+  const e = new Date(s + 'T00:00:00'); e.setDate(e.getDate() + days);
+  document.getElementById('fEnd').value = dateStr(e);
+}
+function renderAtts() {
+  const box = document.getElementById('fAttList');
+  if (!pendingAtts.length) { box.innerHTML = ''; return; }
+  box.innerHTML = pendingAtts.map((a, i) =>
+    '<div class="att-item"><span>' + (a.type === 'image' ? '🖼️' : '🎬') + ' ' + escapeHtml(a.label || '附件') +
+    (a.url ? '' : '（待添加）') + '</span>' +
+    '<button class="att-del" data-att-i="' + i + '" type="button">🗑️</button></div>').join('');
+  box.querySelectorAll('[data-att-i]').forEach(b => b.addEventListener('click', () => {
+    pendingAtts.splice(parseInt(b.getAttribute('data-att-i'), 10), 1); renderAtts();
+  }));
+}
+
+async function uploadFile(file) {
+  document.getElementById('fUploading').textContent = '上传中… ' + file.name;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch('/api/homework/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!data.ok) { alert('上传失败：' + (data.error || '未知错误')); document.getElementById('fUploading').textContent = ''; return null; }
+    document.getElementById('fUploading').textContent = '';
+    return { type: data.type, url: data.url, label: data.label };
+  } catch (e) {
+    document.getElementById('fUploading').textContent = '';
+    alert('上传失败，请确认服务器已启动');
+    return null;
+  }
+}
+
+function apiPost(url, body) {
+  return fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+async function refresh() {
+  try {
+    const res = await fetch('/api/homework', { cache: 'no-store' });
+    const data = await res.json();
+    CONFIG.childName = data.childName || '';
+    ITEMS = data.items || [];
+    SUBJECTS = data.subjects || [];
+    loadRecords();
+    await loadServerRecords();
+  } catch (e) {
+    document.getElementById('errTip').style.display = 'block';
+    document.getElementById('errTip').textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+  renderHero();
+  renderList();
+  renderLearn();
+}
+
+async function loadLearn() {
+  try {
+    const res = await fetch('/api/data', { cache: 'no-store' });
+    const data = await res.json();
+    LEARN_DAYS = data.days || [];
+  } catch (e) { LEARN_DAYS = []; }
+  renderLearn();
+}
+
+function renderHero() {
+  const name = CONFIG.childName || '小朋友';
+  document.getElementById('heroName').innerHTML = rubyHtml(name) + '的作业';
+  document.title = name + '的作业管理';
+  document.getElementById('heroGoal').textContent = '这里管所有科目的作业卡；打卡在各学科页（语文 / 数学 / 辅导班 / 学校英语）里做';
+}
+
+async function init() {
+  document.getElementById('fabAdd').addEventListener('click', openAdd);
+  document.getElementById('fCancel').addEventListener('click', closeAdd);
+  document.getElementById('addOverlay').addEventListener('click', e => { if (e.target.id === 'addOverlay') closeAdd(); });
+  document.getElementById('fPickFile').addEventListener('click', () => document.getElementById('fFile').click());
+  document.getElementById('fFile').addEventListener('change', async e => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    for (const f of files) {
+      const up = await uploadFile(f);
+      if (up) pendingAtts.push(up);
+    }
+    renderAtts();
+  });
+  document.querySelectorAll('.quick').forEach(q => q.addEventListener('click', () => {
+    setQuick(parseInt(q.getAttribute('data-days'), 10));
+  }));
+  document.getElementById('fSave').addEventListener('click', async () => {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { alert('请填写作业名称'); return; }
+    const start = document.getElementById('fStart').value;
+    const end = document.getElementById('fEnd').value;
+    if (start && end && end < start) { alert('结束日期不能早于开始日期'); return; }
+    const media = pendingAtts.map((a, i) => ({
+      id: a.id || ('m' + Date.now() + i),
+      type: a.type, url: a.url || '', label: a.label
+    }));
+    const subject = document.getElementById('fSubject').value || '';
+    const sm = subjectMeta(subject);
+    const body = {
+      name: name,
+      emoji: (sm && sm.emoji) || '📝',
+      color: (sm && sm.color) || '#845EF7',
+      subject: subject,
+      desc: document.getElementById('fDesc').value.trim(),
+      teacherNote: '', repeat: 'daily', start: start, end: end, media: media
+    };
+    if (editingId) {
+      const orig = ITEMS.find(i => i.id === editingId);
+      body.id = editingId;
+      if (orig) {
+        body.emoji = (sm && sm.emoji) || orig.emoji || '📝';
+        body.color = (sm && sm.color) || orig.color || '#845EF7';
+        body.teacherNote = orig.teacherNote || '';
+        body.createdAt = orig.createdAt;
+      }
+      await apiPost('/api/homework', { op: 'update', item: body });
+    } else {
+      await apiPost('/api/homework', { op: 'add', item: body });
+    }
+    closeAdd();
+    speak('作业保存好啦！');
+    await refresh();
+  });
+  document.getElementById('lightbox').addEventListener('click', () => {
+    document.getElementById('lightbox').classList.add('hidden');
+  });
+
+  await refresh();
+  await loadLearn();
+  document.getElementById('app').style.display = 'block';
+
+  // 切回这一页时重新对一次打卡记录：孩子可能刚在手机（或学科页）上打了卡
+  const resyncStats = async () => {
+    loadRecords();
+    await loadServerRecords();
+    renderHero();
+    renderList();
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resyncStats(); });
+  window.addEventListener('focus', () => resyncStats());
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('.hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+
+// 视频点击播放后自动全屏 + 循环播放（孩子看得更清楚，也能反复看）；已在全屏中不重复请求，失败静默忽略
+document.addEventListener('play', e => {
+  const v = e.target;
+  if (!v || v.tagName !== 'VIDEO') return;
+  v.loop = true;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const req = v.requestFullscreen || v.webkitRequestFullscreen || v.msRequestFullscreen;
+  if (req) {
+    try { const p = req.call(v); if (p && p.catch) p.catch(() => {}); } catch (err) {}
+  } else if (typeof v.webkitEnterFullscreen === 'function') {
+    try { v.webkitEnterFullscreen(); } catch (err) {}
+  }
+}, true);
+</script>
+</body>
+</html>

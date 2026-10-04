@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语辅导班</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<script src="/vendor/voice.js"></script>
+<script src="/components/homework-section.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 50px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+  .hero {
+    margin: 16px 0 18px;
+    background: var(--c, #F76707);
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff;
+    text-align: center;
+    padding: 22px 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 24px; opacity: 0.55; }
+  .hero-emoji { font-size: 54px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 32px; font-weight: 900; margin-top: 4px; line-height: 1.7; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .goal { font-size: 16px; margin-top: 4px; font-weight: 700; opacity: 0.95; line-height: 1.8; }
+  .hero .target { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 800; background: rgba(255,255,255,0.2); border-radius: 999px; padding: 3px 14px; }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 16px; margin-bottom: 16px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+
+  .streak-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .streak { font-size: 20px; font-weight: 900; color: var(--acc-deep, #E8590C); }
+  .dots { display: flex; gap: 8px; }
+  .dot { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--soft, #8D7357); }
+  .dot i { width: 20px; height: 20px; border-radius: 50%; display: block; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); }
+  .dot.ok i { background: #51CF66; }
+  .dot.today { font-weight: 900; color: var(--ink, #4A3B2A); }
+
+  .unit-head { display: flex; align-items: center; gap: 14px; }
+  .unit-badge {
+    flex: none; width: 64px; height: 64px; border-radius: 18px;
+    background: var(--c, #F76707); border: 4px solid var(--edge, #4A3B2A);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;
+    box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+  }
+  .unit-badge .u-en { font-size: 20px; font-weight: 900; line-height: 1.05; }
+  .unit-badge .u-sub { font-size: 12px; font-weight: 700; opacity: 0.9; }
+  .unit-info .u-title { font-size: 24px; font-weight: 900; line-height: 1.8; }
+  .unit-info .u-date { font-size: 14px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  .sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sec-head .s-emoji { font-size: 30px; }
+  .sec-head .s-title { font-size: 22px; font-weight: 900; line-height: 1.8; }
+  .sec-desc { font-size: 14px; color: var(--soft, #8D7357); font-weight: 700; margin-bottom: 10px; line-height: 1.7; }
+  .letters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .letters .lchip {
+    font-size: 17px; font-weight: 900; padding: 4px 12px; border-radius: 999px;
+    background: var(--line, #FFF1DB); border: 2.5px solid var(--edge, #4A3B2A); color: var(--ink, #4A3B2A);
+  }
+
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    padding: 11px 13px; margin-bottom: 10px;
+    background: var(--card, #FFFDF7);
+  }
+  .item .i-txt { flex: 1; min-width: 0; }
+  .item .i-en { font-size: 24px; font-weight: 900; letter-spacing: 0.3px; word-break: break-word; }
+  .item .i-zh { font-size: 15px; color: var(--soft, #8D7357); margin-top: 2px; }
+  /* 词汇配图：本地 SVG 插画优先，emoji 兜底 */
+  .i-vimg {
+    flex: none; width: 56px; height: 56px; border-radius: 14px;
+    border: 3px solid var(--edge, #4A3B2A); background: #fff;
+    object-fit: contain; padding: 2px; box-sizing: content-box;
+  }
+  .i-vemoji {
+    flex: none; width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 32px;
+    background: var(--line, #FFF1DB); border: 3px solid var(--edge, #4A3B2A);
+    box-sizing: content-box;
+  }
+  .ab {
+    width: 48px; height: 48px; border-radius: 14px; border: 3.5px solid var(--edge, #4A3B2A);
+    background: var(--line, #FFF1DB); font-size: 21px; cursor: pointer; color: var(--ink, #4A3B2A);
+    box-shadow: 0 3px 0 var(--edge, #4A3B2A); display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .ab:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .ab.play.on { background: #B2F2BB; }
+
+  /* 重点句型 / 语法知识：实线描边 + 左侧主题色条（替代原来的虚线框） */
+  .sen {
+    position: relative; display: flex; align-items: center; gap: 11px;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 20px;
+    padding: 12px 13px 12px 19px; margin-bottom: 11px;
+    background: linear-gradient(135deg, #FFF9F0 0%, #FFFDF9 100%);
+    box-shadow: inset 6px 0 0 var(--sen-acc, #F76707), 0 4px 0 rgba(74, 59, 42, 0.12);
+  }
+  .sen .i-txt { flex: 1; min-width: 0; }
+  .sen .i-en { font-size: 22px; font-weight: 900; letter-spacing: 0.2px; word-break: break-word; line-height: 1.45; }
+  .sen .i-zh { font-size: 14px; color: var(--soft, #8D7357); margin-top: 4px; line-height: 1.5; }
+  /* 语法小知识用紫色条区分，句型保持橙色 */
+  .card[data-sec="grammar"] .sen { --sen-acc: #845EF7; }
+  .card[data-sec="grammar"] .sen { background: linear-gradient(135deg, #FAF8FF 0%, #FFFDF9 100%); }
+
+  .sub-title { font-size: 17px; font-weight: 900; margin: 2px 0 8px; line-height: 1.8; display: flex; align-items: center; gap: 8px; }
+  .dl-line { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+  .dl-line .spk {
+    flex: none; min-width: 74px; text-align: center; font-size: 13px; font-weight: 900; color: #fff;
+    background: var(--c, #F76707); border-radius: 999px; padding: 4px 6px; margin-top: 2px;
+    border: 2.5px solid var(--edge, #4A3B2A);
+  }
+  .dl-line .txt { flex: 1; font-size: 19px; font-weight: 800; line-height: 1.5; word-break: break-word; }
+  .song-lines { font-size: 19px; font-weight: 800; line-height: 2; color: var(--acc-deep, #E8590C); }
+
+  /* 打卡标志：每个知识点板块末尾一个（不再用笼统的听/说/读/写四个大按钮） */
+  .sec-check { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .sec-btn {
+    font-family: inherit; font-size: 17px; font-weight: 900; color: #fff; line-height: 1.4;
+    background: #F76707; border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 10px 16px; cursor: pointer; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .sec-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .sec-btn.done { background: #51CF66; }
+  .card.sec-done { background: #F4FCF6; }
+
+  /* 「这次的要求」：只写老师的要求，打卡在知识点卡上做 */
+  .hw-req {
+    display: flex; gap: 10px; align-items: flex-start;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 9px 12px; margin-bottom: 9px; background: var(--card, #FFFDF7);
+  }
+  .hw-req .hr-emoji { flex: none; font-size: 22px; line-height: 1.5; }
+  .hw-req .hr-body { flex: 1; min-width: 0; }
+  .hw-req .hr-name { display: block; font-size: 16px; font-weight: 900; line-height: 1.6; }
+  .hw-req .hr-desc { display: block; font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.7; }
+  .all-done { text-align: center; font-size: 15px; color: #2B8A3E; font-weight: 800; margin-top: 10px; }
+
+  .med-item { display: flex; align-items: center; gap: 12px; border: 3px solid var(--edge, #4A3B2A); border-radius: 18px; padding: 10px 12px; margin-bottom: 10px; background: var(--card, #FFFDF7); }
+  .med-item .m-ico { flex: none; font-size: 24px; }
+  .med-item .m-label { flex: 1; font-size: 16px; font-weight: 800; line-height: 1.4; word-break: break-word; }
+  .med-item .m-act { flex: none; }
+  .med-item video { width: 100%; border-radius: 12px; border: 2.5px solid var(--edge, #4A3B2A); background: #000; }
+  .med-wrap { flex-direction: column; align-items: stretch; }
+  .med-wrap .med-top { display: flex; align-items: center; gap: 12px; }
+
+  .chip { display: inline-block; font-size: 15px; font-weight: 800; color: #fff; background: var(--c, #F76707); border-radius: 999px; padding: 3px 12px; border: 2.5px solid var(--edge, #4A3B2A); }
+
+  .roadmap { display: flex; flex-wrap: wrap; gap: 7px; }
+  .roadmap .r-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 800; padding: 5px 10px; border-radius: 999px;
+    background: var(--line, #FFF1DB); border: 2.5px solid var(--edge, #4A3B2A); color: var(--ink, #4A3B2A);
+  }
+  .roadmap .r-chip .r-n { display: inline-block; min-width: 18px; height: 18px; padding: 0 2px; border-radius: 999px; background: var(--soft, #B08968); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+  .roadmap .r-chip.current { background: #F76707; color: #fff; }
+  .roadmap .r-chip.current .r-n { background: #fff; color: #F76707; }
+
+  /* 日期条：标明当前在看哪一天 */
+  .date-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border: 2.5px solid var(--acc, #F76707); border-radius: 18px; padding: 10px 12px;
+    background: #FFF8F0; margin-bottom: 12px; font-size: 15px; font-weight: 800; line-height: 1.5;
+    color: var(--ink, #4A3B2A);
+  }
+  .date-banner .db-back {
+    flex: none; font-family: inherit; font-size: 13px; font-weight: 900; color: #fff;
+    background: #F76707; border: 2.5px solid var(--edge, #4A3B2A); border-radius: 999px;
+    padding: 5px 11px; cursor: pointer; box-shadow: 0 2px 0 var(--edge, #4A3B2A);
+  }
+  .date-banner .db-back:active { transform: translateY(2px); box-shadow: none; }
+
+  /* 日历 */
+  .cal-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cal-head .cal-title { flex: 1; text-align: center; font-size: 18px; font-weight: 900; }
+  .cal-nav {
+    flex: none; width: 40px; height: 40px; border-radius: 13px;
+    border: 3px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB);
+    font-size: 16px; cursor: pointer; color: var(--ink, #4A3B2A);
+    box-shadow: 0 3px 0 var(--edge, #4A3B2A); font-family: inherit;
+  }
+  .cal-nav:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .cal-today-btn {
+    flex: none; font-family: inherit; font-size: 13px; font-weight: 900; color: var(--ink, #4A3B2A);
+    background: var(--line, #FFF1DB); border: 3px solid var(--edge, #4A3B2A); border-radius: 13px;
+    padding: 8px 10px; cursor: pointer; box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+  }
+  .cal-today-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .cal-wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 5px; }
+  .cal-wk span { text-align: center; font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-cell {
+    position: relative; height: 46px; border-radius: 12px;
+    border: 2.5px solid var(--edge, #4A3B2A); background: var(--card, #FFFDF7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800; color: var(--ink, #4A3B2A); cursor: pointer;
+    font-family: inherit; padding: 0; -webkit-appearance: none;
+  }
+  .cal-cell.has-content { background: #FFE0B8; }
+  .cal-cell.is-today { box-shadow: inset 0 0 0 3px #12B886; }
+  .cal-cell.sel { background: #F76707; color: #fff; }
+  .cal-cell .c-dot { position: absolute; top: 2px; right: 5px; font-size: 11px; color: #2B8A3E; }
+  .cal-cell.sel .c-dot { color: #fff; }
+  .cal-legend { margin-top: 11px; font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; line-height: 1.8; }
+  .cal-legend b { color: #E8590C; }
+
+  #celebrate {
+    position: fixed; inset: 0; z-index: 99;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    background: color-mix(in srgb, var(--paper, #FFF6E9) 92%, transparent);
+  }
+  #celebrate.hidden { display: none; }
+  .cel-emoji { font-size: 92px; animation: bounce 0.65s infinite alternate; }
+  .cel-msg { font-size: 30px; font-weight: 900; color: var(--acc-deep, #E8590C); text-align: center; line-height: 1.8; padding: 0 20px; }
+  @keyframes bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-22px) scale(1.1); } }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero" id="hero">
+      <span class="deco" style="left:12px;top:12px">✨</span>
+      <span class="deco" style="right:14px;bottom:12px">🌟</span>
+      <div class="hero-emoji">🏫</div>
+      <h1>英语辅导班</h1>
+      <div class="goal" id="heroGoal"></div>
+      <span class="target" id="heroTarget"></span>
+    </header>
+
+    <div class="card">
+      <div class="streak-row">
+        <span class="streak" id="streak"></span>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+
+    <div class="card" id="calendarCard"></div>
+
+    <div class="card" id="dayCard"></div>
+
+    <div class="card" id="unitCard"></div>
+
+    <div class="card" id="roadmapCard"></div>
+
+    <div id="sectionCards"></div>
+
+    <div class="card" id="homeworkCard"></div>
+
+    <div class="card" id="hwCard"></div>
+
+    <div class="card" id="dictationCard"></div>
+
+    <div class="card" id="materialsCard"></div>
+  </div>
+</div>
+
+<div id="celebrate" class="hidden">
+  <div class="cel-emoji" id="celEmoji">🎉</div>
+  <div class="cel-msg" id="celMsg"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let CHILD_NAME = '';
+let GOAL = '跟着辅导班，听说读写，每天进步一点点';
+let WEEKLY_TARGET = '';
+let ROADMAP = [];
+let UNITS = [];
+let RECORDS = {};
+let unitIdx = 0;
+let SEL_DATE = '';            // 当前查看哪一天的作业（默认今天）
+let CAL_Y = 0, CAL_M = 0;     // 日历当前显示的月份
+let UNIT = null;
+const DIMS = ['listen', 'speak', 'read', 'write'];   // 只用来列「老师要求」；改造前的老记录里这四维作兼容读，打卡已改成按知识点
+const audioEl = new Audio();
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+function fillName(s) {
+  const name = CHILD_NAME || '小朋友';
+  return String(s || '').replace(/\{name\}/g, name);
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStr(new Date()); }
+function getDay(date) { if (!RECORDS[date]) RECORDS[date] = {}; return RECORDS[date]; }
+function todayRec() { return getDay(todayStr()); }
+function selDay() { return SEL_DATE || todayStr(); }
+
+// ===== 打卡点＝每个知识点板块（key = "<单元id>:<板块id>"，如 l2-u2:items 物品词汇）=====
+// 每个板块末尾有一个打卡标志，勾的就是那一块；不再用笼统的听/说/读/写四个按钮。
+// 老的 listen/speak/read/write 四维记录只作兼容读（日历圆点、连续天数照旧认它们），新打卡一律记在板块上。
+function unitSections(u) { return (u && u.sections) || []; }
+function secKey(unitId, secId) { return (unitId || '') + ':' + (secId || ''); }
+function secDone(u, sec, ds) {
+  const rec = RECORDS[ds || selDay()] || {};
+  return !!rec[secKey(u && u.id, sec && sec.id)];
+}
+function dayAnyOn(ds) {
+  const u = unitForDate(ds);
+  if (unitSections(u).some(s => secDone(u, s, ds))) return true;
+  const rec = RECORDS[ds] || {};
+  return DIMS.some(d => !!rec[d]);          // 兼容改造前那几天
+}
+function dayDoneOn(ds) {
+  const u = unitForDate(ds);
+  const secs = unitSections(u);
+  if (secs.length) return secs.every(s => secDone(u, s, ds));
+  const rec = RECORDS[ds] || {};
+  return DIMS.every(d => !!rec[d]);
+}
+
+// 朗读：优先播放电脑端预生成的音频（data/tts/），没有对应音频时自动降级到浏览器朗读。
+function speak(text, langPrefix) {
+  const lang = langPrefix === 'zh' ? 'zh' : 'en';
+  if (window.TTS) { TTS.speak(text, lang); return; }
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'zh-CN';
+    u.rate = lang === 'en' ? 0.72 : 0.9;
+    speechSynthesis.speak(u);
+  }, 50);
+}
+
+// 课文/歌曲音频是老师给的 mp3，播放失败时也给出提示，避免"点了没反应"
+audioEl.addEventListener('error', () => {
+  if (window.TTS) TTS.toast('这段音频没加载出来，检查一下手机和电脑是否在同一个 WiFi');
+});
+function showCelebration(emoji, msg) {
+  $('celEmoji').textContent = emoji;
+  $('celMsg').innerHTML = rubyHtml(msg);
+  $('celebrate').classList.remove('hidden');
+  speak(msg, 'zh');
+  setTimeout(() => $('celebrate').classList.add('hidden'), 2600);
+}
+
+function calcStreak() {
+  let streak = 0;
+  const d = new Date();
+  if (!dayDoneOn(dateStr(d))) d.setDate(d.getDate() - 1);
+  while (dayDoneOn(dateStr(d))) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+function renderStreak() {
+  const streak = calcStreak();
+  const ds = selDay();
+  const isToday = ds === todayStr();
+  const u = unitForDate(ds);
+  const secs = unitSections(u);
+  const doneCount = secs.filter(s => secDone(u, s, ds)).length;
+  $('streak').textContent = streak >= 2
+    ? '🔥 连续 ' + streak + ' 天'
+    : (doneCount
+      ? '🌱 ' + (isToday ? '今日' : '这天') + ' ' + doneCount + '/' + secs.length + ' 个知识点完成'
+      : (isToday ? '🌱 今天先学一个知识点吧' : '🌱 这天没有打卡记录'));
+  const box = $('dots');
+  const names = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = dateStr(d);
+    const ok = dayDoneOn(key);
+    html += '<span class="dot' + (ok ? ' ok' : '') + (i === 0 ? ' today' : '') + '">' +
+      '<i></i>' + (i === 0 ? '今' : names[d.getDay()]) + '</span>';
+  }
+  box.innerHTML = html;
+}
+
+// ---------- 日期工具 ----------
+function parseD(s) {
+  const p = String(s || '').split('-');
+  const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  return isNaN(d.getTime()) ? null : d;
+}
+function cnDate(s) {
+  const d = parseD(s);
+  if (!d) return String(s || '');
+  const wk = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + wk;
+}
+function rangeLabel(u) {
+  if (u.start && u.end) {
+    return u.start === u.end ? cnDate(u.start) : (cnDate(u.start) + ' ~ ' + cnDate(u.end));
+  }
+  return u.dateLabel || '';
+}
+function recOf(ds) { if (!RECORDS[ds]) RECORDS[ds] = {}; return RECORDS[ds]; }
+function datedUnits() { return UNITS.filter(u => u.start && u.end); }
+
+// 某一天该看哪一课：优先取覆盖该天的单元；那天没有内容时，退回此前最近的一次更新
+function unitForDate(ds) {
+  const dated = datedUnits();
+  if (!dated.length) return UNITS[UNITS.length - 1] || null;
+  const hit = dated.find(u => u.start <= ds && ds <= u.end);
+  if (hit) return hit;
+  const past = dated.filter(u => u.end < ds).sort((a, b) => (a.end < b.end ? -1 : 1));
+  if (past.length) return past[past.length - 1];
+  return dated.slice().sort((a, b) => (a.start < b.start ? -1 : 1))[0];
+}
+
+function gotoDate(ds) {
+  if (!ds) return;
+  SEL_DATE = ds;
+  const d = parseD(ds);
+  if (d) { CAL_Y = d.getFullYear(); CAL_M = d.getMonth(); }
+  UNIT = unitForDate(ds);
+  renderAll();
+  // 作业区块跟着选中的那天走（可以给历史日期补打卡）
+  if (window.HwSection) HwSection.refresh();
+  const uc = $('unitCard');
+  if (uc && uc.scrollIntoView) {
+    try { uc.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+  }
+}
+
+function shiftMonth(n) {
+  let y = CAL_Y, m = CAL_M + n;
+  if (m < 0) { m = 11; y -= 1; }
+  else if (m > 11) { m = 0; y += 1; }
+  CAL_Y = y; CAL_M = m;
+  renderCalendar();
+}
+
+// ---------- 日历：今天在前，历史内容折叠进来 ----------
+function renderCalendar() {
+  const box = $('calendarCard');
+  const dated = datedUnits();
+  const todayS = todayStr();
+  const wk = ['日', '一', '二', '三', '四', '五', '六'];
+  const lead = new Date(CAL_Y, CAL_M, 1).getDay();
+  const days = new Date(CAL_Y, CAL_M + 1, 0).getDate();
+  const blank = '<span class="cal-cell" style="border:none;background:transparent"></span>';
+  let cells = '', count = 0;
+  for (let i = 0; i < lead; i++) { cells += blank; count++; }
+  for (let d = 1; d <= days; d++) {
+    const ds = CAL_Y + '-' + String(CAL_M + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const hasC = dated.some(u => u.start <= ds && ds <= u.end);
+    const checked = dayAnyOn(ds);
+    cells += '<button class="cal-cell' + (hasC ? ' has-content' : '') +
+      (ds === todayS ? ' is-today' : '') + (ds === SEL_DATE ? ' sel' : '') +
+      '" data-d="' + ds + '" type="button">' + d +
+      (checked ? '<span class="c-dot">✓</span>' : '') + '</button>';
+    count++;
+  }
+  while (count % 7 !== 0) { cells += blank; count++; }
+
+  box.innerHTML =
+    '<div class="sub-title">📅 看哪一天的作业</div>' +
+    '<div class="cal-head">' +
+      '<button class="cal-nav" id="calPrev" type="button">◀</button>' +
+      '<span class="cal-title">' + CAL_Y + ' 年 ' + (CAL_M + 1) + ' 月</span>' +
+      '<button class="cal-nav" id="calNext" type="button">▶</button>' +
+      '<button class="cal-today-btn" id="calToday" type="button">今天</button>' +
+    '</div>' +
+    '<div class="cal-wk">' + wk.map(w => '<span>' + w + '</span>').join('') + '</div>' +
+    '<div class="cal-grid">' + cells + '</div>' +
+    '<div class="cal-legend"><b>🟧 有辅导班内容的日期</b>　✓ 那天已打卡<br>点一天，就能回看那一次更新的作业</div>';
+
+  box.querySelectorAll('.cal-cell[data-d]').forEach(el => {
+    el.addEventListener('click', () => gotoDate(el.getAttribute('data-d')));
+  });
+  $('calPrev').addEventListener('click', () => shiftMonth(-1));
+  $('calNext').addEventListener('click', () => shiftMonth(1));
+  $('calToday').addEventListener('click', () => gotoDate(todayStr()));
+}
+
+function renderUnit() {
+  const u = UNIT;
+  const todayS = todayStr();
+  const isToday = SEL_DATE === todayS;
+  const inRange = !!(u.start && u.end && u.start <= SEL_DATE && SEL_DATE <= u.end);
+  let label = isToday ? '📌 今天的作业' : ('🕘 ' + cnDate(SEL_DATE) + ' 的作业');
+  if (!inRange) label += ' · 最近一次更新';
+  $('unitCard').innerHTML =
+    '<div class="date-banner">' +
+    '<span>' + label + '</span>' +
+    (isToday ? '' : '<button class="db-back" id="dbBack" type="button">回到今天</button>') +
+    '</div>' +
+    '<div class="unit-head">' +
+    '<div class="unit-badge"><span class="u-en">' + escapeHtml(u.title || '') + '</span><span class="u-sub">' + escapeHtml(u.subtitle || '') + '</span></div>' +
+    '<div class="unit-info"><div class="u-title">' + rubyHtml((u.title || '') + ' · ' + (u.subtitle || '')) + '</div>' +
+    '<div class="u-date">' + escapeHtml(rangeLabel(u)) + '</div></div>' +
+    '</div>' +
+    '<div class="sec-desc">📌 这一课有 ' + unitSections(u).length + ' 个知识点，每个学完就在那张卡的最后点一下「学完了，打卡」。</div>';
+  const back = $('dbBack');
+  if (back) back.addEventListener('click', () => gotoDate(todayS));
+}
+
+function renderRoadmap() {
+  const rm = ROADMAP || [];
+  if (!rm.length) { $('roadmapCard').style.display = 'none'; return; }
+  $('roadmapCard').style.display = 'block';
+  const cur = UNIT ? UNIT.id : '';
+  $('roadmapCard').innerHTML =
+    '<div class="sub-title">🗺️ 本学期路线图 <span style="font-size:13px;font-weight:700;color:var(--soft,#8D7357)">共 ' + rm.length + ' 单元</span></div>' +
+    '<div class="roadmap">' + rm.map(r =>
+      '<span class="r-chip' + (r.id === cur ? ' current' : '') + '">' +
+      '<span class="r-n">' + escapeHtml(r.n) + '</span>' + escapeHtml(r.zh) +
+      '<span style="opacity:0.65">' + escapeHtml(r.en) + '</span></span>'
+    ).join('') + '</div>';
+}
+
+// 词汇的视觉辅助：本地配图（data/vocab_images/）优先，没有图则用 emoji 兜底
+function itemVisual(it) {
+  if (it.img) {
+    return '<img class="i-vimg" src="' + escapeHtml(it.img) + '" alt="' + escapeHtml(it.en || '') + '" loading="lazy">';
+  }
+  if (it.emoji) {
+    return '<span class="i-vemoji">' + escapeHtml(it.emoji) + '</span>';
+  }
+  return '';
+}
+
+function renderSections() {
+  const box = $('sectionCards');
+  const secs = UNIT.sections || [];
+  const ds = selDay();
+  box.innerHTML = secs.map(sec => {
+    const done = secDone(UNIT, sec, ds);
+    let html = '<div class="card' + (done ? ' sec-done' : '') + '" data-sec="' + escapeHtml(sec.id) + '"><div class="sec-head"><span class="s-emoji">' + (sec.emoji || '📌') + '</span>' +
+      '<span class="s-title">' + rubyHtml(sec.title || '') + '</span></div>' +
+      (sec.desc ? '<div class="sec-desc">' + escapeHtml(sec.desc) + '</div>' : '');
+    if (sec.letters && sec.letters.length) {
+      html += '<div class="letters">' + sec.letters.map(l => '<span class="lchip">' + escapeHtml(l) + '</span>').join('') + '</div>';
+    }
+    (sec.items || []).forEach((it, i) => {
+      html += '<div class="item" data-a="' + sec.id + '-i' + i + '">' +
+        itemVisual(it) +
+        '<div class="i-txt"><div class="i-en">' + escapeHtml(fillName(it.en)) + '</div>' +
+        '<div class="i-zh">' + escapeHtml(fillName(it.zh)) + '</div></div>' +
+        '<button class="ab" type="button">🔊</button></div>';
+    });
+    (sec.sentences || []).forEach((s, i) => {
+      html += '<div class="sen" data-a="' + sec.id + '-s' + i + '">' +
+        '<div class="i-txt"><div class="i-en">' + escapeHtml(fillName(s.en)) + '</div>' +
+        '<div class="i-zh">' + escapeHtml(fillName(s.zh)) + '</div></div>' +
+        '<button class="ab" type="button">🔊</button></div>';
+    });
+    // 这个知识点学完了就在这里打卡（打卡标志跟在每一块知识点后面）
+    html += '<div class="sec-check"><button class="sec-btn' + (done ? ' done' : '') +
+      '" data-sec-check="' + escapeHtml(sec.id) + '" type="button">' +
+      (done ? '✅ 已打卡' : '✋ 学完了，打卡') + '</button></div>';
+    html += '</div>';
+    return html;
+  }).join('');
+
+  if (secs.length && secs.every(s => secDone(UNIT, s, ds))) {
+    box.innerHTML += '<div class="all-done">🎉 这个单元的知识点都打卡啦，太棒了！</div>';
+  }
+
+  box.querySelectorAll('[data-a]').forEach(el => {
+    const btn = el.querySelector('.ab');
+    btn.addEventListener('click', () => {
+      const enEl = el.querySelector('.i-en');
+      if (enEl) speak(fillName(enEl.textContent), 'en');
+    });
+  });
+  box.querySelectorAll('[data-sec-check]').forEach(btn => {
+    btn.addEventListener('click', () => toggleSection(btn, btn.getAttribute('data-sec-check')));
+  });
+}
+
+function renderDialogue() {
+  const d = UNIT.dialogue;
+  if (!d) return;
+  const card = document.createElement('div');
+  card.className = 'card';
+  let html = '<div class="sub-title">💬 ' + rubyHtml(d.title) +
+    (d.audio ? '<button class="chip" id="ch_dialog" type="button" style="background:#F76707;border:none;cursor:pointer">▶️ 听音频</button>' : '') + '</div>' +
+    (d.note ? '<div class="sec-desc">' + escapeHtml(d.note) + '</div>' : '');
+  (d.lines || []).forEach((ln, i) => {
+    html += '<div class="dl-line" data-dl="' + i + '">' +
+      '<span class="spk">' + escapeHtml(ln.speaker) + '</span>' +
+      '<span class="txt">' + escapeHtml(ln.text) + '</span></div>';
+  });
+  html += '</div>';
+  card.innerHTML = html;
+  const sc = $('sectionCards');
+  sc.appendChild(card);
+  const ch = $('ch_dialog');
+  if (ch) ch.addEventListener('click', () => { audioEl.src = d.audio; audioEl.play().catch(() => {}); });
+  card.querySelectorAll('[data-dl]').forEach(el => {
+    el.addEventListener('click', () => {
+      const txt = el.querySelector('.txt');
+      if (txt) speak(txt.textContent, 'en');
+    });
+  });
+}
+
+function renderSong() {
+  const s = UNIT.song;
+  if (!s) return;
+  const card = document.createElement('div');
+  card.className = 'card';
+  let html = '<div class="sub-title">🎵 ' + rubyHtml(s.name || '儿歌') +
+    '<button class="chip" id="ch_song" type="button" style="background:#E64980;border:none;cursor:pointer">▶️ 听歌曲</button></div>' +
+    '<div class="song-lines">';
+  (s.lines || []).forEach((ln, i) => {
+    html += '<div data-sg="' + i + '" style="cursor:pointer">' + escapeHtml(ln) + '</div>';
+  });
+  html += '</div>';
+  card.innerHTML = html;
+  const sc = $('sectionCards');
+  sc.appendChild(card);
+  const ch = $('ch_song');
+  if (ch) ch.addEventListener('click', () => { audioEl.src = s.audio; audioEl.play().catch(() => {}); });
+  card.querySelectorAll('[data-sg]').forEach(el => {
+    el.addEventListener('click', () => speak(el.textContent, 'en'));
+  });
+}
+
+// 「这次的要求」：只列老师给的听/说/读/写要求，**不用它打卡**（原来那四个大按钮已按用户要求去掉）；
+// 打卡改成每个知识点板块末尾那一个标志（见 renderSections / toggleSection）。
+function renderHomework() {
+  const hw = UNIT.homework || {};
+  let html = '<div class="sub-title">📋 这次的要求（听 / 说 / 读 / 写）</div>';
+  DIMS.forEach(dim => {
+    const cfg = hw[dim] || {};
+    html += '<div class="hw-req"><span class="hr-emoji">' + (cfg.emoji || '•') + '</span>' +
+      '<span class="hr-body"><span class="hr-name">' + escapeHtml(cfg.name || dim) + '</span>' +
+      '<span class="hr-desc">' + escapeHtml(cfg.desc || '') + '</span></span></div>';
+  });
+  html += '<div class="sec-desc">👆 上面每个知识点学完，就在那张卡的最后点一下「学完了，打卡」。</div>';
+  $('homeworkCard').innerHTML = html;
+}
+
+// 知识点打卡：点一下 = 这一块今天学完了。写服务器（跨设备同步），
+// 按钮就地更新、不整块重画（页面长，重画会打断孩子），失败再画回原样。
+async function toggleSection(btn, secId) {
+  const ds = selDay();
+  const u = UNIT;
+  const rec = recOf(ds);
+  const k = secKey(u && u.id, secId);
+  const sec = unitSections(u).find(s => s.id === secId) || {};
+  const next = !rec[k];
+  const wasDone = dayDoneOn(ds);
+  rec[k] = next;
+  btn.classList.toggle('done', next);
+  btn.textContent = next ? '✅ 已打卡' : '✋ 学完了，打卡';
+  const card = btn.closest ? btn.closest('.card') : null;
+  if (card) card.classList.toggle('sec-done', next);
+  renderStreak();
+  renderCalendar();
+  if (window.HwSection) HwSection.refreshDay();
+  try {
+    const r = await fetch('/api/class/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: ds, key: k, done: next })
+    });
+    const j = await r.json();
+    if (!(j && j.ok)) throw new Error((j && j.error) || '保存失败');
+  } catch (e) {
+    rec[k] = !next;
+    renderStreak();
+    renderCalendar();
+    renderSections();
+    if (window.HwSection) HwSection.refreshDay();
+    speak('没保存上，再试一次', 'zh');
+    return;
+  }
+  const secs = unitSections(u);
+  const allDone = !!secs.length && secs.every(s => secDone(u, s, ds));
+  const box = $('sectionCards');
+  const tip = box.querySelector('.all-done');
+  if (allDone && !tip) box.insertAdjacentHTML('beforeend', '<div class="all-done">🎉 这个单元的知识点都打卡啦，太棒了！</div>');
+  if (!allDone && tip) tip.remove();
+  if (next) {
+    if (!wasDone && allDone) {
+      showCelebration('🎉', (ds === todayStr() ? '今天' : cnDate(ds)) + '的 ' + secs.length + ' 个知识点全打卡，你真棒！');
+    } else {
+      speak((sec.title || '这个知识点') + '，打卡成功', 'zh');
+    }
+  } else {
+    speak('已取消，没关系', 'zh');
+  }
+}
+
+function renderDictation() {
+  const d = UNIT.dictation;
+  if (!d) { $('dictationCard').style.display = 'none'; return; }
+  const words = (d.words || []).map(w => w.en + ' <span style="opacity:0.55">' + escapeHtml(w.zh) + '</span>').join(' · ');
+  $('dictationCard').innerHTML =
+    '<div class="sub-title">📝 ' + rubyHtml(d.title || '词汇默写表') + '</div>' +
+    (d.note ? '<div class="sec-desc">' + escapeHtml(d.note) + '</div>' : '') +
+    '<div class="item"><div class="i-txt"><div class="i-en" style="font-size:20px">' + words + '</div></div>' +
+    '<button class="ab" id="dictPlay" type="button">🔊</button></div>';
+  $('dictPlay').addEventListener('click', () => {
+    const list = (d.words || []).map(w => w.en);
+    // 逐个朗读，中间留停顿，方便一边听一边默写
+    if (window.TTS) TTS.speakSeq(list, 'en');
+    else speak(list.join(', '), 'en');
+  });
+}
+
+// 判断资料类型：按 type 字段，其次看扩展名（pdf/docx 等一律走链接）
+function materialKind(m) {
+  const url = String(m.url || '');
+  const t = String(m.type || '');
+  if (!url) return 'none';
+  if (t === 'video' || /\.(mp4|webm|mov|m4v|mkv)$/i.test(url)) return 'video';
+  if (t === 'audio' || /\.(mp3|m4a|wav|ogg|aac)$/i.test(url)) return 'audio';
+  if (t === 'image' || /\.(jpe?g|png|gif|webp|bmp)$/i.test(url)) return 'image';
+  return 'doc';
+}
+
+function renderMaterials() {
+  const mats = UNIT.materials || [];
+  if (!mats.length) { $('materialsCard').style.display = 'none'; return; }
+  let html = '<div class="sub-title">📁 这次更新的资料</div>';
+  mats.forEach(m => {
+    const kind = materialKind(m);
+    const label = escapeHtml(m.label || '资料');
+    if (kind === 'video') {
+      html += '<div class="med-item med-wrap"><div class="med-top"><span class="m-ico">🎬</span>' +
+        '<span class="m-label">' + label + '</span></div>' +
+        '<video controls loop preload="none" src="' + escapeHtml(m.url) + '"></video></div>';
+    } else if (kind === 'image') {
+      html += '<div class="med-item med-wrap"><div class="med-top"><span class="m-ico">🖼️</span>' +
+        '<span class="m-label">' + label + '</span></div>' +
+        '<img src="' + escapeHtml(m.url) + '" alt="' + label + '" style="width:100%;border-radius:12px;border:3px solid var(--edge,#4A3B2A);display:block;margin-top:8px"></div>';
+    } else if (kind === 'audio') {
+      html += '<div class="med-item"><span class="m-ico">🎧</span>' +
+        '<span class="m-label">' + label + '</span>' +
+        '<button class="ab play" id="mat_' + escapeHtml(m.id) + '" type="button">▶️</button></div>';
+    } else if (kind === 'doc') {
+      html += '<div class="med-item"><span class="m-ico">📄</span>' +
+        '<span class="m-label">' + label + '</span>' +
+        '<a class="ab" href="' + escapeHtml(m.url) + '" target="_blank" rel="noopener" style="text-decoration:none;font-size:20px">↗</a></div>';
+    } else {
+      html += '<div class="med-item" style="opacity:0.6"><span class="m-ico">➕</span>' +
+        '<span class="m-label">' + label + '（待添加）</span></div>';
+    }
+  });
+  $('materialsCard').innerHTML = html;
+  mats.forEach(m => {
+    if (materialKind(m) !== 'audio') return;
+    const el = $('mat_' + m.id);
+    if (!el) return;
+    el.addEventListener('click', () => {
+      if (audioEl.src === m.url && !audioEl.paused) { audioEl.pause(); el.textContent = '▶️'; el.classList.remove('on'); }
+      else { audioEl.src = m.url; audioEl.play().catch(() => {}); el.textContent = '⏸'; el.classList.add('on'); }
+    });
+  });
+}
+
+// 音频播完复位按钮（只绑一次，避免重复渲染时监听器堆积）
+audioEl.addEventListener('ended', () => {
+  document.querySelectorAll('.ab.play').forEach(b => { b.textContent = '▶️'; b.classList.remove('on'); });
+});
+
+function renderAll() {
+  renderStreak();
+  renderCalendar();
+  renderUnit();
+  renderRoadmap();
+  renderSections();
+  renderDialogue();
+  renderSong();
+  renderHomework();
+  renderDictation();
+  renderMaterials();
+}
+
+// 「作业」区块：把作业打卡 + 添加作业挂到本页，只显示归属「辅导班英语」的作业卡；
+// 打卡日期跟着日历里选中的那天走，所以历史日期也能补打卡。
+// 科目名/图标/配色以 activities.json 的 subjects 为准，取不到时用下面的兜底值。
+const HW_SUBJECT = { id: 'class-english', name: '辅导班英语', emoji: '🏫', color: '#F76707' };
+async function mountHomework() {
+  let meta = HW_SUBJECT;
+  try {
+    const res = await fetch('/api/home', { cache: 'no-store' });
+    const d = await res.json();
+    const hit = (((d.activities || {}).subjects) || []).find(s => s.id === HW_SUBJECT.id);
+    if (hit) meta = hit;
+  } catch (e) { /* 用兜底值 */ }
+  HwSection.mount({
+    mount: '#hwCard',
+    subject: HW_SUBJECT.id,
+    subjectName: meta.name || HW_SUBJECT.name,
+    emoji: meta.emoji || HW_SUBJECT.emoji,
+    color: meta.color || HW_SUBJECT.color,
+    date: function () { return SEL_DATE || todayStr(); },
+    allowAdd: true,
+    importFromBoard: false,
+    showLearned: false,
+    pageCalendar: false,   // 本页顶部已有「哪天看哪一课」的日历，日历整页只留一个
+    dayDetail: true,       // 但「点某天 → 那天打卡的所有内容」要有，放在日历下面那张卡里
+    panelMount: '#dayCard',
+    // 辅导班自己的打卡项＝每个知识点板块（物品词汇、重点句型……）交给模块按同一套样式列出来，
+    // 这样和语文页的「点某天看当天打卡内容」长得一样
+    dayChecks: function (iso) {
+      const u = unitForDate(iso) || {};
+      const rec = RECORDS[iso] || {};
+      const unitLabel = (u.title || '') + (u.subtitle ? ' · ' + u.subtitle : '');
+      return unitSections(u).map(function (s) {
+        return {
+          name: (s.emoji ? s.emoji + ' ' : '') + (s.title || s.id),
+          detail: (s.desc || '') + (unitLabel ? '（' + unitLabel + '）' : ''),
+          done: !!rec[secKey(u.id, s.id)]
+        };
+      });
+    },
+    meta: { page: '英语辅导班', subject: HW_SUBJECT.id }
+  });
+}
+
+async function init() {
+  const err = $('errTip');
+  try {
+    const res = await fetch('/api/class/data', { cache: 'no-store' });
+    const data = await res.json();
+    CHILD_NAME = (data.childName || '').trim();
+    UNITS = (data.units || []).filter(u => u && Array.isArray(u.sections) && u.sections.length);
+    RECORDS = data.records || {};
+    ROADMAP = data.roadmap || [];
+    if (data.goal) GOAL = data.goal;
+    if (data.weeklyTarget) WEEKLY_TARGET = data.weeklyTarget;
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+  if (!UNITS.length) {
+    err.style.display = 'block';
+    err.textContent = '没有找到辅导班内容，请检查 data/english_class.json。';
+    return;
+  }
+  SEL_DATE = todayStr();
+  const td = new Date();
+  CAL_Y = td.getFullYear();
+  CAL_M = td.getMonth();
+  UNIT = unitForDate(SEL_DATE) || UNITS[UNITS.length - 1];
+  $('heroGoal').innerHTML = rubyHtml(GOAL);
+  $('heroTarget').textContent = WEEKLY_TARGET;
+  $('app').style.display = 'block';
+  renderAll();
+  mountHomework();
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('#hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+
+// 视频点击播放后自动全屏 + 循环播放（孩子看得更清楚，也能反复看）；已在全屏中不重复请求，失败静默忽略
+document.addEventListener('play', e => {
+  const v = e.target;
+  if (!v || v.tagName !== 'VIDEO') return;
+  v.loop = true;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const req = v.requestFullscreen || v.webkitRequestFullscreen || v.msRequestFullscreen;
+  if (req) {
+    try { const p = req.call(v); if (p && p.catch) p.catch(() => {}); } catch (err) {}
+  } else if (typeof v.webkitEnterFullscreen === 'function') {
+    try { v.webkitEnterFullscreen(); } catch (err) {}
+  }
+}, true);
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语文作业</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<script src="/vendor/voice.js"></script>
+</head>
+<body>
+<!--
+  语文学科页（架构 v2 第 3 步）：薄配置 + 加载公共组件。
+  页面逻辑全部在 /components/subject-page.js（语文/数学共用一份，不复制两份）；
+  作业打卡区块在 /components/homework-section.js。
+-->
+<script src="/components/homework-section.js"></script>
+<script src="/components/subject-page.js"></script>
+<script>
+  SubjectPage.mount({
+    subject: 'chinese',
+    apiBase: '/api/chinese',
+    checkinSkill: 'chinese',
+    fallback: { id: 'chinese', name: '语文', emoji: '📖', color: '#E8590C' }
+  });
+</script>
+</body>
+</html>

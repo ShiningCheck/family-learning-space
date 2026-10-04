@@ -1,0 +1,9 @@
+{
+  "url": "reading",
+  "code": ["web", "api.py", "SKILL.md", "data-templates"],
+  "data": ["data"],
+  "enabled": true,
+  "origin": "official",
+  "requires": { "core": "2.0.0-dev" },
+  "api": "api.py"
+}

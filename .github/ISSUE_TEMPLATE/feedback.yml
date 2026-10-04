@@ -1,0 +1,116 @@
+# ============================================================
+# 「成长家园」页面改进反馈 —— GitHub Issue Form（手动提反馈用）
+# 字段结构与 Cloudflare Worker 自动创建的 Issue 保持一致，
+# 便于统一分类和处理。
+# ============================================================
+name: 页面改进反馈
+description: 对「成长家园」门户页面提出新功能建议、反馈体验问题或报告程序错误
+title: "[反馈] "
+labels: ["用户反馈"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你使用「成长家园」！请填写下面的表单，帮助作者改进页面。
+
+        说明：
+        - 只有「问题描述」是必填项，其余能填多少填多少。
+        - 如果你是通过门户页面右下角的「反馈」按钮提交的，系统会自动创建 Issue，无需再手动填写本表单。
+        - 截图可以直接拖拽或粘贴到「截图」输入框里，GitHub 会自动上传。
+        - 请不要在反馈中填写真实姓名、学校、住址等个人隐私信息。
+
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: 反馈类型
+      description: 这次反馈属于哪一类？
+      options:
+        - 新功能建议
+        - 体验问题
+        - 程序错误
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: page
+    attributes:
+      label: 发生页面
+      description: 问题出现在哪个页面？
+      options:
+        - 门户首页
+        - 学习看板
+        - 书包清单
+        - 画作画廊
+        - 读书打卡
+        - 家务打卡
+        - 运动打卡
+        - 其它
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: 问题描述
+      description: 请具体描述遇到的问题或想要的功能（必填）
+      placeholder: 例如：学习看板的字太小了，孩子在平板上看不清今天的打卡项……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expect
+    attributes:
+      label: 期望效果
+      description: 你希望改成什么样子？
+      placeholder: 例如：希望看板正文字号能调大一号，或者支持字号设置……
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 如果是程序错误，请写出复现步骤（从哪一步开始、点了什么、看到了什么）
+      placeholder: |
+        1. 打开门户首页
+        2. 点击「书包清单」标签页
+        3. ……
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 严重程度
+      description: 这个问题对你的影响有多大？
+      options:
+        - 低（有点不方便，能凑合用）
+        - 中（明显影响使用）
+        - 高（核心功能不好用/经常出错）
+        - 阻塞（完全没法用了）
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 操作系统 + 浏览器（尽量填写，方便定位兼容性问题）
+      placeholder: 例如：Windows 11 + Edge 130；或 iPad + Safari
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图
+      description: 把截图直接拖拽或粘贴到这里，GitHub 会自动上传并生成链接
+      placeholder: 拖拽图片到此处……
+    validations:
+      required: false
+
+  - type: input
+    id: contact
+    attributes:
+      label: 联系方式
+      description: 可选。留下联系方式方便作者回复处理结果（不填则视为匿名）
+      placeholder: 例如：飞书 / 微信 / 邮箱
+    validations:
+      required: false

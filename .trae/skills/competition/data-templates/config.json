@@ -1,0 +1,6 @@
+{
+  "childName": "小明",
+  "grade": "一年级",
+  "className": "1班",
+  "_说明": "本技能的真实配置请写到 data/config.json（已被 .gitignore 排除）；本文件只放匿名示例。"
+}

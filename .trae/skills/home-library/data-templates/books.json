@@ -1,0 +1,5 @@
+{
+  "updated": "",
+  "note": "location 为 null 表示还没有归架；infoStatus 为「待补充」表示书名已录入但出版社/简介等待补充",
+  "books": []
+}

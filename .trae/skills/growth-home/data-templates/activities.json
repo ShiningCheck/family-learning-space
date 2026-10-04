@@ -1,0 +1,57 @@
+{
+  "tabs": [
+    {
+      "id": "reading",
+      "name": "读书",
+      "emoji": "📖",
+      "color": "#4DABF7",
+      "type": "single",
+      "goal": "每天读书15分钟",
+      "question": "今天读了什么书？",
+      "placeholder": "写下今天读的书…",
+      "src": "/web/reading.html?id=reading",
+      "booklistTab": "booklist",
+      "modes": {
+        "reading": { "name": "自由阅读", "emoji": "📖", "hint": "想读什么就读什么" },
+        "booklist": { "name": "书单", "emoji": "📚", "hint": "老师给的书，一章一章读" }
+      }
+    },
+    {
+      "id": "chores",
+      "name": "家务",
+      "emoji": "🧹",
+      "color": "#F06595",
+      "type": "single",
+      "goal": "每天做1-2件家务",
+      "question": "今天做了什么家务？",
+      "placeholder": "写下今天做的家务…"
+    },
+    {
+      "id": "sports",
+      "name": "运动",
+      "emoji": "⚽",
+      "color": "#20C997",
+      "type": "single",
+      "goal": "每天运动30分钟",
+      "question": "今天做了什么运动？",
+      "placeholder": "写下今天的运动…"
+    },
+    {
+      "id": "booklist",
+      "name": "书单",
+      "emoji": "📚",
+      "color": "#FF922B",
+      "type": "progress",
+      "hidden": true,
+      "note": "已并入「读书」标签页（/web/reading.html）作为其中一种模式；在哪本书里逐章打卡，就把书加进下面的 items，章节列表写在 data/booklist.json。",
+      "goal": "每读完一章就记一次",
+      "items": []
+    }
+  ],
+  "subjects": [
+    { "id": "chinese", "name": "语文", "emoji": "📖", "color": "#E8590C", "page": "/web/subject.html?subject=chinese" },
+    { "id": "math", "name": "数学", "emoji": "🧮", "color": "#1C7ED6", "page": "/web/subject.html?subject=math" },
+    { "id": "class-english", "name": "辅导班英语", "emoji": "🏫", "color": "#F76707", "page": "/web/english-class.html" },
+    { "id": "school-english", "name": "学校英语", "emoji": "🎧", "color": "#12B886", "page": "/web/school-english.html" }
+  ]
+}

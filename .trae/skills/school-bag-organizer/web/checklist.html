@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>书包整理清单</title>
-<script src="vendor/pinyin-pro.js"></script>
-<script src="vendor/themes.js"></script>
-<script src="vendor/feedback.js"></script>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
 <style>
   :root {
     --bg: #FFF8F0;
@@ -63,6 +64,32 @@
   }
   .header .date {
     font-size: 17px; color: var(--text-light); margin-top: 4px; font-weight: 500;
+  }
+  /* Date picker: let the grown-up look at any day's checklist */
+  .date-picker-wrap { margin-top: 10px; }
+  .btn-pick-date {
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    color: var(--text-light, #8A8A8A); background: rgba(128,128,128,0.12);
+    border: none; border-radius: 18px; padding: 7px 15px; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-pick-date.active {
+    color: #fff;
+    background: var(--accent, #FF6B6B);
+  }
+  .date-picker {
+    margin-top: 10px; display: flex; gap: 8px; justify-content: center;
+    align-items: center; flex-wrap: wrap;
+  }
+  .date-picker input[type="date"] {
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    padding: 8px 12px; border: 2px solid #E0E0E0; border-radius: 14px;
+    background: var(--card, #fff); color: var(--text, #333);
+  }
+  .btn-today {
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    color: #fff; background: var(--accent, #FF6B6B);
+    border: none; border-radius: 14px; padding: 9px 15px; cursor: pointer;
   }
 
   /* Read All Button */
@@ -340,6 +367,13 @@
       <ruby>明<rt>míng</rt>天<rt>tiān</rt>带<rt>dài</rt>什<rt>shén</rt>么<rt>me</rt>？</ruby>
     </h1>
     <div class="date" id="dateLine">加载中…</div>
+    <div class="date-picker-wrap">
+      <button class="btn-pick-date" id="btnPickDate" type="button" onclick="toggleDatePicker()">📅 <span id="pickLabel">按日期查看</span></button>
+      <div class="date-picker" id="datePicker" style="display:none">
+        <input type="date" id="dateInput" onchange="onDateChange(this.value)">
+        <button class="btn-today" type="button" onclick="resetDate()">回到今天</button>
+      </div>
+    </div>
   </div>
 
   <div class="read-all-wrap">
@@ -418,7 +452,8 @@ let scheduleData = null;
 let requirementsData = null;
 let notificationsData = null;
 let holidaysData = null;
-let TARGET = null; // { rest, todayStr, targetStr, morning }
+let TARGET = null; // { rest, todayStr, targetStr, morning, manual }
+let MANUAL_DATE = null; // 'YYYY-MM-DD' — 用户在页面上自选的日期；null = 按当前时间自动判断
 
 async function loadAllData() {
   if (EMBEDDED_DATA) {
@@ -494,6 +529,19 @@ function computeTarget() {
   return { rest: true, restReason: 'rest', todayStr, targetStr: null, morning: false };
 }
 
+// A date the grown-up picked by hand: show that very day's own checklist
+// (no "next school day" logic). A rest day simply has no classes.
+function computeTargetForDate(dateStr) {
+  if (isRestDay(dateStr)) {
+    return { rest: true, restReason: 'rest', todayStr: dateStr, targetStr: null, morning: false, manual: true };
+  }
+  return { rest: false, todayStr: dateStr, targetStr: dateStr, morning: false, manual: true };
+}
+
+function computeCurrentTarget() {
+  return MANUAL_DATE ? computeTargetForDate(MANUAL_DATE) : computeTarget();
+}
+
 function dayNameFor(dateStr) {
   return DAY_MAP[new Date(dateStr + 'T00:00:00').getDay()];
 }
@@ -502,8 +550,17 @@ function getTomorrowDayName() {
   return dayNameFor(TARGET.targetStr);
 }
 
+// The weekday whose schedule applies on a given date. Make-up school days
+// (调休补课) follow another weekday's timetable, e.g. a Sunday that follows
+// Tuesday's classes. schedule.json may carry a `makeupDays` map of date->weekday.
+function scheduleDayFor(dateStr) {
+  const makeup = scheduleData && scheduleData.makeupDays;
+  if (makeup && makeup[dateStr]) return makeup[dateStr];
+  return dayNameFor(dateStr);
+}
+
 function getTomorrowCourses() {
-  const dayName = getTomorrowDayName();
+  const dayName = scheduleDayFor(TARGET.targetStr);
   const sched = scheduleData && scheduleData.schedule;
   if (!sched || !sched[dayName]) return [];
   return sched[dayName];
@@ -661,10 +718,17 @@ function buildCourseData() {
   // One-time notifs roll over day by day until the child actually checks all
   // items on some day's checklist (= brought to school), or the agent marks
   // the notif as done in notifications.json.
-  const tomorrowStr = TARGET.targetStr;
+  const targetStr = TARGET.targetStr;
   const pendingNotifs = (notificationsData || []).filter(n => {
     if (n.status !== 'pending' || !n.items_to_bring || n.items_to_bring.length === 0) return false;
-    if (n.type === 'one_time' && isNotifBrought(n, tomorrowStr)) return false;
+    if (n.type === 'one_time') {
+      // Already taken to school on an earlier day -> nothing left to do.
+      if (isNotifBrought(n, targetStr)) return false;
+      // Only surface once the target day reaches the deadline, so a task due in
+      // two weeks doesn't crowd today's list. Past the deadline it keeps
+      // rolling over day by day until it is checked off.
+      if (n.deadline && n.deadline > targetStr) return false;
+    }
     return true;
   });
   if (pendingNotifs.length > 0) {
@@ -675,7 +739,7 @@ function buildCourseData() {
         name: '通知：' + notif.title,
         namePy: 'tōng zhī：' + (getPinyin(notif.title) || ''),
         type: 'art',
-        postponed: (notif.type === 'one_time') ? postponedDays(notif, tomorrowStr) : 0,
+        postponed: (notif.type === 'one_time') ? postponedDays(notif, targetStr) : 0,
         items: notif.items_to_bring.map(item => ({
           text: item,
           py: getPinyin(item)
@@ -699,32 +763,9 @@ function getSavedVoiceURI() { try { return localStorage.getItem(VOICE_KEY); } ca
 function saveVoiceURI(uri) { try { localStorage.setItem(VOICE_KEY, uri); } catch {} }
 
 function populateVoiceSelector() {
-  if (!speechSupported) return;
-  const voices = synth.getVoices();
-  zhVoices = voices.filter(v =>
-    v.lang.startsWith('zh-CN') || v.lang.startsWith('zh-TW') ||
-    v.lang.startsWith('zh-HK') || v.lang === 'zh'
-  );
-  const sel = document.getElementById('voiceSelect');
-  sel.innerHTML = '';
-  if (zhVoices.length === 0) { document.getElementById('voiceSelector').style.display = 'none'; return; }
-  document.getElementById('voiceSelector').style.display = 'block';
-  const savedURI = getSavedVoiceURI();
-  zhVoices.sort((a, b) => {
-    const aN = a.name.includes('Google') || a.name.includes('Natural') || a.name.includes('Siri') || a.name.includes('Premium');
-    const bN = b.name.includes('Google') || b.name.includes('Natural') || b.name.includes('Siri') || b.name.includes('Premium');
-    if (aN && !bN) return -1; if (!aN && bN) return 1; return a.name.localeCompare(b.name);
-  });
-  let selIdx = 0;
-  zhVoices.forEach((v, i) => {
-    const opt = document.createElement('option');
-    opt.value = v.voiceURI;
-    opt.textContent = v.name.replace(/^Google /, '').replace(/^Microsoft /, '') + ' (' + v.lang + ')';
-    sel.appendChild(opt);
-    if (v.voiceURI === savedURI) selIdx = i;
-  });
-  sel.selectedIndex = selIdx;
-  setVoiceFromSelect();
+  // 朗读已统一改用电脑端合成好的配音音频（edge-tts），不再需要选手机音色
+  const box = document.getElementById('voiceSelector');
+  if (box) box.style.display = 'none';
 }
 function setVoiceFromSelect() {
   const sel = document.getElementById('voiceSelect');
@@ -750,11 +791,11 @@ function initSpeech() {
   synth.speak(dummy);
 }
 if (speechSupported) { initSpeech(); synth.onvoiceschanged = populateVoiceSelector; }
-if (!speechSupported) {
+if (!speechSupported && !window.TTS) {
   document.addEventListener('DOMContentLoaded', () => {
     const banner = document.createElement('div');
     banner.style.cssText = 'background:#FFF3E0;color:#E65100;text-align:center;padding:12px 16px;font-size:15px;font-weight:600;border-radius:16px;margin-bottom:16px;line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto';
-    banner.innerHTML = '⚠️ 当前浏览器不支持朗读<br>请用 <b>Chrome 浏览器</b> 打开本页面';
+    banner.innerHTML = '⚠️ 当前浏览器无法播放朗读<br>请用 <b>Chrome 浏览器</b> 打开本页面';
     const container = document.querySelector('.container');
     container.insertBefore(banner, container.firstChild);
     document.getElementById('btnReadAll').style.display = 'none';
@@ -763,9 +804,17 @@ if (!speechSupported) {
 }
 
 function speak(text, btnEl) {
-  if (!speechSupported) { showToast('请用Chrome浏览器打开以启用朗读'); return; }
+  if (!window.TTS && !speechSupported) { showToast('当前浏览器无法朗读或播放音频，请用 Chrome 打开'); return; }
   document.querySelectorAll('.btn-speak.speaking, .btn-card-speak.speaking, .btn-read-all.speaking').forEach(b => b.classList.remove('speaking'));
   isSpeakingAll = false;
+  // 统一播放电脑端用 edge-tts 合成好的配音音频，不再用手机自带语音
+  if (window.TTS) {
+    if (btnEl) btnEl.classList.add('speaking');
+    TTS.speak(text, 'zh', { waitEnd: true }).then(() => {
+      if (btnEl) btnEl.classList.remove('speaking');
+    });
+    return;
+  }
   try { synth.cancel(); } catch(e) {}
   setTimeout(() => {
     const u = new SpeechSynthesisUtterance(text);
@@ -782,15 +831,25 @@ function speak(text, btnEl) {
 }
 
 function readAllItems() {
-  if (!speechSupported) { showToast('请用Chrome浏览器打开以启用朗读'); return; }
-  if (isSpeakingAll) { try { synth.cancel(); } catch(e) {} isSpeakingAll = false; document.getElementById('btnReadAll').classList.remove('speaking'); return; }
+  if (!window.TTS && !speechSupported) { showToast('当前浏览器无法朗读或播放音频，请用 Chrome 打开'); return; }
+  if (isSpeakingAll) {
+    if (window.TTS) TTS.stop(); else { try { synth.cancel(); } catch(e) {} }
+    isSpeakingAll = false; document.getElementById('btnReadAll').classList.remove('speaking'); return;
+  }
   const allItems = [];
   const cd = window._courseData || [];
   cd.forEach(c => { if (c.items.length > 0) { allItems.push(c.name); c.items.forEach(i => allItems.push(i.text)); } });
   if (allItems.length === 0) return;
   document.querySelectorAll('.btn-speak.speaking, .btn-card-speak.speaking').forEach(b => b.classList.remove('speaking'));
-  try { synth.cancel(); } catch(e) {}
   const btn = document.getElementById('btnReadAll');
+  if (window.TTS) {
+    isSpeakingAll = true; btn.classList.add('speaking');
+    TTS.speakSeq(allItems, 'zh').then(() => {
+      isSpeakingAll = false; btn.classList.remove('speaking');
+    });
+    return;
+  }
+  try { synth.cancel(); } catch(e) {}
   setTimeout(() => {
     isSpeakingAll = true; btn.classList.add('speaking');
     let idx = 0;
@@ -845,10 +904,19 @@ function buildCards() {
       card.appendChild(header);
       card.appendChild(Object.assign(document.createElement('div'), { className: 'card-empty-msg', innerHTML: makeRuby('暂无特殊用具要求', 'zàn wú tè shū yòng jù yāo qiú') }));
     } else {
-      if (speechSupported) {
+      if (window.TTS || speechSupported) {
         const sw = document.createElement('span'); sw.className = 'card-speak-wrap';
         const btn = document.createElement('button'); btn.className = 'btn-card-speak'; btn.innerHTML = '🔊';
-        btn.addEventListener('click', e => { e.stopPropagation(); speak(course.name + '，' + course.items.map(i => i.text).join('，'), btn); });
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!window.TTS) { speak(course.name + '，' + course.items.map(i => i.text).join('，'), btn); return; }
+          const texts = [course.name].concat(course.items.map(i => i.text));
+          // 逐个播放配音音频（课程名 + 每样用具），中间留停顿
+          btn.classList.add('speaking');
+          TTS.speakSeq(texts, 'zh').then(() => {
+            btn.classList.remove('speaking');
+          });
+        });
         sw.appendChild(btn); header.appendChild(sw);
       }
       card.appendChild(header);
@@ -865,7 +933,7 @@ function buildCards() {
         label.innerHTML = makeRuby(itemData.text, itemData.py);
         label.addEventListener('click', () => toggleItem(item, itemId));
         item.appendChild(label);
-        if (speechSupported) {
+        if (window.TTS || speechSupported) {
           const btnS = document.createElement('button'); btnS.className = 'btn-speak'; btnS.innerHTML = '🔊';
           btnS.addEventListener('click', e => { e.stopPropagation(); speak(itemData.text, btnS); });
           item.appendChild(btnS);
@@ -924,7 +992,7 @@ function showCelebration() {
   speak('太棒了' + name + '，书包整理完毕，' + (TARGET.morning ? '今天' : '明天') + '上学开心哦');
 }
 
-function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); try { synth.cancel(); } catch(e) {} }
+function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); if (window.TTS) TTS.stop(); try { synth.cancel(); } catch(e) {} }
 
 function launchConfetti() {
   const canvas = document.getElementById('confetti');
@@ -961,9 +1029,15 @@ function updateHeader() {
 
   const titleEl = document.getElementById('mainTitle');
   if (TARGET.rest) {
-    titleEl.innerHTML = TARGET.restReason === 'ahead'
-      ? makeRuby('明天休息啦', getPinyin('明天休息啦'))
-      : makeRuby('今日休息', getPinyin('今日休息'));
+    if (TARGET.manual) {
+      titleEl.innerHTML = makeRuby('这天休息', getPinyin('这天休息'));
+    } else {
+      titleEl.innerHTML = TARGET.restReason === 'ahead'
+        ? makeRuby('明天休息啦', getPinyin('明天休息啦'))
+        : makeRuby('今日休息', getPinyin('今日休息'));
+    }
+  } else if (TARGET.manual) {
+    titleEl.innerHTML = makeRuby('书包整理清单', getPinyin('书包整理清单'));
   } else if (TARGET.morning) {
     titleEl.innerHTML = makeRuby('今天的书包检查', getPinyin('今天的书包检查'));
   } else {
@@ -971,9 +1045,12 @@ function updateHeader() {
   }
 
   const line1 = '书包整理完毕！';
-  const line2 = TARGET.morning ? '今天上学开心哦～' : '明天上学开心哦～';
+  const line2 = TARGET.manual ? '上学开心哦～'
+    : (TARGET.morning ? '今天上学开心哦～' : '明天上学开心哦～');
   document.getElementById('modalSub').innerHTML =
     makeRuby(line1, getPinyin(line1)) + '<br>' + makeRuby(line2, getPinyin(line2));
+
+  updateDatePickerUI();
 
   if (configData) {
     const school = configData.school || '';
@@ -989,7 +1066,8 @@ function renderRestView() {
   document.querySelector('.progress-wrap').style.display = 'none';
   document.querySelector('.btn-wrap').style.display = 'none';
   const d = new Date(TARGET.todayStr + 'T00:00:00');
-  document.getElementById('dateLine').textContent = `${d.getMonth() + 1}月${d.getDate()}日 · ${dayNameFor(TARGET.todayStr)}`;
+  document.getElementById('dateLine').textContent =
+    `${d.getMonth() + 1}月${d.getDate()}日 · ${dayNameFor(TARGET.todayStr)}` + (TARGET.manual ? ' · 自选' : '');
   const next = nextSchoolDay(TARGET.todayStr);
   const nd = new Date(next + 'T00:00:00');
   const nextTxt = `${nd.getMonth() + 1}月${nd.getDate()}日 · ${dayNameFor(next)}`;
@@ -1001,18 +1079,63 @@ function renderRestView() {
     makeRuby(nextTxt, getPinyin(nextTxt)) + '</div></div>';
 }
 
-async function init() {
-  const ok = await loadAllData();
-  if (!ok) {
-    document.getElementById('cards').innerHTML = '<p style="text-align:center;color:#999;padding:40px">数据加载失败，请检查 JSON 文件</p>';
-    return;
+// === 按日期查看 ===
+function toggleDatePicker() {
+  const panel = document.getElementById('datePicker');
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'flex' : 'none';
+  if (opening) {
+    const inp = document.getElementById('dateInput');
+    inp.value = MANUAL_DATE || dateToStr(new Date());
+    try { if (inp.showPicker) inp.showPicker(); } catch (e) { /* 部分浏览器不支持自动弹日历 */ }
   }
-  TARGET = computeTarget();
+}
+
+function onDateChange(v) {
+  if (!v) return;
+  MANUAL_DATE = v;
+  if (window.TTS) TTS.stop();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  render();
+}
+
+function resetDate() {
+  MANUAL_DATE = null;
+  const panel = document.getElementById('datePicker');
+  if (panel) panel.style.display = 'none';
+  if (window.TTS) TTS.stop();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  render();
+}
+
+function updateDatePickerUI() {
+  const label = document.getElementById('pickLabel');
+  const btn = document.getElementById('btnPickDate');
+  if (!label || !btn) return;
+  if (MANUAL_DATE) {
+    const d = new Date(MANUAL_DATE + 'T00:00:00');
+    label.textContent = `${d.getMonth() + 1}月${d.getDate()}日`;
+    btn.classList.add('active');
+  } else {
+    label.textContent = '按日期查看';
+    btn.classList.remove('active');
+  }
+}
+
+function render() {
+  TARGET = computeCurrentTarget();
   updateHeader();
+
   if (TARGET.rest) {
     renderRestView();
     return;
   }
+
+  // Coming back from a rest day view: restore the sections it hid.
+  document.querySelector('.read-all-wrap').style.display = '';
+  document.querySelector('.progress-wrap').style.display = '';
+  document.querySelector('.btn-wrap').style.display = '';
+
   const courseData = buildCourseData();
   window._courseData = courseData;
   totalItems = courseData.reduce((sum, c) => sum + c.items.length, 0);
@@ -1020,11 +1143,32 @@ async function init() {
 
   const d = new Date(TARGET.targetStr + 'T00:00:00');
   const dayName = dayNameFor(TARGET.targetStr);
+  const schedDay = scheduleDayFor(TARGET.targetStr);
+  const makeupNote = (schedDay !== dayName) ? ' · 按' + schedDay + '课表' : '';
+  const modeNote = TARGET.manual ? ' · 自选' : (TARGET.morning ? ' · 早上检查' : '');
   document.getElementById('dateLine').textContent =
-    `${d.getMonth() + 1}月${d.getDate()}日 · ${dayName}` + (TARGET.morning ? ' · 早上检查' : '');
+    `${d.getMonth() + 1}月${d.getDate()}日 · ${dayName}${makeupNote}${modeNote}`;
 
   buildCards();
   updateProgress();
+}
+
+async function init() {
+  const ok = await loadAllData();
+  if (!ok) {
+    document.getElementById('cards').innerHTML = '<p style="text-align:center;color:#999;padding:40px">数据加载失败，请检查 JSON 文件</p>';
+    return;
+  }
+  // Keep the calendar picker within a sensible range around today.
+  const inp = document.getElementById('dateInput');
+  if (inp) {
+    const t = new Date();
+    const lo = new Date(t); lo.setDate(lo.getDate() - 30);
+    const hi = new Date(t); hi.setDate(hi.getDate() + 180);
+    inp.min = dateToStr(lo);
+    inp.max = dateToStr(hi);
+  }
+  render();
 }
 
 init();

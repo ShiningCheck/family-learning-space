@@ -1,0 +1,52 @@
+{
+  "date": "2026-03-02",
+  "weekday": "周一",
+  "schoolDayIndex": 1,
+  "teacherReport": {
+    "received": true,
+    "raw": "示例：家长您好！今天是开学第一天，主要进行了入学常规教育……",
+    "summary": "示例学情报告：入学第一天，常规教育为主。"
+  },
+  "conversation": {
+    "received": true,
+    "summary": "示例：孩子讲述了参观校园、认识同桌的经历。"
+  },
+  "learned": [
+    {
+      "id": "2026-03-02-1",
+      "subject": "常规",
+      "content": "示例：认识校园，学习上下课问好",
+      "sources": ["teacherReport", "conversation"]
+    },
+    {
+      "id": "2026-03-02-2",
+      "subject": "语文",
+      "content": "示例：认识了自己的课本和名字贴",
+      "sources": ["conversation"]
+    }
+  ],
+  "habits": [
+    {
+      "id": "2026-03-02-sit-posture",
+      "name": "正确坐姿练习",
+      "detail": "回家练习5分钟",
+      "done": true
+    }
+  ],
+  "homework": [],
+  "review": {
+    "done": true,
+    "highlights": ["示例：主动帮老师发课本"],
+    "mood": "开心",
+    "stuckPoints": [
+      {
+        "id": "sp-2026-03-02-1",
+        "topic": "示例：分不清上课铃和下课铃",
+        "note": "描述时把两个铃说反了",
+        "status": "pending",
+        "clearedDate": null
+      }
+    ]
+  },
+  "notes": "示例备注：座位在第二排。"
+}

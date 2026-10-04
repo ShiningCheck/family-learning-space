@@ -1,0 +1,6 @@
+{
+  "url": "comp",
+  "code": ["web", "SKILL.md", "data-templates"],
+  "data": ["data"],
+  "standalone": { "mode": "none" }
+}

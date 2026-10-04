@@ -1,0 +1,36 @@
+# ============================================================
+# 「成长家园」反馈中转服务 —— Cloudflare Worker 部署配置
+# ============================================================
+# 敏感配置（GITHUB_TOKEN / LARK_WEBHOOK / LARK_SECRET / RELAY_APP_KEY）
+# 【绝对不要】写在本文件里！本文件会随仓库公开分发。
+# 敏感值一律通过命令行注入为 Worker Secret：
+#   npx wrangler secret put GITHUB_TOKEN
+#   npx wrangler secret put LARK_WEBHOOK
+#   npx wrangler secret put LARK_SECRET
+#   npx wrangler secret put RELAY_APP_KEY
+# 详细步骤见同目录 README.md。
+
+name = "shan-learn-feedback-relay"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# ---- 非敏感默认值（可以放心公开）----
+[vars]
+# GitHub 仓库拥有者（改成你自己的 GitHub 用户名）
+GITHUB_OWNER = "YOUR_GITHUB_NAME"
+# GitHub 仓库名（改成接收反馈 Issue 的仓库名）
+GITHUB_REPO = "YOUR_REPO_NAME"
+# 自动建的 Issue 上固定打的标签（需先在仓库里创建，见 README）
+ISSUE_LABEL = "用户反馈"
+# 截图附件在仓库里的存放目录
+ASSET_DIR = "feedback-assets"
+# 同一 IP 每小时最多提交的反馈条数
+RATE_LIMIT_PER_HOUR = "10"
+# 全局每日最多自动创建的 Issue 数（超过后只推飞书不建 Issue）
+DAILY_ISSUE_CAP = "20"
+# 可选：截图/Issue 提交到的分支名。留空不设置则使用仓库默认分支。
+# GITHUB_BRANCH = "main"
+
+# ---- 可观测性：开启 Worker 日志采集，方便 `npm run tail` 排查 ----
+[observability]
+enabled = true

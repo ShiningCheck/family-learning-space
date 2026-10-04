@@ -1,0 +1,6 @@
+{
+  "url": "bag",
+  "code": ["web", "SKILL.md", "data-templates"],
+  "data": ["data"],
+  "standalone": { "mode": "localstorage" }
+}

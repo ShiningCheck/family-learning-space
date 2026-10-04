@@ -1,0 +1,10 @@
+#!/bin/sh
+# 隐私守卫 pre-commit 钩子（由 setup.py 安装到 .git/hooks/）
+# 提交前自动扫描暂存区，发现个人信息即拦截。
+ROOT=$(git rev-parse --show-toplevel)
+if command -v python >/dev/null 2>&1; then
+  PY=python
+else
+  PY=python3
+fi
+exec "$PY" "$ROOT/tools/privacy_guard.py" --staged

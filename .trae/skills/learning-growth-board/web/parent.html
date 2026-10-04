@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家长中心</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 40px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  .hero {
+    margin: 16px 0 18px;
+    background: #F06595;
+    border: 4px solid var(--edge, #4A3B2A); border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff; text-align: center; padding: 20px 16px 18px;
+  }
+  .hero h1 { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+  .hero .sub { font-size: 15px; margin-top: 6px; font-weight: 700; opacity: 0.95; }
+  .sec-title { font-size: 19px; font-weight: 900; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sec-title .cnt { font-size: 13px; color: var(--soft, #8D7357); font-weight: 800; }
+  .empty {
+    background: var(--card, #fff); border-radius: 20px; padding: 24px; text-align: center;
+    font-size: 15px; color: var(--soft, #8D7357); border: 3px dashed var(--line, #FFE3B3);
+  }
+  .sync { font-size: 13px; font-weight: 800; color: var(--soft, #8D7357); line-height: 1.8; margin: -4px 0 10px; }
+  .sync.warn { color: #E8590C; }
+
+  /* ── 需要家长做的事 ── */
+  .task {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--card, #fff); border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    padding: 13px 14px; margin-bottom: 10px; cursor: pointer;
+  }
+  .task.done { opacity: 0.6; }
+  .task .t-check {
+    flex: none; width: 30px; height: 30px; border-radius: 50%; margin-top: 2px;
+    border: 3px solid var(--edge, #4A3B2A); background: var(--card, #fff);
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .task.done .t-check { background: #51CF66; color: #fff; }
+  .task .t-body { flex: 1; min-width: 0; }
+  .task .t-tag { display: inline-block; font-size: 12px; font-weight: 900; padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
+  .tag-material { background: #FFF3BF; color: #B06A00; }
+  .tag-check { background: #E7F5FF; color: #1971C2; }
+  .tag-other { background: #F1F3F5; color: #495057; }
+  .task .t-text { font-size: 17px; line-height: 1.7; font-weight: 700; }
+  .task .t-date { font-size: 12px; color: var(--soft, #8D7357); font-weight: 700; margin-top: 3px; }
+  .task .t-done-tag { flex: none; font-size: 12px; font-weight: 900; color: #2B8A3E; background: #E7FBEA; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+
+  /* ── 需要监督孩子完成的作业 ── */
+  .hw {
+    background: var(--card, #fff); border: 3px solid var(--edge, #4A3B2A);
+    border-left: 12px solid var(--sc, #845EF7); border-radius: 18px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .hw.done { opacity: 0.62; }
+  .hw-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hw-tag { font-size: 12px; font-weight: 900; color: #fff; background: var(--sc, #845EF7); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+  .hw-name { font-size: 17px; font-weight: 900; line-height: 1.6; flex: 1; min-width: 0; }
+  .hw-state { flex: none; font-size: 12px; font-weight: 900; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+  .hw-state.todo { background: #FFF3BF; color: #B06A00; }
+  .hw-state.ok { background: #E7FBEA; color: #2B8A3E; }
+  .hw-state.miss { background: #FFE3E3; color: #C92A2A; }
+  .hw-state.nojoin { background: #F1F3F5; color: #495057; }
+  .hw-desc { font-size: 14px; line-height: 1.75; margin-top: 6px; }
+  .hw-note { font-size: 13px; line-height: 1.7; color: #B0570F; background: #FFF3D6; border-radius: 10px; padding: 7px 10px; margin-top: 7px; }
+  .hw-meta { font-size: 12.5px; color: var(--soft, #8D7357); font-weight: 800; margin-top: 7px; line-height: 1.8; }
+  .hw-media { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .hw-media a {
+    font-size: 13px; font-weight: 900; text-decoration: none; color: #fff;
+    background: #E8590C; border-radius: 11px; padding: 6px 11px; line-height: 1.5;
+  }
+  .hw-voice { margin-top: 9px; padding-top: 8px; border-top: 3px dashed var(--line, #FFE3B3); font-size: 14px; line-height: 1.8; }
+  .hw-voice .play {
+    font-family: inherit; font-size: 13px; font-weight: 900; color: var(--ink, #4A3B2A);
+    border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF9DB);
+    border-radius: 11px; padding: 4px 10px; cursor: pointer; margin-right: 6px;
+  }
+  .hw-voice .play:active { transform: translateY(2px); }
+  .hw-voice .vt { font-weight: 700; }
+  .hw-voice .t { font-size: 12px; color: var(--soft, #8D7357); font-weight: 800; white-space: nowrap; }
+  .hw-dots { display: flex; gap: 7px; margin-top: 9px; }
+  .hw-dot { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--soft, #8D7357); font-weight: 800; }
+  .hw-dot i { width: 17px; height: 17px; border-radius: 50%; display: block; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); }
+  .hw-dot.ok i { background: #51CF66; }
+  .hw-dot.today { color: var(--ink, #4A3B2A); }
+
+  /* ── 看板里还没加入打卡的任务 ── */
+  .foldbtn {
+    display: none; width: 100%; margin: 6px 0 10px; font-family: inherit; font-size: 16px; font-weight: 900;
+    color: var(--ink, #4A3B2A); background: var(--line, #FFF1DB); border: 3px solid var(--edge, #4A3B2A);
+    border-radius: 16px; padding: 11px 14px; cursor: pointer; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+  }
+  .foldbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .bd-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card, #fff); border: 3px dashed var(--line, #FFE3B3); border-radius: 18px;
+    padding: 11px 14px; margin-bottom: 10px;
+  }
+  .bd-body { flex: 1; min-width: 0; }
+  .bd-name { font-size: 16px; font-weight: 800; line-height: 1.6; }
+  .bd-detail { font-size: 13px; color: var(--soft, #8D7357); line-height: 1.6; }
+  .bd-date { flex: none; font-size: 12px; color: var(--soft, #8D7357); font-weight: 700; white-space: nowrap; }
+  .hint { font-size: 13px; line-height: 1.8; color: var(--soft, #8D7357); font-weight: 800; margin: 2px 0 8px; }
+
+  .btn-row { margin: 18px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-row .btn { flex: 1 1 auto; min-width: 138px; }
+  .btn {
+    font-family: inherit; font-size: 16px; font-weight: 900; color: var(--ink, #4A3B2A);
+    background: #FFD43B; border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 10px 20px; cursor: pointer; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 16px; line-height: 1.9; padding: 40px 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <header class="hero">
+    <h1 id="heroName">家长中心</h1>
+    <div class="sub" id="heroSub">需要您关注和配合的事项都在这</div>
+  </header>
+
+  <div class="sec-title">📌 需要家长做的事 <span class="cnt" id="taskCnt"></span></div>
+  <div id="taskList"></div>
+
+  <div class="sec-title">📚 需要监督孩子完成的作业 <span class="cnt" id="hwCnt"></span></div>
+  <div class="sync" id="syncTip"></div>
+  <div id="hwList"></div>
+
+  <div id="boardBox" style="display:none">
+    <button class="foldbtn" id="boardFold" type="button">📚 看板里还没加入打卡的任务</button>
+    <div id="boardHint" class="hint" style="display:none">这些是老师要求孩子每天练的任务，孩子还没在学科页把它做成打卡作业 —— 让孩子在语文 / 数学页点「＋加入」，它就会出现在上面并开始打卡。</div>
+    <div id="boardList" style="display:none"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" id="showAllBtn" type="button">显示已完成的</button>
+    <button class="btn" id="expiredBtn" type="button">显示已过期的</button>
+  </div>
+</div>
+
+<script>
+/* 家长中心
+   「需要监督孩子完成的作业」不再只看学习看板里的习惯项、也不再只认本机的勾选状态，
+   而是直接读孩子在各学科页打卡的同一份数据：
+     GET /api/homework           孩子的作业卡（含科目、附件、有效期）
+     GET /api/homework/checkins  孩子的打卡记录（服务器为准，逐项逐日）
+     GET /api/voice?scope=homework  打卡时录的那句话（音频 + 文字，双显示）
+   页面打开时拉一次，之后每 12 秒 + 切回前台时再拉，和孩子的打卡状态保持一致。
+   打卡与否以孩子那边为准，家长页只读，不会改动孩子的记录。 */
+const EMBEDDED_DATA = null;
+
+let BOARD = null;        // 学习看板 /api/data：家长事项 + 「今天学了」
+let HW_ITEMS = [];       // 孩子的作业卡
+let SUBJECTS = [];       // 科目清单（名称 / 图标 / 颜色）
+let CHK = {};            // 作业打卡记录：{ 作业id: { "YYYY-MM-DD": true } }
+let VOICE = {};          // 作业id -> 孩子最近一条语音记录
+let childName = '孩子';
+let showAll = false;
+let hideExpired = true;  // 默认只看「今天还能打卡」的作业，已过期的收起来（开关随时可翻）
+let hwOffline = false;   // 连不上门户服务器（作业卡 / 打卡记录取不到）
+let syncedAt = null;
+let foldBound = false;   // 看板任务折叠按钮只绑一次事件
+
+/* ---------------- 小工具 ---------------- */
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function pad2(n) { return String(n).padStart(2, '0'); }
+function dateStr(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function todayStr() { return dateStr(new Date()); }
+function fmtDate(iso) {
+  const p = String(iso || '').split('-');
+  return p.length < 3 ? '' : parseInt(p[1], 10) + '月' + parseInt(p[2], 10) + '日';
+}
+function fmtStamp(ts) {
+  const d = new Date(Number(ts) || Date.now());
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function daysBetween(a, b) {
+  return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000) + 1;
+}
+function fetchJson(url) {
+  return fetch(url, { cache: 'no-store' }).then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  });
+}
+
+/* ---------------- 数据读取 ---------------- */
+
+async function loadData() {
+  if (EMBEDDED_DATA) return EMBEDDED_DATA;
+  return await fetchJson('/api/data');
+}
+
+// 打卡记录只关心「那天打没打」，把 { v, ts } / 旧格式 1 统一成布尔表
+function normRecords(raw) {
+  const out = {};
+  Object.keys(raw || {}).forEach(id => {
+    const days = raw[id];
+    if (!days || typeof days !== 'object') return;
+    const o = {};
+    Object.keys(days).forEach(d => {
+      const m = days[d];
+      if (m && typeof m === 'object') { if (m.v) o[d] = true; }
+      else if (m) o[d] = true;
+    });
+    out[id] = o;
+  });
+  return out;
+}
+function isChecked(id, date) { return !!(CHK[id] && CHK[id][date]); }
+function checkedDates(id) { return Object.keys(CHK[id] || {}); }
+function itemActive(item, d) {
+  return (!item.start || item.start <= d) && (!item.end || item.end >= d);
+}
+function calcStreak(item) {
+  const set = {};
+  checkedDates(item.id).forEach(d => { if (itemActive(item, d)) set[d] = 1; });
+  let streak = 0;
+  const d = new Date();
+  if (!set[dateStr(d)]) d.setDate(d.getDate() - 1);
+  while (set[dateStr(d)]) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+function subjectOf(id) {
+  return SUBJECTS.filter(x => x.id === id)[0] ||
+    { id: id || '', name: '其它作业', emoji: '📝', color: '#845EF7' };
+}
+
+// 拉孩子的打卡记录与打卡语音（服务器为准），失败不报错，只是标记离线
+async function refreshChildData() {
+  try {
+    const chk = await fetchJson('/api/homework/checkins');
+    CHK = normRecords((chk && chk.records) || {});
+    hwOffline = false;
+    syncedAt = Date.now();
+  } catch (e) {
+    hwOffline = true;
+  }
+  try {
+    const v = await fetchJson('/api/voice?scope=homework&limit=200');
+    const map = {};
+    (v.records || []).forEach(rec => {
+      const id = (rec.meta && rec.meta.item) || String(rec.scope || '').replace(/^homework-/, '');
+      if (id && !map[id]) map[id] = rec;   // 接口已按时间倒序，取第一条即最近一条
+    });
+    VOICE = map;
+  } catch (e) { /* 没有语音记录或接口不可用，忽略 */ }
+  renderHomework();
+}
+
+/* ---------------- 需要家长做的事 ---------------- */
+
+function parentDoneKey() { return 'lgb_parent_done'; }
+function getParentDone() {
+  try { return JSON.parse(localStorage.getItem(parentDoneKey()) || '{}'); } catch (e) { return {}; }
+}
+function saveParentDone(m) { localStorage.setItem(parentDoneKey(), JSON.stringify(m)); }
+
+const TAG = {
+  material: { cls: 'tag-material', label: '准备材料' },
+  check: { cls: 'tag-check', label: '查看/签字' },
+  other: { cls: 'tag-other', label: '其他' }
+};
+
+function renderTasks() {
+  const box = document.getElementById('taskList');
+  const doneMap = getParentDone();
+  const tasks = [];
+  (BOARD.days || []).forEach(d => {
+    (d.parentTasks || []).forEach(t => {
+      tasks.push(Object.assign({ date: d.date }, t));
+    });
+  });
+  // 未完成在前，再按日期倒序
+  tasks.sort((a, b) => {
+    const da = doneMap[a.id] ? 1 : 0, db = doneMap[b.id] ? 1 : 0;
+    if (da !== db) return da - db;
+    return a.date < b.date ? 1 : -1;
+  });
+  const visible = tasks.filter(t => showAll || !doneMap[t.id]);
+  const pending = tasks.filter(t => !doneMap[t.id]).length;
+  document.getElementById('taskCnt').textContent = tasks.length ? ('待办 ' + pending + ' / 共 ' + tasks.length) : '';
+  if (!visible.length) {
+    box.innerHTML = '<div class="empty">🎉 暂时没有需要家长办的事</div>';
+    return;
+  }
+  box.innerHTML = visible.map(t => {
+    const done = !!doneMap[t.id];
+    const tag = TAG[t.type] || TAG.other;
+    return '<div class="task' + (done ? ' done' : '') + '" data-id="' + escapeHtml(t.id) + '">' +
+      '<span class="t-check">' + (done ? '✓' : '') + '</span>' +
+      '<span class="t-body"><span class="t-tag ' + tag.cls + '">' + tag.label + '</span>' +
+      '<div class="t-text">' + escapeHtml(t.text) + '</div>' +
+      '<div class="t-date">' + fmtDate(t.date) + '</div></span>' +
+      (done ? '<span class="t-done-tag">已完成</span>' : '') +
+      '</div>';
+  }).join('');
+  box.querySelectorAll('.task').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.getAttribute('data-id');
+      const m = getParentDone();
+      if (m[id]) delete m[id]; else m[id] = true;
+      saveParentDone(m);
+      renderTasks();
+    });
+  });
+}
+
+/* ---------------- 需要监督孩子完成的作业（与孩子打卡同步） ---------------- */
+
+// 孩子的作业卡 → 监督清单（含科目、附件、打卡状态、连续天数、孩子录的话）
+function hwRows() {
+  const today = todayStr();
+  const rows = [];
+  HW_ITEMS.forEach(item => {
+    if (!item || !item.id) return;
+    const active = itemActive(item, today);
+    const future = !!(item.start && item.start > today);   // 还没开始 ≠ 已过期
+    const singleDay = item.start && item.end && item.start === item.end;
+    const done = active
+      ? isChecked(item.id, today)
+      : isChecked(item.id, singleDay ? item.start : (item.end || today));
+    const total = (item.start && item.end) ? Math.max(1, daysBetween(item.start, item.end)) : 0;
+    rows.push({
+      kind: 'hw', id: item.id, subject: item.subject || '',
+      name: item.name || '作业', desc: item.desc || '', teacherNote: item.teacherNote || '',
+      media: (item.media || []).filter(m => m && m.url),
+      start: item.start || '', end: item.end || '', active: active, done: done,
+      future: future, expired: !active && !future,
+      streak: calcStreak(item),
+      doneCount: checkedDates(item.id).filter(d => itemActive(item, d)).length,
+      total: total,
+      sortDate: active ? today : (item.start || ''),
+      voice: VOICE[item.id] || null
+    });
+  });
+  // 未完成在前 → 今天要打卡的在前 → 日期新的在前
+  rows.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.active !== b.active) return a.active ? -1 : 1;
+    if (a.sortDate === b.sortDate) return a.name < b.name ? -1 : 1;
+    return a.sortDate < b.sortDate ? 1 : -1;
+  });
+  return rows;
+}
+
+function dotsHtml(itemId) {
+  const wk = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ok = isChecked(itemId, dateStr(d));
+    html += '<span class="hw-dot' + (ok ? ' ok' : '') + (i === 0 ? ' today' : '') + '">' +
+      '<i></i>' + (i === 0 ? '今' : wk[d.getDay()]) + '</span>';
+  }
+  return html;
+}
+
+function mediaHtml(media) {
+  if (!media.length) return '';
+  return '<div class="hw-media">' + media.map(m => {
+    const ico = m.type === 'video' ? '🎬' : (m.type === 'image' ? '🖼️' : '📄');
+    return '<a href="' + escapeHtml(m.url) + '" target="_blank" rel="noopener">' +
+      ico + ' ' + escapeHtml(m.label || '作业材料') + '</a>';
+  }).join('') + '</div>';
+}
+
+function voiceHtml(rec) {
+  if (!rec) return '';
+  const when = rec.ts ? fmtStamp(rec.ts) : '';
+  const said = rec.text
+    ? '<span class="vt">孩子说：「' + escapeHtml(rec.text) + '」</span>'
+    : '<span class="vt">孩子录了一段话（还没识别出文字）</span>';
+  return '<div class="hw-voice">🎤 ' +
+    '<button class="play" type="button" data-audio="' + escapeHtml(rec.url || '') + '">▶️ 听</button>' +
+    said + (when ? ' <span class="t">' + escapeHtml(when) + '</span>' : '') +
+    '</div>';
+}
+
+function hwRowHtml(r) {
+  const s = subjectOf(r.subject);
+  const tag = '<span class="hw-tag">' + s.emoji + ' ' + escapeHtml(s.name) + '</span>';
+  let state, meta;
+  if (r.active) {
+    state = r.done ? '<span class="hw-state ok">✅ 已打卡</span>' : '<span class="hw-state todo">⏳ 待打卡</span>';
+    const range = (r.start && r.end && r.start !== r.end)
+      ? fmtDate(r.start) + ' ~ ' + fmtDate(r.end)
+      : (r.start ? fmtDate(r.start) : '长期有效');
+    meta = '📅 ' + range + ' · 已打卡 ' + r.doneCount + (r.total ? '/' + r.total : '') + ' 天' +
+      (r.streak >= 2 ? ' · 🔥 连续 ' + r.streak + ' 天' : '');
+  } else {
+    state = r.future
+      ? '<span class="hw-state nojoin">⏳ 还没开始</span>'
+      : (r.done ? '<span class="hw-state ok">✅ 已完成</span>' : '<span class="hw-state miss">⏰ 当时没打卡</span>');
+    const range = r.start ? (fmtDate(r.start) + (r.end && r.end !== r.start ? ' ~ ' + fmtDate(r.end) : '')) : '';
+    meta = '📅 ' + range + ' · ' + (r.future ? '还没开始' : '已过期');
+  }
+  return '<div class="hw' + (r.done ? ' done' : '') + '" style="--sc:' + escapeHtml(s.color) + '">' +
+    '<div class="hw-head">' + tag +
+    '<span class="hw-name">' + escapeHtml(r.name) + '</span>' + state + '</div>' +
+    (r.desc ? '<div class="hw-desc">' + escapeHtml(r.desc) + '</div>' : '') +
+    (r.teacherNote ? '<div class="hw-note">👩‍🏫 ' + escapeHtml(r.teacherNote) + '</div>' : '') +
+    mediaHtml(r.media) +
+    voiceHtml(r.voice) +
+    '<div class="hw-meta">' + escapeHtml(meta) + '</div>' +
+    (r.active && !r.done ? '<div class="hw-dots">' + dotsHtml(r.id) + '</div>' : '') +
+    '</div>';
+}
+
+function renderHomework() {
+  const box = document.getElementById('hwList');
+  const tip = document.getElementById('syncTip');
+  const rows = hwRows();
+
+  const todayRows = rows.filter(r => r.active);
+  const todayPending = todayRows.filter(r => !r.done).length;
+  const pendingAll = rows.filter(r => !r.done).length;
+  const expiredRows = rows.filter(r => r.expired);
+  const expiredPending = expiredRows.filter(r => !r.done).length;
+
+  if (hwOffline) {
+    tip.className = 'sync warn';
+    tip.textContent = '⚠️ 暂时连不上门户服务器，孩子的打卡状态可能不是最新的（联网后自动刷新）。';
+  } else {
+    tip.className = 'sync';
+    tip.textContent = '☁️ 与孩子的打卡实时同步（孩子在各学科页打卡，这里立刻更新）· 更新于 ' + fmtStamp(syncedAt) +
+      (todayRows.length ? ' · 今天待打卡 ' + todayPending + ' / ' + todayRows.length + ' 项' : '');
+  }
+
+  document.getElementById('hwCnt').textContent = rows.length
+    ? ('待打卡 ' + pendingAll + ' / 共 ' + rows.length + ' 项' +
+      (expiredRows.length ? '（其中已过期 ' + expiredRows.length + ' 项）' : ''))
+    : '';
+  document.getElementById('expiredBtn').textContent = hideExpired
+    ? ('显示已过期的' + (expiredRows.length ? '（' + expiredRows.length + '）' : ''))
+    : '隐藏已过期的';
+
+  const visible = rows.filter(r => (showAll || !r.done) && (!hideExpired || !r.expired));
+  if (!rows.length) {
+    box.innerHTML = hwOffline
+      ? '<div class="empty">⚠️ 暂时连不上门户服务器<br>孩子的作业卡和打卡状态等联网后再看</div>'
+      : '<div class="empty">孩子还没有要打卡的作业<br>老师在学科页布置后，这里会自动出现</div>';
+    return;
+  }
+  if (!visible.length) {
+    const lines = [];
+    if (todayRows.length && todayPending === 0 && !showAll) lines.push('🎉 今天要打卡的作业都完成啦，孩子真棒！');
+    else lines.push('🎉 暂时没有需要监督的作业');
+    if (hideExpired && expiredRows.length) {
+      lines.push('🙈 已收起 ' + expiredRows.length + ' 项已过期的作业' +
+        (expiredPending ? '（其中 ' + expiredPending + ' 项当时没打卡）' : '') +
+        '，点下面的「显示已过期的」就能看到。');
+    }
+    box.innerHTML = '<div class="empty">' + lines.join('<br>') + '</div>';
+    return;
+  }
+  box.innerHTML = visible.map(hwRowHtml).join('');
+
+  box.querySelectorAll('[data-audio]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.getAttribute('data-audio');
+      if (!url) return;
+      try { new Audio(url).play(); } catch (e) { /* 播放失败就不出声 */ }
+    });
+  });
+}
+
+/* ---------------- 看板里还没加入打卡的任务 ---------------- */
+// 学习看板的习惯项如果还没被做成作业卡，孩子那边就没有可打卡的入口；
+// 单独折叠展示，提醒家长让孩子在学科页「＋加入」，不混进上面的待办计数。
+function guessSubject(hint) {
+  const t = String(hint || '').toLowerCase();
+  if (/(^|[-_ ])(yuwen|chinese)([-_ ]|$)|语文/.test(t)) return 'chinese';
+  if (/(^|[-_ ])(math|shuxue)([-_ ]|$)|数学/.test(t)) return 'math';
+  if (/(^|[-_ ])(english|yingyu)([-_ ]|$)|英语/.test(t)) return 'school-english';
+  return '';
+}
+
+function boardUnjoined() {
+  const known = {};
+  HW_ITEMS.forEach(i => { if (i && i.name) known[String(i.name).trim()] = 1; });
+  const seen = {};
+  const out = [];
+  (BOARD.days || []).slice().sort((a, b) => (a.date < b.date ? 1 : -1)).forEach(d => {
+    (d.habits || []).forEach(h => {
+      const nm = String(h.name || '').trim();
+      if (!nm || known[nm] || seen[nm]) return;   // 已经是作业卡的不重复列
+      seen[nm] = 1;
+      out.push({ id: h.id, name: h.name, detail: h.detail || '', date: d.date, subject: guessSubject((h.id || '') + ' ' + nm) });
+    });
+  });
+  return out;
+}
+
+function renderBoardTasks() {
+  const listBox = document.getElementById('boardList');
+  const fold = document.getElementById('boardFold');
+  const hint = document.getElementById('boardHint');
+  const box = document.getElementById('boardBox');
+  const list = boardUnjoined();
+  if (!list.length || hwOffline) { box.style.display = 'none'; return; }   // 离线时判断不了「有没有做成作业卡」，先不列
+  box.style.display = 'block';
+  fold.textContent = '📚 看板里还没加入打卡的任务（' + list.length + ' 项）';
+  listBox.innerHTML = list.map(c => {
+    const s = c.subject ? subjectOf(c.subject) : null;
+    return '<div class="bd-item">' +
+      (s ? '<span class="hw-tag" style="background:' + escapeHtml(s.color) + '">' + s.emoji + '</span>' : '') +
+      '<span class="bd-body"><div class="bd-name">' + escapeHtml(c.name) + '</div>' +
+      (c.detail ? '<div class="bd-detail">' + escapeHtml(c.detail) + '</div>' : '') + '</span>' +
+      '<span class="bd-date">' + fmtDate(c.date) + '</span>' +
+      '</div>';
+  }).join('');
+  if (!foldBound) {
+    foldBound = true;   // 只绑一次：fold 按钮不会被重画，重复绑会让点击来回抖
+    fold.addEventListener('click', () => {
+      const open = listBox.style.display === 'block';
+      listBox.style.display = open ? 'none' : 'block';
+      hint.style.display = open ? 'none' : 'block';
+    });
+  }
+}
+
+/* ---------------- 启动 ---------------- */
+
+function renderAll() {
+  renderTasks();
+  renderHomework();
+  renderBoardTasks();
+  document.getElementById('showAllBtn').textContent = showAll ? '只看未完成的' : '显示已完成的';
+}
+
+async function init() {
+  const err = document.getElementById('errTip');
+  try {
+    BOARD = await loadData();
+    BOARD.days = BOARD.days || [];
+  } catch (e) {
+    err.style.display = 'block';
+    err.innerHTML = '数据加载失败。请通过门户地址访问：<b>http://localhost:8090/learn/web/parent.html</b>，并确认预览服务器已启动。';
+    return;
+  }
+  childName = (BOARD.config && BOARD.config.childName) || '孩子';
+  document.getElementById('heroName').textContent = childName + '的家长中心';
+  document.getElementById('heroSub').textContent = '需要您关注和配合的事项都汇总在这';
+
+  try {
+    const hw = await fetchJson('/api/homework');
+    HW_ITEMS = hw.items || [];
+    SUBJECTS = hw.subjects || [];
+  } catch (e) {
+    hwOffline = true;   // 单文件打开等场景：退化成只看家长事项 + 看板任务
+  }
+  await refreshChildData();   // 里面会画一次作业区
+
+  renderTasks();
+  renderBoardTasks();
+  document.getElementById('showAllBtn').textContent = showAll ? '只看未完成的' : '显示已完成的';
+
+  document.getElementById('showAllBtn').addEventListener('click', () => {
+    showAll = !showAll;
+    renderAll();
+  });
+  document.getElementById('expiredBtn').addEventListener('click', () => {
+    hideExpired = !hideExpired;
+    renderAll();
+  });
+
+  // 孩子那边打完卡，这里 12 秒内就会跟着变
+  setInterval(() => { if (!document.hidden) refreshChildData(); }, 12000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshChildData(); });
+  window.addEventListener('focus', () => { refreshChildData(); });
+}
+
+init();
+</script>
+</body>
+</html>

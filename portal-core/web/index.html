@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成长家园</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* 老浏览器不认识 dvh，先用 100% 兜底，避免整页高度塌掉、内容区只剩一条缝 */
+  html { height: 100%; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    display: flex; flex-direction: column;
+    height: 100%;
+    min-height: -webkit-fill-available;
+    overflow: hidden;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  @supports (height: 100dvh) { body { height: 100dvh; } }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+
+  /* 顶部整块（成长家园标题 + 标签菜单）会一直驻留在最上面 */
+  .topbar { position: sticky; top: 0; z-index: 20; }
+
+  .sky {
+    position: relative;
+    text-align: center;
+    padding: 14px 16px 10px;
+    background: linear-gradient(180deg, var(--sky, #D0EBFF) 0%, var(--paper, #FFF6E9) 100%);
+    border-bottom: 4px solid var(--edge, #4A3B2A);
+    flex: none;
+    overflow: hidden;
+    transition: padding 0.18s ease;
+  }
+  .floaty { position: absolute; font-size: 24px; opacity: 0.85; animation: floaty 4s ease-in-out infinite alternate; pointer-events: none; }
+  @keyframes floaty { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  .home-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card, #FFF); border: 4px solid var(--edge, #4A3B2A); border-radius: 999px;
+    padding: 6px 20px; box-shadow: 0 6px 0 var(--edge, #4A3B2A);
+    color: var(--ink, #4A3B2A);
+    cursor: pointer; user-select: none;
+  }
+  .home-badge:active { transform: translateY(2px); box-shadow: 0 3px 0 var(--edge, #4A3B2A); }
+  .home-badge .house { font-size: 30px; animation: floaty 3s ease-in-out infinite alternate; }
+  .home-title { font-size: 27px; font-weight: 900; letter-spacing: 2px; }
+  .home-title rt { color: var(--acc-deep, #C9A227); }
+  .hdr-caret { font-size: 14px; color: var(--soft, #8D7357); transition: transform 0.2s ease; }
+  .sub-line { margin-top: 6px; font-size: 15px; color: var(--soft, #6B5B45); font-weight: 700; }
+
+  /* 收起状态：顶部「成长家园」与本条菜单压成一条细带，把屏幕让给内容 */
+  body.compact .sky { padding: 5px 10px; }
+  body.compact .floaty { display: none; }
+  body.compact .home-badge { padding: 4px 16px; gap: 6px; border-width: 3px; box-shadow: 0 3px 0 var(--edge, #4A3B2A); }
+  body.compact .home-badge .house { font-size: 19px; }
+  body.compact .home-title { font-size: 18px; letter-spacing: 1px; }
+  body.compact .sub-line { display: none; }
+  body.compact .hdr-caret { transform: rotate(180deg); }
+
+  .skin-toggle {
+    position: absolute; right: 12px; top: 14px; z-index: 3;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit; font-size: 14px; font-weight: 900; color: var(--ink, #4A3B2A);
+    background: var(--card, #fff); border: 3px solid var(--edge, #4A3B2A); border-radius: 999px;
+    padding: 6px 12px; box-shadow: 0 3px 0 var(--edge, #4A3B2A); cursor: pointer;
+  }
+  .skin-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .skin-toggle .caret { font-size: 11px; }
+
+  .skin-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .skin-overlay.hidden { display: none; }
+  .skin-panel {
+    width: min(92vw, 430px);
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 26px;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.25);
+    padding: 16px 16px 18px;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .skin-panel h3 { text-align: center; font-size: 18px; margin-bottom: 12px; color: var(--ink, #4A3B2A); }
+  .skin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 360px) { .skin-grid { grid-template-columns: repeat(3, 1fr); } }
+  .skin {
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    background: var(--card, #fff); box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+    padding: 8px 2px 6px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: inherit; transition: transform 0.12s ease, background 0.25s ease;
+  }
+  .skin:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .skin .s-emoji { font-size: 26px; line-height: 1.2; }
+  .skin .s-name { font-size: 12px; font-weight: 900; color: var(--ink, #4A3B2A); margin-top: 2px; }
+  .skin.active { background: var(--acc, #FF922B); }
+  .skin.active .s-name { color: #fff; }
+
+  .tabs {
+    flex: none;
+    display: flex; gap: 10px;
+    padding: 10px 12px 8px;
+    background: var(--paper, #FFF6E9);
+    overflow-x: auto;
+    scrollbar-width: none;
+    transition: padding 0.18s ease;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    min-width: 76px;
+    padding: 8px 12px 6px;
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 20px;
+    background: var(--c, #FF922B);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 0 var(--edge, #4A3B2A);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+  }
+  .tab .t-emoji { font-size: 26px; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .tab .t-name { font-size: 17px; font-weight: 900; text-shadow: 0 2px 0 rgba(0,0,0,0.18); line-height: 1.55; }
+  .tab .t-name rt { color: rgba(255,255,255,0.85); }
+  .tab:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge, #4A3B2A); }
+  .tab.active {
+    transform: translateY(-4px) rotate(-2deg);
+    box-shadow: 0 10px 0 var(--edge, #4A3B2A);
+    animation: wiggle 0.4s ease;
+  }
+  @keyframes wiggle {
+    0% { transform: translateY(-4px) rotate(2deg) scale(1.04); }
+    50% { transform: translateY(-4px) rotate(-3deg) scale(1.06); }
+    100% { transform: translateY(-4px) rotate(-2deg) scale(1); }
+  }
+
+  /* 收起状态下的菜单：只留图标 + 小字，一条细带装下所有标签 */
+  body.compact .tabs { padding: 5px 8px 4px; gap: 7px; }
+  body.compact .tab {
+    min-width: 56px; padding: 3px 9px 2px;
+    border-width: 3px; border-radius: 15px;
+    box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+  }
+  body.compact .tab .t-emoji { font-size: 17px; }
+  body.compact .tab .t-name { font-size: 13px; line-height: 1.4; }
+  body.compact .tab:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  body.compact .tab.active { transform: translateY(-2px) rotate(-2deg); box-shadow: 0 5px 0 var(--edge, #4A3B2A); animation: none; }
+
+  .stage { flex: 1; padding: 0 10px 10px; min-height: 0; }
+  .panel {
+    position: relative;
+    height: 100%;
+    background: var(--card, #fff);
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 26px;
+    box-shadow: 0 8px 0 rgba(74, 59, 42, 0.18);
+    overflow: hidden;
+  }
+  .panel iframe { width: 100%; height: 100%; border: none; display: block; }
+  .loading {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: var(--paper, #FFF6E9);
+    font-size: 20px; font-weight: 800; color: var(--soft, #8D7357);
+    z-index: 5;
+  }
+  .loading.hidden { display: none; }
+  .loading .star { font-size: 54px; animation: bounce 0.6s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-18px); } }
+
+  #errTip {
+    display: none; position: absolute; inset: 0; z-index: 6;
+    background: #FFF6E9; color: #C92A2A;
+    padding: 40px 24px; font-size: 17px; line-height: 1.9; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+<header class="sky">
+  <span class="floaty" style="left:8%;top:14px">☁️</span>
+  <span class="floaty" style="right:34%;top:10px;animation-delay:1s">🌈</span>
+  <span class="floaty" style="left:22%;top:56px;animation-delay:2s;font-size:18px">⭐</span>
+  <span class="floaty" style="right:14%;top:58px;animation-delay:0.5s;font-size:18px">🎈</span>
+  <button class="skin-toggle" id="skinToggle" type="button">
+    <span id="skinEmoji">🎨</span><span id="skinName">风格</span><span class="caret">▼</span>
+  </button>
+  <button class="skin-toggle" id="settingsBtn" type="button" style="right:118px" onclick="location.href='/settings.html'">
+    ⚙️<span>设置</span>
+  </button>
+  <div class="home-badge" id="homeBadge" role="button" tabindex="0" title="点一下收起顶部，把屏幕让给内容">
+    <span class="house">🏠</span>
+    <span class="home-title" id="homeTitle">成长家园</span>
+    <span class="hdr-caret" aria-hidden="true">▴</span>
+  </div>
+  <div class="sub-line" id="subLine"></div>
+</header>
+
+<nav class="tabs" id="tabBar"></nav>
+</div>
+
+<main class="stage">
+  <div class="panel">
+    <div class="loading" id="loading">
+      <span class="star">🌟</span>
+      <span>正在打开，等一下下…</span>
+    </div>
+    <div id="errTip"></div>
+    <iframe id="frame" title="内容区" allow="microphone; camera; fullscreen" allowfullscreen></iframe>
+  </div>
+</main>
+
+<div class="skin-overlay hidden" id="skinOverlay">
+  <div class="skin-panel">
+    <h3>选一个喜欢的风格</h3>
+    <div class="skin-grid" id="skinGrid"></div>
+  </div>
+</div>
+
+<script>
+// 学科页（语文/数学/辅导班/学校英语）各自带作业打卡与「添加作业」；
+// 原来的「作业打卡」标签页已删除，打卡结果统一进「日报」。
+const CORE_TABS = [
+  { id: 'learn', name: '学习', emoji: '📚', color: '#FF922B', src: '/learn/web/dashboard.html' },
+  { id: 'report', name: '日报', emoji: '📋', color: '#20C997', src: '/report/web/index.html' },
+  { id: 'chinese', name: '语文', emoji: '📖', color: '#E8590C', src: '/chinese/web/index.html' },
+  { id: 'math', name: '数学', emoji: '🧮', color: '#1C7ED6', src: '/math/web/index.html' },
+  { id: 'english-class', name: '辅导班英语', emoji: '🏫', color: '#F76707', src: '/class/web/index.html' },
+  { id: 'school-english', name: '学校英语', emoji: '🎧', color: '#12B886', src: '/school/web/index.html' },
+  { id: 'bag', name: '书包', emoji: '🎒', color: '#51CF66', src: '/bag/web/checklist.html' },
+  { id: 'art', name: '画作', emoji: '🎨', color: '#845EF7', src: '/art/web/art.html' },
+  { id: 'library', name: '图书馆', emoji: '📖', color: '#B5793C', src: '/lib/web/library.html' },
+  { id: 'parent', name: '家长任务', emoji: '👨‍👩‍👧', color: '#F06595', src: '/learn/web/parent.html' },
+  { id: 'homework-admin', name: '作业管理', emoji: '🗂️', color: '#845EF7', src: '/homework/web/index.html' },
+  { id: 'competition', name: '比赛', emoji: '🏆', color: '#FF922B', src: '/comp/web/index.html' },
+];
+
+// 菜单里标签页的固定次序（activities.json 里的打卡标签如「读书/家务/运动」也按这个排，
+// 一排就落在「画作」和「图书馆」之间；没列到的标签排到最后，次序沿用配置里的先后）。
+const TAB_ORDER = [
+  'learn', 'report', 'chinese', 'math', 'english-class', 'school-english',
+  'bag', 'art', 'reading', 'chores', 'sports', 'library', 'parent', 'homework-admin', 'competition'
+];
+
+function sortTabs() {
+  TABS.sort((a, b) => {
+    let ia = TAB_ORDER.indexOf(a.id), ib = TAB_ORDER.indexOf(b.id);
+    if (ia < 0) ia = TAB_ORDER.length;
+    if (ib < 0) ib = TAB_ORDER.length;
+    return ia - ib;
+  });
+}
+
+let TABS = CORE_TABS.slice();
+let CONFIG = {};
+let activeId = null;
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+
+function renderHeader() {
+  const name = CONFIG.childName || '小朋友';
+  document.getElementById('homeTitle').innerHTML = rubyHtml(name) + '的成长家园';
+  document.title = name + '的成长家园';
+  const d = new Date();
+  const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  const hour = d.getHours();
+  const greet = hour < 11 ? '早上好' : hour < 13 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
+  document.getElementById('subLine').textContent =
+    (d.getMonth() + 1) + '月' + d.getDate() + '日 星期' + week + ' · ' + greet + '！';
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = TABS.map(t =>
+    '<div class="tab' + (t.id === activeId ? ' active' : '') + '" data-tab="' + t.id + '" style="--c:' + t.color + '">' +
+    '<span class="t-emoji">' + t.emoji + '</span>' +
+    '<span class="t-name">' + rubyHtml(t.name) + '</span>' +
+    '</div>').join('');
+  bar.querySelectorAll('.tab').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.getAttribute('data-tab');
+      if (id === activeId) {
+        try { document.getElementById('frame').contentWindow.location.reload(); } catch (e) {}
+        return;
+      }
+      activate(id);
+    });
+  });
+}
+
+function activate(id) {
+  const tab = TABS.find(t => t.id === id);
+  if (!tab) return;
+  activeId = id;
+  location.hash = id;
+  localStorage.setItem('gh_last_tab', id);
+  renderTabs();
+  const activeEl = document.querySelector('.tab[data-tab="' + id + '"]');
+  if (activeEl && activeEl.scrollIntoView) {
+    try { activeEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch (e) { /* 个别内核不支持平滑滚动，忽略 */ }
+  }
+  frameRevealed = false;
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('frame').src = tab.src;
+  watchFrameReady();
+}
+
+// ===== 遮罩放行 =====
+// 不能只等 iframe 的 load：那个事件要等子页面里"所有图片"都下载完才触发，
+// 而学习看板这类页面一次要拉二十来张教材扫描页图（每张几百 KB），
+// 手机在 Wi-Fi 弱一些的情况下会长时间停在"正在打开，等一下下…"，看着就像打不开。
+// 改成看子页面自己的 readyState：DOM 一就绪就让开屏幕（图片慢慢往下load就是了），
+// 另有 8 秒兜底，保证无论如何都不会永远卡在遮罩上。
+let frameRevealed = false;
+let framePollTimer = null;
+
+function revealFrame() {
+  document.getElementById('loading').classList.add('hidden');
+  if (frameRevealed) return;      // watchFrameScroll 会往子页面挂滚动监听，只挂一次
+  frameRevealed = true;
+  watchFrameScroll();
+}
+
+function watchFrameReady() {
+  if (framePollTimer) { clearInterval(framePollTimer); framePollTimer = null; }
+  const t0 = Date.now();
+  framePollTimer = setInterval(() => {
+    let doc = null;
+    try { doc = document.getElementById('frame').contentDocument; } catch (e) { doc = null; }
+    const domReady = !!(doc && doc.readyState && doc.readyState !== 'loading');
+    if (domReady || Date.now() - t0 > 8000) {
+      clearInterval(framePollTimer);
+      framePollTimer = null;
+      revealFrame();
+    }
+  }, 150);
+}
+
+function initialTab() {
+  const fromHash = location.hash.slice(1);
+  if (fromHash && TABS.some(t => t.id === fromHash)) return fromHash;
+  const saved = localStorage.getItem('gh_last_tab');
+  if (saved && TABS.some(t => t.id === saved)) return saved;
+  return 'learn';
+}
+
+function renderSkins() {
+  if (!window.GrowthThemes) return;
+  const cur = GrowthThemes.current();
+  const curTheme = GrowthThemes.THEMES[cur] || GrowthThemes.THEMES.original;
+  document.getElementById('skinEmoji').textContent = curTheme.emoji;
+  document.getElementById('skinName').textContent = curTheme.name;
+  const grid = document.getElementById('skinGrid');
+  grid.innerHTML = Object.entries(GrowthThemes.THEMES).map(([id, t]) =>
+    '<button class="skin' + (id === cur ? ' active' : '') + '" data-skin="' + id + '">' +
+    '<span class="s-emoji">' + t.emoji + '</span>' +
+    '<span class="s-name">' + escapeHtml(t.name) + '</span>' +
+    '</button>').join('');
+  grid.querySelectorAll('.skin').forEach(el => {
+    el.addEventListener('click', () => {
+      GrowthThemes.set(el.getAttribute('data-skin'));
+      closeSkins();
+    });
+  });
+}
+
+function openSkins() {
+  renderSkins();
+  document.getElementById('skinOverlay').classList.remove('hidden');
+}
+
+function closeSkins() {
+  document.getElementById('skinOverlay').classList.add('hidden');
+}
+
+// ===== 顶部收起 / 驻留 =====
+// 往下看内容时，顶部标题和菜单自动压成一条细带（始终驻留在最上面），
+// 滑回顶部、或点一下标题就展开回来；手动收起的选择会记住。
+let manualCompact = false;
+let autoCompact = false;
+
+function applyCompact() {
+  document.body.classList.toggle('compact', manualCompact || autoCompact);
+}
+
+function toggleHeaderCompact() {
+  manualCompact = !manualCompact;
+  try { localStorage.setItem('gh_header_compact', manualCompact ? '1' : '0'); } catch (e) {}
+  applyCompact();
+}
+
+function watchFrameScroll() {
+  const frame = document.getElementById('frame');
+  let win = null;
+  try { win = frame.contentWindow; } catch (e) { win = null; }
+  if (!win || !win.document) return;
+  const readTop = () => {
+    try {
+      const doc = win.document;
+      const sc = doc.scrollingElement || doc.documentElement;
+      return win.scrollY || (sc && sc.scrollTop) || 0;
+    } catch (e) { return 0; }
+  };
+  const check = () => {
+    const y = readTop();
+    // 收起阈值 60、展开阈值 20，留出迟滞区间，避免来回抖
+    const next = autoCompact ? y > 20 : y > 60;
+    if (next !== autoCompact) { autoCompact = next; applyCompact(); }
+  };
+  try {
+    win.addEventListener('scroll', check, { passive: true });
+    win.document.addEventListener('scroll', check, { passive: true });
+  } catch (e) { return; }
+  check();
+}
+
+function syncDeco(theme) {
+  const deco = (theme && theme.deco) || ['☁️', '🌈', '⭐', '🎈'];
+  document.querySelectorAll('.floaty').forEach((el, i) => {
+    el.textContent = deco[i % deco.length];
+  });
+  const house = document.querySelector('.home-badge .house');
+  if (house && theme) house.textContent = theme.emoji || '🏠';
+}
+
+async function init() {
+  renderSkins();
+  document.getElementById('skinToggle').addEventListener('click', openSkins);
+  document.getElementById('skinOverlay').addEventListener('click', e => {
+    if (e.target.id === 'skinOverlay') closeSkins();
+  });
+  try { manualCompact = localStorage.getItem('gh_header_compact') === '1'; } catch (e) {}
+  applyCompact();
+  const badge = document.getElementById('homeBadge');
+  badge.addEventListener('click', toggleHeaderCompact);
+  badge.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHeaderCompact(); }
+  });
+  if (window.GrowthThemes) {
+    syncDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+    document.addEventListener('themechange', e => {
+      syncDeco(e.detail);
+      renderSkins();
+    });
+  }
+  try {
+    const res = await fetch('/api/home', { cache: 'no-store' });
+    const data = await res.json();
+    CONFIG = data.config || {};
+    ((data.activities || {}).tabs || []).forEach(t => {
+      // hidden: 这个标签页已并入别的页面（如「书单」并入「读书」），只在数据里留着，不再单独出现在菜单
+      if (t.hidden) return;
+      // src: 想指向自己写的页面就填（如「读书」是自由阅读 + 书单的合并页）；不填就是通用打卡页。
+      // 用绝对路径（/web/...）：相对路径会跟着门户页当前地址走，一旦落到 /tracker.html（会 302 到
+      // /web/tracker.html）就有可能丢掉 ?id=…，页面打开就是空的。
+      TABS.push({
+        id: t.id, name: t.name, emoji: t.emoji, color: t.color,
+        src: t.src || ('/web/tracker.html?id=' + encodeURIComponent(t.id))
+      });
+    });
+  } catch (e) {
+    const tip = document.getElementById('errTip');
+    tip.style.display = 'block';
+    tip.textContent = '数据加载失败：请确认门户服务器已启动（python preview_server.py）。';
+  }
+  // 读设置：禁用技能从门户隐藏（标签 id → 技能 url 映射）
+  try {
+    const s = await fetch('/api/settings', { cache: 'no-store' });
+    const sj = await s.json();
+    if (sj && sj.ok) {
+      const TAB_URL = { 'learn':'learn','report':'report','chinese':'chinese','math':'math',
+        'english-class':'class','school-english':'school','bag':'bag','art':'art',
+        'library':'lib','parent':'learn','homework-admin':'homework','competition':'comp' };
+      const disabled = new Set((sj.skills || []).filter(x => !x.enabled).map(x => x.url));
+      TABS = TABS.filter(t => !disabled.has(TAB_URL[t.id] || t.id));
+    }
+  } catch (e) { /* 设置读不到不影响门户 */ }
+  sortTabs();
+  renderHeader();
+  renderTabs();
+  activate(initialTab());
+  document.getElementById('frame').addEventListener('load', revealFrame);
+  window.addEventListener('hashchange', () => {
+    const id = location.hash.slice(1);
+    if (id && id !== activeId && TABS.some(t => t.id === id)) activate(id);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

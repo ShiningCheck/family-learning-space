@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>读书打卡</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/voice.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 50px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 12px; }
+
+  .hero {
+    margin: 10px 0 12px;
+    background: var(--c, var(--hero-a, #4DABF7));
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 26px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff;
+    text-align: center;
+    padding: 14px 16px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 22px; opacity: 0.5; }
+  .hero-emoji { font-size: 42px; line-height: 1.15; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 26px; font-weight: 900; margin-top: 2px; line-height: 1.6; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .goal { font-size: 15px; margin-top: 2px; font-weight: 700; opacity: 0.95; line-height: 1.7; }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 14px; margin-bottom: 12px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .sync-tip { margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); }
+  .sync-tip.ok { color: #2B8A3E; }
+  .sync-tip.warn { color: #E8590C; }
+
+  /* 两个模式：自由阅读 / 书单 */
+  .mode-row { display: flex; gap: 10px; }
+  .mode-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-family: inherit; cursor: pointer;
+    border: 4px solid var(--edge, #4A3B2A); border-radius: 20px;
+    background: var(--line, #FFF1DB); color: var(--ink, #4A3B2A);
+    padding: 10px 6px 9px; box-shadow: 0 5px 0 var(--edge, #4A3B2A);
+    transition: transform 0.12s ease, background 0.2s;
+  }
+  .mode-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--edge, #4A3B2A); }
+  .mode-btn .m-emoji { font-size: 26px; }
+  .mode-btn .m-name { font-size: 18px; font-weight: 900; line-height: 1.7; }
+  .mode-btn .m-hint { font-size: 12px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.6; }
+  .mode-btn.active { background: var(--c, #4DABF7); color: #fff; }
+  .mode-btn.active .m-hint { color: rgba(255,255,255,0.9); }
+
+  .streak-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .streak { font-size: 20px; font-weight: 900; color: var(--acc-deep, #E8590C); }
+  .dots { display: flex; gap: 8px; }
+  .dot { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--soft, #8D7357); }
+  .dot i { width: 20px; height: 20px; border-radius: 50%; display: block; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); }
+  .dot.ok i { background: #51CF66; }
+  .dot.today { font-weight: 900; color: var(--ink, #4A3B2A); }
+
+  .big-area { text-align: center; padding: 10px 0 4px; }
+  .big-btn {
+    width: 170px; height: 170px; border-radius: 50%;
+    border: 5px solid var(--edge, #4A3B2A);
+    background: var(--c, var(--hero-a, #4DABF7));
+    box-shadow: 0 10px 0 var(--edge, #4A3B2A);
+    font-size: 60px; cursor: pointer;
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s;
+    color: #fff;
+  }
+  .big-btn:active { transform: translateY(6px); box-shadow: 0 4px 0 var(--edge, #4A3B2A); }
+  .big-btn .lbl { font-size: 21px; font-weight: 900; text-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  .big-btn.done { background: #69DB7C; }
+  .hint { margin-top: 12px; font-size: 16px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  .note-box { margin-top: 14px; text-align: left; }
+  .note-box label { font-size: 17px; font-weight: 800; display: block; margin-bottom: 8px; line-height: 1.8; }
+  .note-row { display: flex; gap: 10px; }
+  .note-row input {
+    flex: 1; font-size: 18px; padding: 12px 14px;
+    border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px;
+    background: var(--card, #FFFDF7); font-family: inherit; color: var(--ink, #4A3B2A);
+    min-width: 0;
+  }
+  .note-row button {
+    flex: none; font-size: 18px; font-weight: 900; font-family: inherit;
+    border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px;
+    background: #FFD43B; color: #4A3B2A; padding: 12px 18px;
+    box-shadow: 0 4px 0 var(--edge, #4A3B2A); cursor: pointer;
+  }
+  .note-row button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .note-show { margin-top: 12px; font-size: 17px; background: var(--line, #FFF9DB); border-radius: 14px; padding: 10px 14px; line-height: 1.9; word-break: break-word; }
+  .note-voice { margin-top: 12px; }
+  .voice-show, .v-item { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .v-play {
+    flex: none; border: 3px solid var(--edge, #4A3B2A); border-radius: 999px;
+    background: var(--line, #FFF9DB); color: var(--ink, #4A3B2A);
+    padding: 8px 16px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .v-play:active { transform: translateY(2px); }
+  .v-text { font-size: 15px; color: var(--soft, #8D7357); font-weight: 700; line-height: 1.8; }
+
+  .progress-line { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 12px; }
+  .book {
+    border: 3.5px solid var(--edge, #4A3B2A); border-radius: 20px;
+    background: var(--card, #FFFDF7); margin-bottom: 12px; overflow: hidden;
+  }
+  .book:last-child { margin-bottom: 0; }
+  .book-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .book-head .i-emoji { font-size: 32px; flex: none; }
+  .book-head .b-title { flex: 1; min-width: 0; }
+  .book-head .b-name { font-size: 20px; font-weight: 800; line-height: 1.8; }
+  .book-head .b-sub { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; }
+  .book-head .b-arrow { flex: none; font-size: 20px; transition: transform 0.2s ease; }
+  .book.open .b-arrow { transform: rotate(180deg); }
+  .chapters { display: none; border-top: 2.5px dashed var(--line, #FFF1DB); padding: 10px 12px 12px; }
+  .book.open .chapters { display: block; }
+  .chap { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; cursor: pointer; user-select: none; }
+  .chap:active { background: var(--line, #FFF1DB); }
+  .chap .c-check {
+    flex: none; width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid var(--edge, #4A3B2A); background: var(--card, #fff);
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .chap.done .c-check { background: #51CF66; color: #fff; }
+  .chap .c-name { flex: 1; font-size: 17px; line-height: 1.7; font-weight: 700; }
+  .chap.done .c-name { color: #2B8A3E; text-decoration: line-through; }
+  .empty-tip { text-align: center; font-size: 14px; color: var(--soft, #8D7357); font-weight: 700; padding: 10px 0 6px; line-height: 1.8; }
+  .task-guide {
+    margin: 2px 2px 10px;
+    background: #FFF9DB;
+    border: 3px dashed #FF922B;
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+  .task-guide .tg-title { font-size: 16px; font-weight: 900; color: #E8590C; line-height: 1.8; }
+  .task-guide .tg-line { font-size: 14px; font-weight: 700; color: #4A3B2A; line-height: 1.9; margin-top: 3px; }
+  .task-guide .tg-line b { color: #E8590C; }
+  .chap.today-chap { background: #FFF3D6; }
+  .chap .c-tag { flex: none; font-size: 11px; font-weight: 800; color: #E8590C; background: #FFE8C7; border-radius: 999px; padding: 2px 7px; }
+
+  .rec-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .rec-title { font-size: 19px; font-weight: 900; }
+  .rec-hint { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; }
+  .rec-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* 月日历 */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-title { font-size: 20px; font-weight: 900; line-height: 1.7; }
+  .cal-nav { flex: none; display: flex; gap: 6px; }
+  .cal-nav button {
+    font-family: inherit; font-size: 15px; font-weight: 900; color: var(--ink, #4A3B2A);
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 12px; background: var(--line, #FFF1DB);
+    padding: 6px 11px; cursor: pointer; box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+  }
+  .cal-nav button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .cal-sum { font-size: 13px; color: var(--soft, #8D7357); font-weight: 800; line-height: 1.9; margin-top: 4px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+  .cal-wk { text-align: center; font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); padding: 2px 0; }
+  .cal-day {
+    font-family: inherit; color: var(--ink, #4A3B2A); cursor: pointer;
+    border: 2.5px solid var(--line, #FFE3B3); border-radius: 12px; background: var(--card, #FFFDF7);
+    min-height: 48px; padding: 4px 2px 3px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
+    transition: transform 0.12s ease, background 0.2s;
+  }
+  .cal-day:active { transform: scale(0.96); }
+  .cal-day.out { background: transparent; border-color: transparent; color: #CFC0A8; cursor: default; }
+  .cal-day.has { background: #FFF9DB; }
+  .cal-day.today { border-color: #4DABF7; border-width: 3px; }
+  .cal-day.sel { border-color: var(--edge, #4A3B2A); border-width: 3px; background: #FFE8C7; }
+  .cal-day .d-num { font-size: 15px; font-weight: 900; line-height: 1.3; }
+  .cal-day .d-marks { display: flex; align-items: center; gap: 3px; min-height: 11px; }
+  .mdot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 1.5px solid var(--edge, #4A3B2A); }
+  .mdot.free { background: #4DABF7; }
+  .mdot.bl { background: #FF922B; }
+  .d-cnt { font-size: 10px; font-weight: 900; color: #E8590C; line-height: 1; }
+  .cal-legend { display: flex; gap: 16px; align-items: center; font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); margin-top: 10px; }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+  /* 某天的阅读内容 */
+  .day-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .day-title { font-size: 19px; font-weight: 900; line-height: 1.7; }
+  .tag-today { flex: none; font-size: 12px; font-weight: 800; color: #fff; background: #4DABF7; border-radius: 999px; padding: 4px 10px; }
+  .dsec { border-top: 2.5px dashed var(--line, #FFF1DB); padding-top: 10px; margin-top: 10px; }
+  .dsec.first { border-top: none; padding-top: 0; margin-top: 0; }
+  .dsec .s-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .dsec .s-title { font-size: 16px; font-weight: 900; }
+  .s-ok { font-size: 13px; font-weight: 800; color: #2B8A3E; }
+  .s-none { font-size: 14px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.9; }
+  .d-note { font-size: 16px; background: var(--line, #FFF9DB); border-radius: 14px; padding: 10px 12px; line-height: 1.9; word-break: break-word; }
+  .d-chap { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; line-height: 1.9; padding: 4px 0; }
+  .d-chap .dc-book { flex: none; font-size: 13px; font-weight: 800; color: #E8590C; background: #FFF1DB; border-radius: 999px; padding: 2px 9px; }
+
+  #celebrate {
+    position: fixed; inset: 0; z-index: 99;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    background: rgba(255, 246, 233, 0.92);
+    background: color-mix(in srgb, var(--paper, #FFF6E9) 92%, transparent);
+  }
+  #celebrate.hidden { display: none; }
+  .cel-emoji { font-size: 92px; animation: bounce 0.65s infinite alternate; }
+  .cel-msg { font-size: 30px; font-weight: 900; color: var(--acc-deep, #E8590C); text-align: center; line-height: 1.8; padding: 0 20px; }
+  @keyframes bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-22px) scale(1.1); } }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero" id="hero">
+      <span class="deco" style="left:12px;top:12px">✨</span>
+      <span class="deco" style="right:14px;bottom:12px">🌟</span>
+      <div class="hero-emoji" id="heroEmoji">📖</div>
+      <h1 id="heroName"></h1>
+      <div class="goal" id="heroGoal"></div>
+    </header>
+
+    <div class="card">
+      <div class="mode-row" id="modeRow"></div>
+      <div class="sync-tip" id="syncTip"></div>
+    </div>
+
+    <div class="card" id="freeCard"></div>
+    <div class="card" id="listCard" style="display:none"></div>
+
+    <div class="card" id="recCard">
+      <div class="rec-head">
+        <span class="rec-title">🎙️ 录音</span>
+        <span class="rec-hint" id="recHint">读一段录下来：声音存进服务器，还会自动变成文字（语音和文字一起留着）</span>
+      </div>
+      <div id="recBox"></div>
+      <div class="rec-list" id="recList"></div>
+    </div>
+
+    <div class="card" id="calCard"></div>
+    <div class="card" id="dayCard"></div>
+  </div>
+</div>
+
+<div id="celebrate" class="hidden">
+  <div class="cel-emoji" id="celEmoji">🎉</div>
+  <div class="cel-msg" id="celMsg"></div>
+</div>
+
+<script>
+// ===== 读书打卡：一个页面装两种读法 =====
+//   自由阅读：原来的「读书」页（大按钮 + 一句话记录 + 录音转文字）
+//   书单    ：原来的「书单」页（一本一本书、一章一章勾）
+// 两条记录都落在服务器上（data/tracker_state.json 的 reading / booklist 两个标签），
+// 页面把它们按月日历摆出来，点某一天就能看到这天读了什么（含书单读到的章节名）。
+const FREE_TAB_ID = 'reading';
+const BL_TAB_ID_DEFAULT = 'booklist';
+
+let CONFIG = {};
+let TAB = null;          // 自由阅读（读书）标签配置
+let BL_TAB = null;       // 书单标签配置
+let BOOKS = {};          // booklist.json 的书（含 chapters）
+let mode = 'reading';
+let calYear = 0, calMonth = 0, selectedDate = '';
+
+const TRACK_IDS = [];
+const TRACKS = {};       // tabId -> { records, progress }
+let syncing = false;
+let pushTimer = null;
+const pendingPush = new Set();
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStr(new Date()); }
+function nowTs() { return Date.now(); }
+function childTag() { return CONFIG.childName || 'child'; }
+function weekName(d) { return ['日', '一', '二', '三', '四', '五', '六'][d.getDay()]; }
+
+// ===== 两条记录的本地缓存（键与旧打卡页一致，老数据不用迁移）=====
+function track(id) {
+  if (!TRACKS[id]) TRACKS[id] = { records: {}, progress: {} };
+  return TRACKS[id];
+}
+function recKey(id) { return 'gh_' + id + '_' + childTag(); }
+function progKey(id) { return 'ghp_' + id + '_' + childTag(); }
+function openKey(id) { return 'ghb_open_' + id + '_' + childTag(); }
+
+function normProgress(raw) {
+  const out = {};
+  Object.keys(raw || {}).forEach(id => {
+    const v = raw[id];
+    if (Array.isArray(v)) out[id] = { chapters: v.slice(), ts: 0 };
+    else if (v && typeof v === 'object') out[id] = { chapters: (v.chapters || []).slice(), ts: Number(v.ts) || 0 };
+  });
+  return out;
+}
+
+function loadLocal(id) {
+  const t = track(id);
+  try { t.records = JSON.parse(localStorage.getItem(recKey(id)) || '{}') || {}; } catch (e) { t.records = {}; }
+  try { t.progress = normProgress(JSON.parse(localStorage.getItem(progKey(id)) || '{}')); } catch (e) { t.progress = {}; }
+}
+function saveLocal(id) {
+  const t = track(id);
+  try { localStorage.setItem(recKey(id), JSON.stringify(t.records)); } catch (e) { /* 隐私模式等，忽略 */ }
+  try { localStorage.setItem(progKey(id), JSON.stringify(t.progress)); } catch (e) { /* 忽略 */ }
+}
+
+// 展开着的书：记在本机，勾章节不会把书收起来，只有点书头才收起
+let openBooks = new Set();
+function loadOpen() {
+  try { openBooks = new Set(JSON.parse(localStorage.getItem(openKey(BL_TAB.id)) || '[]')); } catch (e) { openBooks = new Set(); }
+}
+function saveOpen() {
+  try { localStorage.setItem(openKey(BL_TAB.id), JSON.stringify(Array.from(openBooks))); } catch (e) { /* 忽略 */ }
+}
+
+// ===== 跨设备同步（服务器上的那份为准，localStorage 只是断网缓存）=====
+function stampOf(o) { return Number((o && o.ts) || 0) || 0; }
+
+function mergeRecords(localMap, remoteMap) {
+  const out = Object.assign({}, localMap || {});
+  Object.keys(remoteMap || {}).forEach(k => {
+    const rv = remoteMap[k];
+    if (!rv || typeof rv !== 'object') return;
+    const lv = out[k];
+    if (!lv) { out[k] = rv; return; }
+    const lt = stampOf(lv), rt = stampOf(rv);
+    if (lt === 0 && rt === 0) {
+      // 升级前的旧数据没有时间戳：取并集，不丢已经打过的卡
+      out[k] = Object.assign({}, rv, lv, { done: !!(lv.done || rv.done) });
+    } else {
+      out[k] = rt >= lt ? rv : lv;
+    }
+  });
+  return out;
+}
+
+function mergeProgress(localMap, remoteMap) {
+  const out = Object.assign({}, localMap || {});
+  Object.keys(remoteMap || {}).forEach(k => {
+    const rv = remoteMap[k];
+    if (!rv || typeof rv !== 'object') return;
+    const lv = out[k];
+    if (!lv) { out[k] = rv; return; }
+    const lt = stampOf(lv), rt = stampOf(rv);
+    if (lt === 0 && rt === 0) {
+      const set = new Set((lv.chapters || []).concat(rv.chapters || []));
+      out[k] = { chapters: Array.from(set).sort((a, b) => a - b), ts: 0 };
+    } else if (rt >= lt) {
+      out[k] = rv;
+    }
+  });
+  return out;
+}
+
+function sigOf(t) {
+  return JSON.stringify({
+    r: Object.keys(t.records || {}).sort().map(k => {
+      const v = t.records[k] || {};
+      return [k, !!v.done, v.note || '', v.voice ? (v.voice.url || '') : '',
+        (v.chapters || []).map(c => c.book + ':' + c.idx).sort()];
+    }),
+    p: Object.keys(t.progress || {}).sort().map(k => [k, ((t.progress[k] || {}).chapters || []).slice().sort((a, b) => a - b)])
+  });
+}
+function remoteSig(data) {
+  return sigOf({ records: (data && data.records) || {}, progress: normProgress(data && data.progress) });
+}
+
+function setSyncTip(state) {
+  const el = document.getElementById('syncTip');
+  if (!el) return;
+  if (state === 'syncing') { el.className = 'sync-tip'; el.textContent = '⏳ 正在同步…'; }
+  else if (state === 'ok') { el.className = 'sync-tip ok'; el.textContent = '☁️ 已同步（自由阅读和书单都在服务器上，换台设备打开也是这份）'; }
+  else { el.className = 'sync-tip warn'; el.textContent = '⚠️ 暂时连不上服务器，先存在本机，联网后自动补上'; }
+}
+
+/** 把服务器状态并进本地；返回本地是否发生变化 */
+function adoptRemote(id, data) {
+  if (!data || !data.ok) return false;
+  const t = track(id);
+  const before = sigOf(t);
+  t.records = mergeRecords(t.records, data.records || {});
+  t.progress = mergeProgress(t.progress, normProgress(data.progress));
+  saveLocal(id);
+  return before !== sigOf(t);
+}
+
+async function pushState() {
+  if (syncing || !pendingPush.size) return;
+  syncing = true;
+  const ids = Array.from(pendingPush);
+  pendingPush.clear();
+  setSyncTip('syncing');
+  try {
+    for (const id of ids) {
+      const t = track(id);
+      const res = await fetch('/api/tracker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tab: id, records: t.records, progress: t.progress })
+      });
+      if (!res.ok) throw new Error('http ' + res.status);
+      adoptRemote(id, await res.json());
+    }
+    setSyncTip('ok');
+  } catch (e) {
+    ids.forEach(id => pendingPush.add(id));
+    setSyncTip('offline');
+  } finally {
+    syncing = false;
+    if (pendingPush.size) schedulePush(150);
+  }
+}
+
+/** ids 传标签名 / 标签名数组 / 不传（两条都推），攒一小会儿再一起推，避免连点造成多次请求 */
+function schedulePush(ids, delay) {
+  if (ids === undefined || ids === null) TRACK_IDS.forEach(t => pendingPush.add(t));
+  else [].concat(ids).forEach(id => pendingPush.add(id));
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => { pushTimer = null; pushState(); }, delay || 300);
+}
+
+async function syncNow(allowRender) {
+  if (syncing) return false;
+  syncing = true;
+  let changed = false, ok = true;
+  const toPush = [];
+  try {
+    for (const id of TRACK_IDS) {
+      const res = await fetch('/api/tracker?tab=' + encodeURIComponent(id), { cache: 'no-store' });
+      if (!res.ok) throw new Error('http ' + res.status);
+      const data = await res.json();
+      if (adoptRemote(id, data)) changed = true;
+      if (sigOf(track(id)) !== remoteSig(data)) toPush.push(id);
+    }
+  } catch (e) { ok = false; }
+  syncing = false;
+  setSyncTip(ok ? 'ok' : 'offline');
+  if (ok && toPush.length) schedulePush(toPush, 50);
+  if (allowRender && changed) refreshAll();
+  return changed;
+}
+
+function startSyncLoop() {
+  setInterval(() => { if (!document.hidden) syncNow(true); }, 12000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNow(true); });
+  window.addEventListener('focus', () => syncNow(true));
+  window.addEventListener('online', () => syncNow(true));
+}
+
+// ===== 朗读 / 庆祝 =====
+let voices = [];
+function loadVoices() { if ('speechSynthesis' in window) voices = speechSynthesis.getVoices(); }
+if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function speak(text) {
+  // 优先播电脑端预生成的配音音频（data/tts/），没有对应音频时自动降级浏览器朗读
+  if (window.TTS) { TTS.speak(text, 'zh'); return; }
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    const zh = voices.filter(v => v.lang && v.lang.toLowerCase().indexOf('zh') === 0);
+    if (zh.length) u.voice = zh[0];
+    u.lang = zh.length ? zh[0].lang : 'zh-CN';
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }, 50);
+}
+
+function showCelebration(emoji, msg) {
+  document.getElementById('celEmoji').textContent = emoji;
+  document.getElementById('celMsg').innerHTML = rubyHtml(msg);
+  const cel = document.getElementById('celebrate');
+  cel.classList.remove('hidden');
+  speak(msg);
+  setTimeout(() => cel.classList.add('hidden'), 2600);
+}
+
+// 勾完一章就念出「这一章叫什么」，不再笼统地说"读完一章"。
+// 章节名的音频由 voice-dubbing 技能从 booklist.json 生成（新书单加进去后会自动补），
+// 清单里没有这条音频时才退回浏览器朗读；后面接一句"读完啦！"作为表扬。
+function speakChapter(chapName) {
+  const parts = [];
+  if (chapName) parts.push(chapName);
+  parts.push('读完啦！');
+  if (window.TTS && TTS.speakSeq) { TTS.speakSeq(parts, 'zh'); return; }
+  speak(parts.join('，'));
+}
+
+// ===== 语音（录音 / 上传录音 -> 服务器存档 -> 自动识别成文字）=====
+// 全站通用约定：语音输入必须「双显示」——音频能播、文字能读，两样一起留档。
+function voiceShowInner(v) {
+  if (!v || !v.url) return '';
+  return '<div class="voice-show">' +
+    '<button class="v-play" type="button" data-url="' + escapeHtml(v.url) + '">▶️ 听我录的</button>' +
+    '<span class="v-text">' + escapeHtml(v.text || '（这段没听清）') + '</span>' +
+    '</div>';
+}
+
+function bindVoicePlay(root) {
+  if (!root) return;
+  root.querySelectorAll('.v-play').forEach(b => b.addEventListener('click', () => {
+    const url = b.getAttribute('data-url');
+    if (!url) return;
+    try { if (window.__vAudio) window.__vAudio.pause(); } catch (e) { /* 忽略 */ }
+    const a = new Audio(url);
+    window.__vAudio = a;
+    a.play().catch(() => {});
+  }));
+}
+
+let readVoiceCtl = null;
+function initRecorder() {
+  if (!window.Voice) return;
+  readVoiceCtl = Voice.attach({
+    mount: '#recBox',
+    scope: 'tracker-read-' + TAB.id,
+    lang: 'zh',
+    meta: { page: '读书打卡', tab: TAB.id },
+    onSaved: () => renderDay()
+  });
+  Voice.listInto('#recList', {
+    scope: 'tracker-read-' + TAB.id,
+    limit: 20,
+    empty: '还没有录音，读一段课文或故事录下来吧 🎙️',
+    onDeleted: id => clearVoiceRef(id)   // 顺手把记录里挂的同一条语音引用也清掉
+  });
+}
+
+/**
+ * 删掉一段录音时，把打卡记录里挂的那条 voice 引用一起清掉（自由阅读、书单两条记录都扫一遍），
+ * 否则这一天在日历和「这天读了什么」里还会留着已经删掉的录音与文字，看着像"没删干净"。
+ * 只留一个 ts 更新的空壳：服务器按时间戳合并、取并集，键删掉会被服务器那份带回来，
+ * 空壳的 ts 更新才压得过旧记录，"删除"才能同步到手机、平板。
+ */
+function clearVoiceRef(id) {
+  if (!id) return;
+  const hit = [];
+  TRACK_IDS.forEach(tid => {
+    const t = track(tid);
+    let touched = false;
+    Object.keys(t.records).forEach(k => {
+      const r = t.records[k];
+      if (r && r.voice && r.voice.id === id) {
+        const rest = Object.assign({}, r);
+        delete rest.voice;
+        rest.ts = nowTs();
+        t.records[k] = rest;
+        touched = true;
+      }
+    });
+    if (touched) { saveLocal(tid); hit.push(tid); }
+  });
+  if (!hit.length) return;
+  const box = document.getElementById('noteVoiceShow');
+  if (box) box.innerHTML = '';
+  schedulePush(hit);
+  renderCalendar();
+  renderDay();
+}
+
+function mountNoteVoice() {
+  if (!window.Voice || !document.getElementById('noteVoice')) return;
+  Voice.attach({
+    mount: '#noteVoice',
+    scope: 'tracker-note-' + TAB.id,
+    lang: 'zh',
+    autoFill: '#noteInput',
+    compact: true,
+    meta: { page: '读书打卡', tab: TAB.id },
+    onSaved: rec => {
+      const key = todayStr();
+      const t = track(TAB.id);
+      const r = t.records[key] || {};
+      r.voice = { id: rec.id, url: rec.url, text: rec.text || '', ts: nowTs() };
+      r.ts = nowTs();
+      t.records[key] = r;
+      saveLocal(TAB.id);
+      schedulePush(TAB.id);
+      const box = document.getElementById('noteVoiceShow');
+      if (box) { box.innerHTML = voiceShowInner(r.voice); bindVoicePlay(box); }
+      renderCalendar();
+      renderDay();
+    },
+    onDeleted: clearVoiceRef
+  });
+}
+
+// ===== 自由阅读 =====
+function dayDoneFree(rec) { return !!(rec && rec.done); }
+function dayDoneBl(rec) { return !!(rec && (rec.done || (rec.chapters || []).length)); }
+
+function calcStreak() {
+  const t = track(TAB.id);
+  let streak = 0;
+  const d = new Date();
+  if (!dayDoneFree(t.records[dateStr(d)])) d.setDate(d.getDate() - 1);
+  while (dayDoneFree(t.records[dateStr(d)])) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+
+function renderFree() {
+  const t = track(TAB.id);
+  const today = todayStr();
+  const rec = t.records[today] || {};
+  const done = !!rec.done;
+  const card = document.getElementById('freeCard');
+  const streak = calcStreak();
+  const names = ['日', '一', '二', '三', '四', '五', '六'];
+  let dots = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ok = dayDoneFree(t.records[dateStr(d)]);
+    dots += '<span class="dot' + (ok ? ' ok' : '') + (i === 0 ? ' today' : '') + '"><i></i>' + (i === 0 ? '今' : names[d.getDay()]) + '</span>';
+  }
+  card.innerHTML =
+    '<div class="streak-row"><span class="streak">' +
+    (streak >= 2 ? '🔥 连续 ' + streak + ' 天' : '🌱 今天开始打卡吧') + '</span>' +
+    '<div class="dots">' + dots + '</div></div>' +
+    '<div class="big-area">' +
+    '<button class="big-btn' + (done ? ' done' : '') + '" id="bigBtn">' +
+    '<span>' + (done ? '✅' : '📖') + '</span><span class="lbl">' + (done ? '已打卡' : '打卡！') + '</span>' +
+    '</button>' +
+    '<div class="hint">' + (done ? '太棒啦！明天也要坚持哦' : '读完就点一下大按钮') + '</div>' +
+    '<div class="note-box">' +
+    '<label>' + rubyHtml(TAB.question || '今天读了什么书？') + '</label>' +
+    '<div class="note-row"><input id="noteInput" maxlength="140" placeholder="' + escapeHtml(TAB.placeholder || '可以写下来…') + '">' +
+    '<button id="noteSave">记住</button></div>' +
+    '<div class="note-voice" id="noteVoice"></div>' +
+    '<div id="noteVoiceShow">' + voiceShowInner(rec.voice) + '</div>' +
+    (rec.note ? '<div class="note-show">📝 ' + escapeHtml(rec.note) + '</div>' : '') +
+    '</div></div>';
+
+  document.getElementById('bigBtn').addEventListener('click', () => {
+    const r = t.records[today] || {};
+    r.done = !r.done;
+    r.ts = nowTs();
+    t.records[today] = r;
+    saveLocal(TAB.id);
+    if (r.done) showCelebration('🎉', TAB.name + '打卡成功，你真棒！');
+    renderFree();
+    renderCalendar();
+    renderDay();
+    schedulePush(TAB.id);
+  });
+  const input = document.getElementById('noteInput');
+  input.value = rec.note || '';
+  const save = () => {
+    const r = t.records[today] || {};
+    r.note = input.value.trim();
+    r.ts = nowTs();
+    t.records[today] = r;
+    saveLocal(TAB.id);
+    speak('记住啦！');
+    renderFree();
+    renderCalendar();
+    renderDay();
+    schedulePush(TAB.id);
+  };
+  document.getElementById('noteSave').addEventListener('click', save);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+  mountNoteVoice();
+  bindVoicePlay(card);
+}
+
+// ===== 书单 =====
+function chapterList(bookId) {
+  const b = BOOKS[bookId];
+  return (b && b.chapters) || [];
+}
+function bookSubHtml(book, doneCount, total) {
+  return ((book && book.period) ? '共读 ' + book.period + ' · ' : '') +
+    (total ? ('已读 ' + doneCount + ' / ' + total + ' 章') : '待补目录');
+}
+function blItems() { return (BL_TAB && BL_TAB.items) || []; }
+
+function renderBooklist() {
+  const t = track(BL_TAB.id);
+  const items = blItems();
+  const card = document.getElementById('listCard');
+  if (!items.length) {
+    card.innerHTML = '<div class="empty-tip">书单还没配置<br>在 activities.json 的「书单」标签里加书吧</div>';
+    return;
+  }
+  let totalChapters = 0, doneChapters = 0;
+  items.forEach(it => {
+    totalChapters += chapterList(it.id).length;
+    doneChapters += ((t.progress[it.id] || {}).chapters || []).length;
+  });
+  card.innerHTML =
+    '<div class="progress-line">' + rubyHtml('累计读完') + ' ' + doneChapters + ' / ' + totalChapters + ' ' + rubyHtml('章') + '</div>' +
+    items.map(it => {
+      const book = BOOKS[it.id] || {};
+      const chaps = chapterList(it.id);
+      const done = (t.progress[it.id] || {}).chapters || [];
+      // 阅读任务：取最新一条（date 不超过今天的最后一条）
+      const tasks = book.tasks || [];
+      let curTask = null;
+      if (tasks.length) {
+        const today = todayStr();
+        curTask = tasks.filter(tk => !tk.date || tk.date <= today).slice(-1)[0] || tasks[tasks.length - 1];
+      }
+      const taskIdxSet = new Set();
+      if (curTask && Array.isArray(curTask.chapters)) {
+        curTask.chapters.forEach(cn => { const i = chaps.indexOf(cn); if (i >= 0) taskIdxSet.add(i); });
+      }
+      const taskGuideHtml = curTask
+        ? '<div class="task-guide">' +
+          '<div class="tg-title">📚 ' + escapeHtml(curTask.title) + (curTask.range ? ' · ' + escapeHtml(curTask.range) : '') +
+          (Array.isArray(curTask.chapters) ? '（共 ' + curTask.chapters.length + ' 首）' : '') + '</div>' +
+          (curTask.prompt ? '<div class="tg-line">🌈 <b>阅读提示</b>：' + escapeHtml(curTask.prompt) + '</div>' : '') +
+          (curTask.method ? '<div class="tg-line">✅ <b>方法点拨</b>：' + escapeHtml(curTask.method) + '</div>' : '') +
+          (curTask.gain ? '<div class="tg-line">🔔 <b>今日收获</b>：' + escapeHtml(curTask.gain) + '</div>' : '') +
+          '</div>'
+        : '';
+      const chapHtml = chaps.length
+        ? chaps.map((c, i) =>
+          '<div class="chap' + (done.indexOf(i) >= 0 ? ' done' : '') + (taskIdxSet.has(i) ? ' today-chap' : '') + '" data-book="' + escapeHtml(it.id) + '" data-idx="' + i + '">' +
+          '<span class="c-check">' + (done.indexOf(i) >= 0 ? '✓' : '') + '</span>' +
+          '<span class="c-name">' + rubyHtml(c) + '</span>' +
+          (taskIdxSet.has(i) ? '<span class="c-tag">今日</span>' : '') +
+          '</div>').join('')
+        : '<div class="empty-tip">目录待补充<br>把这本书的目录页拍照发给我吧</div>';
+      return '<div class="book' + (openBooks.has(it.id) ? ' open' : '') + '" data-bookwrap="' + escapeHtml(it.id) + '">' +
+        '<div class="book-head" data-toggle="' + escapeHtml(it.id) + '">' +
+        '<span class="i-emoji">' + (it.emoji || '📖') + '</span>' +
+        '<span class="b-title"><span class="b-name">' + rubyHtml(it.name) + '</span>' +
+        '<span class="b-sub">' + escapeHtml(bookSubHtml(book, done.length, chaps.length)) + '</span></span>' +
+        '<span class="b-arrow">▾</span>' +
+        '</div>' +
+        '<div class="chapters">' + taskGuideHtml + chapHtml + '</div>' +
+        '</div>';
+    }).join('');
+
+  card.querySelectorAll('.book-head').forEach(h => {
+    h.addEventListener('click', () => {
+      const id = h.getAttribute('data-toggle');
+      const w = card.querySelector('.book[data-bookwrap="' + id + '"]');
+      if (!w) return;
+      if (w.classList.toggle('open')) openBooks.add(id);
+      else openBooks.delete(id);
+      saveOpen();
+    });
+  });
+
+  // 逐章勾选：只更新这一行（不整页重画，免得把书收起来、把页面滚回顶部）
+  card.querySelectorAll('.chap').forEach(el => {
+    el.addEventListener('click', () => {
+      const bookId = el.getAttribute('data-book');
+      const idx = parseInt(el.getAttribute('data-idx'), 10);
+      const cur = t.progress[bookId] || { chapters: [], ts: 0 };
+      const list = cur.chapters.slice();
+      const pos = list.indexOf(idx);
+      const nowDone = pos < 0;
+      const total = chapterList(bookId).length;
+      if (nowDone) {
+        list.push(idx);
+        // 整本读完了就把话留给"这本书读完啦"的庆祝，否则念这一章的名字
+        if (!(total > 0 && list.length === total)) speakChapter(chapterList(bookId)[idx]);
+      } else { list.splice(pos, 1); speak('已取消，没关系！'); }
+      t.progress[bookId] = { chapters: list, ts: nowTs() };
+      // 顺手记下「今天读的是哪一章」，日历点开那天就能看到具体内容
+      const today = todayStr();
+      const r = t.records[today] || {};
+      let todayChaps = (r.chapters || []).slice();
+      const cpos = todayChaps.findIndex(c => c.book === bookId && c.idx === idx);
+      if (nowDone && cpos < 0) todayChaps.push({ book: bookId, idx: idx });
+      if (!nowDone && cpos >= 0) todayChaps.splice(cpos, 1);
+      r.chapters = todayChaps;
+      if (nowDone) r.done = true;
+      r.ts = nowTs();
+      t.records[today] = r;
+      saveLocal(BL_TAB.id);
+
+      el.classList.toggle('done', nowDone);
+      const mark = el.querySelector('.c-check');
+      if (mark) mark.textContent = nowDone ? '✓' : '';
+      updateBookSub(bookId);
+      updateProgressLine();
+      renderCalendar();
+      if (today === selectedDate) renderDay();
+      schedulePush(BL_TAB.id);
+      if (nowDone && total > 0 && list.length === total) {
+        showCelebration('🏆', '这本书读完啦，你是小书虫！');
+      }
+    });
+  });
+}
+
+function updateProgressLine() {
+  const line = document.querySelector('#listCard .progress-line');
+  if (!line) return;
+  const t = track(BL_TAB.id);
+  let totalChapters = 0, doneChapters = 0;
+  blItems().forEach(it => {
+    totalChapters += chapterList(it.id).length;
+    doneChapters += ((t.progress[it.id] || {}).chapters || []).length;
+  });
+  line.innerHTML = rubyHtml('累计读完') + ' ' + doneChapters + ' / ' + totalChapters + ' ' + rubyHtml('章');
+}
+
+function updateBookSub(bookId) {
+  const w = document.querySelector('#listCard .book[data-bookwrap="' + bookId + '"]');
+  if (!w) return;
+  const it = blItems().find(x => x.id === bookId) || {};
+  const done = ((track(BL_TAB.id).progress[bookId] || {}).chapters || []).length;
+  const chaps = chapterList(bookId);
+  const sub = w.querySelector('.b-sub');
+  if (sub) sub.textContent = bookSubHtml(BOOKS[bookId] || {}, done, chaps.length);
+}
+
+// ===== 月日历 =====
+function renderCalendar() {
+  const card = document.getElementById('calCard');
+  const freeT = track(TAB.id);
+  const blT = track(BL_TAB.id);
+  const today = todayStr();
+  const first = new Date(calYear, calMonth, 1);
+  const startWk = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(calYear, calMonth, 0).getDate();
+
+  let freeDays = 0, chapCount = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = dateStr(new Date(calYear, calMonth, d));
+    if (dayDoneFree(freeT.records[iso])) freeDays++;
+    chapCount += ((blT.records[iso] || {}).chapters || []).length;
+  }
+
+  const wkNames = ['日', '一', '二', '三', '四', '五', '六'];
+  let cells = '';
+  for (let i = 0; i < startWk; i++) {
+    cells += '<div class="cal-day out"><span class="d-num">' + (prevMonthDays - startWk + 1 + i) + '</span><span class="d-marks"></span></div>';
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const iso = dateStr(date);
+    const fDone = dayDoneFree(freeT.records[iso]);
+    const bRec = blT.records[iso] || {};
+    const bDone = dayDoneBl(bRec);
+    const nChap = (bRec.chapters || []).length;
+    const cls = ['cal-day'];
+    if (fDone || bDone) cls.push('has');
+    if (iso === today) cls.push('today');
+    if (iso === selectedDate) cls.push('sel');
+    const tip = (d + '日') + (fDone ? '：自由阅读已打卡' : '') + (bDone ? (nChap ? '：书单 ' + nChap + ' 章' : '：书单已打卡') : '');
+    cells += '<button type="button" class="' + cls.join(' ') + '" data-date="' + iso + '" title="' + escapeHtml(tip || (d + '日：还没有记录')) + '">' +
+      '<span class="d-num">' + d + '</span>' +
+      '<span class="d-marks">' +
+      (fDone ? '<i class="mdot free"></i>' : '') +
+      (bDone ? '<i class="mdot bl"></i>' + (nChap ? '<span class="d-cnt">' + nChap + '</span>' : '') : '') +
+      '</span></button>';
+  }
+  const tail = (7 - ((startWk + daysInMonth) % 7)) % 7;
+  for (let i = 1; i <= tail; i++) {
+    cells += '<div class="cal-day out"><span class="d-num">' + i + '</span><span class="d-marks"></span></div>';
+  }
+
+  card.innerHTML =
+    '<div class="cal-head">' +
+    '<span class="cal-title">' + calYear + '年' + (calMonth + 1) + '月</span>' +
+    '<span class="cal-nav">' +
+    '<button type="button" id="calPrev">◀</button>' +
+    '<button type="button" id="calToday">今天</button>' +
+    '<button type="button" id="calNext">▶</button>' +
+    '</span></div>' +
+    '<div class="cal-sum">本月：自由阅读 ' + freeDays + ' 天 · 书单 ' + chapCount + ' 章（点某一天看当天读了什么）</div>' +
+    '<div class="cal-grid">' + wkNames.map(w => '<span class="cal-wk">' + w + '</span>').join('') + cells + '</div>' +
+    '<div class="cal-legend">' +
+    '<span><i class="mdot free"></i>自由阅读</span>' +
+    '<span><i class="mdot bl"></i>书单（数字＝当天读完几章）</span>' +
+    '</div>';
+
+  document.getElementById('calPrev').addEventListener('click', () => shiftMonth(-1));
+  document.getElementById('calNext').addEventListener('click', () => shiftMonth(1));
+  document.getElementById('calToday').addEventListener('click', () => {
+    const now = new Date();
+    calYear = now.getFullYear(); calMonth = now.getMonth();
+    selectedDate = today;
+    renderCalendar();
+    renderDay();
+  });
+  card.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    el.addEventListener('click', () => {
+      selectedDate = el.getAttribute('data-date');
+      renderCalendar();
+      renderDay();
+    });
+  });
+}
+
+function shiftMonth(delta) {
+  const d = new Date(calYear, calMonth + delta, 1);
+  calYear = d.getFullYear();
+  calMonth = d.getMonth();
+  renderCalendar();
+}
+
+// ===== 某天的阅读内容（自由阅读 + 书单）=====
+function renderDay() {
+  const card = document.getElementById('dayCard');
+  const iso = selectedDate || todayStr();
+  const freeT = track(TAB.id);
+  const blT = track(BL_TAB.id);
+  const fRec = freeT.records[iso] || {};
+  const bRec = blT.records[iso] || {};
+  const isToday = iso === todayStr();
+  const d = new Date(iso + 'T00:00:00');
+
+  let html = '<div class="day-head"><span class="day-title">' +
+    (d.getMonth() + 1) + '月' + d.getDate() + '日 星期' + weekName(d) + ' 读了什么</span>' +
+    (isToday ? '<span class="tag-today">就是今天</span>' : '') + '</div>';
+
+  // 自由阅读
+  const freeDone = !!fRec.done;
+  html += '<div class="dsec first"><div class="s-head"><span class="s-title">📖 自由阅读</span>' +
+    (freeDone ? '<span class="s-ok">✅ 已打卡</span>' : '<span class="s-ok" style="color:#B08968">还没有打卡</span>') + '</div>';
+  if (fRec.note) html += '<div class="d-note">📝 ' + escapeHtml(fRec.note) + '</div>';
+  if (fRec.voice && fRec.voice.url) {
+    html += '<div class="voice-show"><button class="v-play" type="button" data-url="' + escapeHtml(fRec.voice.url) + '">▶️ 听我录的</button>' +
+      '<span class="v-text">' + escapeHtml(fRec.voice.text || '（这段没听清）') + '</span></div>';
+  }
+  if (!freeDone && !fRec.note && !(fRec.voice && fRec.voice.url)) {
+    html += '<div class="s-none">这天没有自由阅读的记录</div>';
+  }
+  html += '<div id="dayVoices"></div></div>';
+
+  // 书单
+  const chaps = bRec.chapters || [];
+  html += '<div class="dsec"><div class="s-head"><span class="s-title">📚 书单</span>' +
+    (chaps.length ? '<span class="s-ok">读了 ' + chaps.length + ' 章</span>' : '') + '</div>';
+  if (chaps.length) {
+    const rows = chaps.slice().sort((a, b) => a.idx - b.idx).map(c => {
+      const it = blItems().find(x => x.id === c.book);
+      const name = it ? it.name : c.book;
+      const cn = chapterList(c.book)[c.idx] || '';
+      return '<div class="d-chap"><span class="dc-book">' + escapeHtml(name) + '</span>' +
+        '<span>' + rubyHtml(cn || ('第 ' + (c.idx + 1) + ' 章')) + '</span></div>';
+    });
+    html += rows.join('');
+  } else if (dayDoneBl(bRec)) {
+    html += '<div class="s-none">这天读过书单 ✅（那会儿还没记下具体章节名，以后会自动记住）</div>';
+  } else {
+    html += '<div class="s-none">这天没有书单记录</div>';
+  }
+  html += '</div>';
+
+  card.innerHTML = html;
+  bindVoicePlay(card);
+
+  // 这天录下来的音（录音卡里读的 + 一句话记录说的），音频和文字都摆出来
+  const box = document.getElementById('dayVoices');
+  if (!box || !window.Voice) return;
+  Promise.all([
+    Voice.list({ scope: 'tracker-read-' + TAB.id, date: iso, limit: 50 }),
+    Voice.list({ scope: 'tracker-note-' + TAB.id, date: iso, limit: 50 })
+  ]).then(lists => {
+    const recs = (lists[0] || []).concat(lists[1] || []).filter(r => r && r.url)
+      .sort((a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0));
+    if (!recs.length) { box.innerHTML = '<div class="s-none">这天没有录音</div>'; return; }
+    box.innerHTML = '<div class="s-none" style="margin-top:10px">🎙️ 这天录的音（点 ▶️ 能听，文字就是孩子说的话）</div>' +
+      recs.map(r => '<div class="v-item"><button class="v-play" type="button" data-url="' + escapeHtml(r.url) + '">▶️ 听</button>' +
+        '<span class="v-text">' + escapeHtml(r.text || '（这段没听清）') + '</span></div>').join('');
+    bindVoicePlay(box);
+  }).catch(() => { box.innerHTML = ''; });
+}
+
+// ===== 模式切换 =====
+function modeKey() { return 'ghread_mode_' + childTag(); }
+function setMode(next, render) {
+  mode = next === 'booklist' ? 'booklist' : 'reading';
+  try { localStorage.setItem(modeKey(), mode); } catch (e) { /* 忽略 */ }
+  const row = document.getElementById('modeRow');
+  row.querySelectorAll('.mode-btn').forEach(b => {
+    const on = b.getAttribute('data-mode') === mode;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('freeCard').style.display = mode === 'reading' ? 'block' : 'none';
+  document.getElementById('listCard').style.display = mode === 'booklist' ? 'block' : 'none';
+  if (render) {
+    if (mode === 'reading') renderFree(); else renderBooklist();
+  }
+}
+
+function renderModeRow() {
+  const cfg = (TAB && TAB.modes) || {};
+  const free = cfg.reading || {};
+  const bl = cfg.booklist || {};
+  document.getElementById('modeRow').innerHTML =
+    '<button type="button" class="mode-btn" data-mode="reading">' +
+    '<span class="m-emoji">' + (free.emoji || '📖') + '</span>' +
+    '<span class="m-name">' + escapeHtml(free.name || '自由阅读') + '</span>' +
+    '<span class="m-hint">' + escapeHtml(free.hint || '想读什么就读什么') + '</span></button>' +
+    '<button type="button" class="mode-btn" data-mode="booklist">' +
+    '<span class="m-emoji">' + (bl.emoji || '📚') + '</span>' +
+    '<span class="m-name">' + escapeHtml(bl.name || '书单') + '</span>' +
+    '<span class="m-hint">' + escapeHtml(bl.hint || '老师给的书，一章一章读') + '</span></button>';
+  document.getElementById('modeRow').querySelectorAll('.mode-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const next = b.getAttribute('data-mode');
+      if (next === mode) return;
+      setMode(next, true);
+      speak(next === 'booklist' ? '书单' : '自由阅读');
+    });
+  });
+}
+
+/** 整页重画（别的设备改了数据时用），正在输入框里打字就不打扰 */
+function refreshAll() {
+  const active = document.activeElement;
+  if (active && active.tagName === 'INPUT' && document.body.contains(active)) return;
+  const y = window.scrollY;
+  if (mode === 'reading') renderFree(); else renderBooklist();
+  renderCalendar();
+  renderDay();
+  if (y) window.scrollTo(0, y);
+}
+
+async function init() {
+  const err = document.getElementById('errTip');
+  const params = new URLSearchParams(location.search);
+  try {
+    const res = await fetch('/api/home', { cache: 'no-store' });
+    const data = await res.json();
+    CONFIG = data.config || {};
+    const tabs = (data.activities || {}).tabs || [];
+    const wantId = params.get('id') || FREE_TAB_ID;
+    TAB = tabs.find(t => t.id === wantId) || tabs.find(t => t.id === FREE_TAB_ID);
+    if (!TAB) throw new Error('activities.json 里没有读书标签');
+    BL_TAB = tabs.find(t => t.id === (TAB.booklistTab || BL_TAB_ID_DEFAULT)) || null;
+    if (!BL_TAB) BL_TAB = { id: BL_TAB_ID_DEFAULT, name: '书单', emoji: '📚', type: 'progress', items: [] };
+    ((data.booklist || {}).books || []).forEach(b => { if (b && b.id) BOOKS[b.id] = b; });
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+
+  TRACK_IDS.push(TAB.id);
+  if (TRACK_IDS.indexOf(BL_TAB.id) < 0) TRACK_IDS.push(BL_TAB.id);
+  TRACK_IDS.forEach(loadLocal);
+  loadOpen();
+
+  document.title = TAB.name + '打卡';
+  document.getElementById('hero').style.setProperty('--c', TAB.color || '#4DABF7');
+  document.getElementById('heroEmoji').textContent = TAB.emoji || '📖';
+  document.getElementById('heroName').innerHTML = rubyHtml(TAB.name) + '打卡';
+  document.getElementById('heroGoal').innerHTML = rubyHtml(TAB.goal || '');
+  document.getElementById('app').style.display = 'block';
+
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  selectedDate = todayStr();
+
+  renderModeRow();
+  let wanted = params.get('mode');
+  if (!wanted) { try { wanted = localStorage.getItem(modeKey()); } catch (e) { wanted = ''; } }
+  setMode(wanted || 'reading', true);
+  renderCalendar();
+  renderDay();
+  initRecorder();
+
+  // 先拉服务器上的最新状态（另一台设备勾的也算数），再刷新界面
+  setSyncTip('syncing');
+  syncNow(false).then(() => refreshAll());
+  startSyncLoop();
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('#hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+</script>
+</body>
+</html>

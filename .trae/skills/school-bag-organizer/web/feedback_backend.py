@@ -59,15 +59,17 @@ def _write_json(path, obj):
 class FeedbackBackend:
     """每个技能实例化一个：传入技能根目录、端口与显示名。"""
 
-    def __init__(self, skill_root, port, app_name):
+    def __init__(self, skill_root, port, app_name, data_dir=None):
         self.skill_root = skill_root
         self.port = port
         self.app_name = app_name
         # 技能根目录 = <repo>/.trae/skills/<skill>；向上三层到仓库根目录
         self.workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(skill_root)))
-        self.feedback_dir = os.path.join(skill_root, "data", "feedback")
+        # 数据目录默认取技能内 data/；迁移后由调用方传入仓库之外的 data-root 路径
+        data_dir = data_dir or os.path.join(skill_root, "data")
+        self.feedback_dir = os.path.join(data_dir, "feedback")
         self.inbox = os.path.join(self.feedback_dir, "inbox")
-        self.channels_file = os.path.join(skill_root, "data", "feedback_channels.json")
+        self.channels_file = os.path.join(data_dir, "feedback_channels.json")
         self.channels_template = os.path.join(skill_root, "data-templates", "feedback_channels.json")
         self.version_file = os.path.join(self.workspace_root, "VERSION")
         self._lock = threading.Lock()

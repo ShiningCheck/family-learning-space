@@ -1,0 +1,6 @@
+{
+  "url": "lib",
+  "code": ["web", "SKILL.md", "data-templates"],
+  "data": ["data", "images"],
+  "standalone": { "mode": "none" }
+}

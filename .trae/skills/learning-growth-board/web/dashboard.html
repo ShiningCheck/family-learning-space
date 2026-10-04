@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习成长看板</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background-color: var(--paper, #FFF8EC);
+    background-image: radial-gradient(var(--dot, #FFE9C7) 2px, transparent 2px);
+    background-size: 26px 26px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 60px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.48em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    background: linear-gradient(135deg, var(--hero-a, #FFB84D) 0%, var(--hero-b, #FF922B) 100%);
+    border-radius: 0 0 36px 36px;
+    padding: 26px 16px 22px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    transition: background 0.35s ease;
+  }
+  .greet { font-size: 30px; font-weight: 800; line-height: 1.5; }
+  .greet rt { color: #FFE8CC; }
+  .sub { font-size: 17px; margin-top: 6px; opacity: 0.95; }
+  .voice-bar { margin-top: 12px; font-size: 14px; }
+  .voice-bar select {
+    max-width: 220px; font-size: 14px; padding: 4px 8px;
+    border-radius: 10px; border: none; color: #4A3B2A;
+  }
+
+  .stat-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin: -20px auto 8px; position: relative;
+  }
+  .stat {
+    background: var(--card, #fff); border-radius: 20px; padding: 14px 6px;
+    text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 3px solid var(--line, #FFE3B3);
+  }
+  .stat .num { font-size: 30px; font-weight: 800; color: var(--acc, #FF922B); }
+  .stat .lbl { font-size: 13px; color: var(--soft, #8D7357); margin-top: 2px; }
+
+  section { margin-top: 26px; }
+  .sec-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+
+  .day-card {
+    background: var(--card, #fff); border-radius: 24px; padding: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 3px solid var(--line, #FFE3B3); margin-bottom: 16px;
+  }
+  .day-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .day-date { font-size: 20px; font-weight: 800; }
+  .pill {
+    font-size: 13px; padding: 4px 10px; border-radius: 999px;
+    background: var(--line, #FFF1DB); color: var(--acc-deep, #B06A00); font-weight: 600;
+  }
+  .pill.blue { background: #E7F5FF; color: #1971C2; }
+  .pill.green { background: #EBFBEE; color: #2B8A3E; }
+
+  .learned-list { list-style: none; }
+  .learned-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 2px dashed var(--line, #FFEFD5);
+  }
+  .learned-list li:last-child { border-bottom: none; }
+  .chip {
+    flex: none; font-size: 14px; font-weight: 700; color: #fff;
+    padding: 5px 10px; border-radius: 12px; margin-top: 4px;
+  }
+  .item-body { flex: 1; font-size: 19px; line-height: 2.05; }
+  .star { color: #FFB800; font-size: 18px; }
+  .speak-btn {
+    flex: none; width: 44px; height: 44px; border-radius: 50%;
+    border: none; background: var(--line, #FFF1DB); font-size: 20px; cursor: pointer;
+    margin-top: 2px;
+  }
+  .speak-btn:active { background: var(--dot, #FFD8A8); }
+  .highlights {
+    margin-top: 10px; background: var(--line, #FFF9DB); border-radius: 16px;
+    padding: 12px 14px; font-size: 16px; line-height: 2;
+  }
+  .empty-tip {
+    background: var(--card, #fff); border-radius: 24px; padding: 30px; text-align: center;
+    font-size: 18px; color: var(--soft, #8D7357); border: 3px dashed var(--line, #FFE3B3);
+  }
+
+  .habit-btn {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    background: var(--card, #fff); color: var(--ink, #4A3B2A);
+    border: 4px solid var(--hero-a, #FFB84D); border-radius: 24px;
+    padding: 18px; margin-bottom: 12px; cursor: pointer; text-align: left;
+    font-family: inherit;
+  }
+  .habit-btn:active { transform: scale(0.98); }
+  .habit-btn.done { border-color: #69DB7C; background: #F4FFF6; color: #4A3B2A; }
+  .habit-btn.done .habit-detail { color: #8D7357; }
+  .habit-emoji { font-size: 40px; }
+  .habit-name { font-size: 22px; font-weight: 800; line-height: 1.9; }
+  .habit-detail { font-size: 15px; color: var(--soft, #8D7357); line-height: 1.8; }
+  .habit-status { margin-left: auto; font-size: 30px; flex: none; }
+
+  .habit-history { background: var(--card, #fff); border-radius: 24px; padding: 16px 18px; border: 3px solid var(--line, #FFE3B3); margin-top: 4px; }
+  .habit-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; flex-wrap: wrap; }
+  .habit-row .name { font-size: 17px; font-weight: 700; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
+  .dot.ok { background: #51CF66; }
+  .dot.no { background: var(--line, #FFD8A8); }
+  .streak { font-size: 15px; color: var(--acc-deep, #E8590C); font-weight: 700; }
+
+  .monster-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card, #fff); border-radius: 24px; padding: 16px 18px;
+    margin-bottom: 12px; border: 3px solid #D0BFFF;
+  }
+  .monster-card.cleared { border-color: #B2F2BB; opacity: 0.85; }
+  .monster-emoji { font-size: 40px; flex: none; }
+  .monster-topic { font-size: 19px; font-weight: 700; line-height: 2; }
+  .monster-note { font-size: 14px; color: var(--soft, #8D7357); line-height: 1.7; }
+  .monster-status { margin-left: auto; font-size: 26px; flex: none; }
+
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { width: 64px; font-size: 16px; font-weight: 700; text-align: right; flex: none; }
+  .bar-track { flex: 1; background: var(--line, #FFF1DB); border-radius: 999px; height: 26px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; min-width: 30px; }
+  .bar-num { width: 30px; font-size: 16px; font-weight: 700; flex: none; }
+
+  .weekly-card {
+    background: var(--card, #fff); border-radius: 24px; padding: 18px;
+    border: 3px solid var(--line, #FFE3B3); font-size: 17px; line-height: 2;
+  }
+  .weekly-card h3 { font-size: 20px; margin-bottom: 8px; }
+  .weekly-card ul { padding-left: 24px; }
+
+  footer { text-align: center; margin-top: 40px; color: var(--soft, #B08968); font-size: 14px; }
+
+  #celebrate {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 248, 236, 0.88);
+    background: color-mix(in srgb, var(--paper, #FFF8EC) 88%, transparent);
+    z-index: 99; flex-direction: column; gap: 16px;
+  }
+  #celebrate.hidden { display: none; }
+  .cel-emoji { font-size: 90px; animation: bounce 0.7s infinite alternate; }
+  .cel-msg { font-size: 30px; font-weight: 800; color: var(--acc-deep, #E8590C); text-align: center; line-height: 1.8; }
+  @keyframes bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-24px) scale(1.12); } }
+
+  #errBanner {
+    display: none; background: #FFE3E3; color: #C92A2A; border-radius: 16px;
+    padding: 14px; margin-top: 16px; font-size: 15px; line-height: 1.7;
+  }
+
+  .item-main { flex: 1; min-width: 0; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .thumb-btn { padding: 0; border: none; background: none; cursor: pointer; line-height: 0; }
+  .thumb {
+    width: 72px; height: 96px; object-fit: cover; border-radius: 10px;
+    border: 2px solid var(--line, #FFE3B3); background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  #imgViewer {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0, 0, 0, 0.86);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; cursor: zoom-out;
+  }
+  #imgViewer.hidden { display: none; }
+  #imgViewer img {
+    max-width: 100%; max-height: 100%;
+    border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.55);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="greet" id="greet">加载中…</div>
+  <div class="sub" id="greetSub"></div>
+</header>
+
+<div class="wrap">
+  <div id="errBanner"></div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="num" id="stLearned">0</div><div class="lbl">知识点</div></div>
+    <div class="stat"><div class="num" id="stReview">0</div><div class="lbl">回顾天数</div></div>
+    <div class="stat"><div class="num" id="stHabits">0</div><div class="lbl">习惯打卡</div></div>
+    <div class="stat"><div class="num" id="stMonsters">0</div><div class="lbl">攻克卡点</div></div>
+  </div>
+
+  <section>
+    <div class="sec-title">💪 今天的好习惯</div>
+    <div id="todayHabits"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">📚 我学到了什么</div>
+    <div id="timeline"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">👾 卡点小怪兽</div>
+    <div id="monsters"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">🌟 成长统计</div>
+    <div class="day-card">
+      <div id="subjectBars"></div>
+    </div>
+    <div style="margin-top:14px" id="habitHistory"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">📮 本周周报</div>
+    <div id="weekly"></div>
+  </section>
+
+  <footer>每天聊一聊，进步看得见 · 学习成长看板</footer>
+</div>
+
+<div id="celebrate" class="hidden">
+  <div class="cel-emoji" id="celEmoji">🎉</div>
+  <div class="cel-msg" id="celMsg"></div>
+</div>
+
+<div id="imgViewer" class="hidden"><img id="imgViewerImg" alt="教材图片大图"></div>
+
+<script>
+const EMBEDDED_DATA = null;
+
+const SUBJECT_COLORS = {
+  '语文': '#E8590C', '数学': '#1C7ED6', '英语': '#9C36B5', '劳动': '#2F9E44',
+  '体育': '#0CA678', '美术': '#E64980', '音乐': '#F08C00', '常规': '#7048E8', '其他': '#868E96'
+};
+
+let DATA = null;
+let voices = [];
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fmtDate(dateStr) {
+  const parts = dateStr.split('-');
+  return parseInt(parts[1], 10) + '月' + parseInt(parts[2], 10) + '日';
+}
+
+async function loadData() {
+  if (EMBEDDED_DATA) return EMBEDDED_DATA;
+  const res = await fetch('/api/data', { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+function loadVoices() {
+  // 朗读已统一使用电脑端合成好的配音音频（edge-tts），不再需要选手机音色
+  if (!('speechSynthesis' in window)) return;
+  voices = speechSynthesis.getVoices();
+}
+
+let prewarmed = false;
+function prewarm() {
+  if (window.TTS) return;    // 已统一播放配音音频，不需要预热手机语音引擎
+  if (prewarmed || !('speechSynthesis' in window)) return;
+  prewarmed = true;
+  const u = new SpeechSynthesisUtterance(' ');
+  u.volume = 0;
+  speechSynthesis.speak(u);
+}
+
+function speak(text) {
+  // 统一播放电脑端用 edge-tts 合成好的配音音频，不再用手机自带语音
+  if (window.TTS) { TTS.speak(text, 'zh'); return; }
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    const saved = localStorage.getItem('lgb_voice');
+    const v = voices.find(x => x.voiceURI === saved);
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : 'zh-CN';
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }, 50);
+}
+
+function getCheckins() {
+  try { return JSON.parse(localStorage.getItem('lgb_checkins') || '{}'); } catch (e) { return {}; }
+}
+function getUncheckins() {
+  try { return JSON.parse(localStorage.getItem('lgb_uncheckins') || '{}'); } catch (e) { return {}; }
+}
+function habitDone(h) { return (h.done && !getUncheckins()[h.id]) || !!getCheckins()[h.id]; }
+
+function allHabits() {
+  const out = [];
+  (DATA.days || []).forEach(d => {
+    (d.habits || []).forEach(h => out.push(Object.assign({ date: d.date }, h)));
+  });
+  return out.sort((a, b) => a.date < b.date ? -1 : 1);
+}
+
+function allStuckPoints() {
+  const out = [];
+  (DATA.days || []).forEach(d => {
+    ((d.review || {}).stuckPoints || []).forEach(s => out.push(Object.assign({ date: d.date }, s)));
+  });
+  return out;
+}
+
+function showCelebration(emoji, msg) {
+  document.getElementById('celEmoji').textContent = emoji;
+  document.getElementById('celMsg').innerHTML = rubyHtml(msg);
+  const cel = document.getElementById('celebrate');
+  cel.classList.remove('hidden');
+  speak(msg);
+  setTimeout(() => cel.classList.add('hidden'), 2600);
+}
+
+function renderHeader() {
+  const name = (DATA.config && DATA.config.childName) || '小朋友';
+  const hour = new Date().getHours();
+  const greet = hour < 11 ? '早上好' : hour < 13 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
+  document.getElementById('greet').innerHTML = greet + '，' + rubyHtml(name) + '！';
+  const days = DATA.days || [];
+  const last = days.length ? days[days.length - 1] : null;
+  document.getElementById('greetSub').textContent = last && last.schoolDayIndex
+    ? '你已经是小学第 ' + last.schoolDayIndex + ' 天的小朋友啦'
+    : '每一天都在长大';
+  document.title = name + '的学习成长看板';
+}
+
+function renderStats() {
+  const days = DATA.days || [];
+  let learned = 0, reviewDays = 0;
+  days.forEach(d => {
+    learned += (d.learned || []).length;
+    if (d.review && d.review.done) reviewDays++;
+  });
+  const habits = allHabits();
+  const monsters = allStuckPoints();
+  document.getElementById('stLearned').textContent = learned;
+  document.getElementById('stReview').textContent = reviewDays;
+  document.getElementById('stHabits').textContent = habits.filter(habitDone).length;
+  document.getElementById('stMonsters').textContent = monsters.filter(m => m.status === 'cleared').length;
+}
+
+function renderTodayHabits() {
+  const box = document.getElementById('todayHabits');
+  const today = todayStr();
+  const habits = allHabits();
+  const todays = habits.filter(h => h.date === today);
+  if (!todays.length) {
+    box.innerHTML = '<div class="empty-tip">今天还没有习惯打卡任务<br>等老师的学情报告来了就会有啦</div>';
+    return;
+  }
+  box.innerHTML = todays.map(h => {
+    const done = habitDone(h);
+    return '<button class="habit-btn' + (done ? ' done' : '') + '" data-habit="' + escapeHtml(h.id) + '">' +
+      '<span class="habit-emoji">' + (done ? '✅' : '🎯') + '</span>' +
+      '<span><div class="habit-name">' + rubyHtml(h.name) + '</div>' +
+      (h.detail ? '<div class="habit-detail">' + rubyHtml(h.detail) + '</div>' : '') + '</span>' +
+      '<span class="habit-status">' + (done ? '🌟' : '👆') + '</span>' +
+      '</button>';
+  }).join('');
+  box.querySelectorAll('.habit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-habit');
+      const h = todays.find(x => x.id === id);
+      if (!h) return;
+      const checkins = getCheckins();
+      const uncheckins = getUncheckins();
+      if (habitDone(h)) {
+        // 取消打卡：点错了可以反悔
+        delete checkins[id];
+        if (h.done) uncheckins[id] = true;
+        localStorage.setItem('lgb_checkins', JSON.stringify(checkins));
+        localStorage.setItem('lgb_uncheckins', JSON.stringify(uncheckins));
+        speak('已取消打卡，没关系！');
+      } else {
+        delete uncheckins[id];
+        checkins[id] = true;
+        localStorage.setItem('lgb_checkins', JSON.stringify(checkins));
+        localStorage.setItem('lgb_uncheckins', JSON.stringify(uncheckins));
+        const remaining = todays.filter(x => !habitDone(x)).length;
+        if (remaining === 0) {
+          showCelebration('🎉', '今天的好习惯全部完成，太棒啦！');
+        } else {
+          speak('打卡成功！');
+        }
+      }
+      renderTodayHabits();
+      renderStats();
+      renderHabitHistory();
+    });
+  });
+}
+
+function renderTimeline() {
+  const box = document.getElementById('timeline');
+  const days = (DATA.days || []).slice().sort((a, b) => a.date < b.date ? 1 : -1);
+  if (!days.length) {
+    box.innerHTML = '<div class="empty-tip">还没有记录哦<br>把老师的学情报告或者你和孩子的聊天发给我吧</div>';
+    return;
+  }
+  box.innerHTML = days.map(d => {
+    const badges = [];
+    if (d.schoolDayIndex) badges.push('<span class="pill">入学第' + d.schoolDayIndex + '天</span>');
+    if (d.teacherReport && d.teacherReport.received) badges.push('<span class="pill blue">📩 老师报告</span>');
+    if (d.conversation && d.conversation.received) badges.push('<span class="pill green">💬 亲子聊天</span>');
+    const items = (d.learned || []).map(l => {
+      const color = SUBJECT_COLORS[l.subject] || SUBJECT_COLORS['其他'];
+      const dual = (l.sources || []).length >= 2;
+      const imgs = (l.images || []).map(src =>
+        '<button class="thumb-btn" data-img="' + escapeHtml(src) + '" title="点击看大图">' +
+        '<img class="thumb" src="' + escapeHtml(src) + '" alt="教材图片" loading="lazy">' +
+        '</button>').join('');
+      return '<li>' +
+        '<span class="chip" style="background:' + color + '">' + escapeHtml(l.subject) + '</span>' +
+        '<span class="item-main">' +
+        '<span class="item-body">' + rubyHtml(l.content) + (dual ? ' <span class="star" title="老师和小朋友都提到啦">⭐</span>' : '') + '</span>' +
+        (imgs ? '<span class="thumbs">' + imgs + '</span>' : '') +
+        '</span>' +
+        '<button class="speak-btn" data-say="' + escapeHtml(l.content) + '">🔊</button>' +
+        '</li>';
+    }).join('');
+    const highlights = ((d.review || {}).highlights || []).length
+      ? '<div class="highlights">🌟 ' + (d.review.highlights.map(rubyHtml).join('<br>🌟 ')) + '</div>'
+      : '';
+    return '<article class="day-card">' +
+      '<div class="day-head"><span class="day-date">' + fmtDate(d.date) + ' ' + escapeHtml(d.weekday || '') + '</span>' + badges.join('') + '</div>' +
+      '<ul class="learned-list">' + (items || '<li><span class="item-body">这一天还没有记录</span></li>') + '</ul>' +
+      highlights +
+      '</article>';
+  }).join('');
+  box.querySelectorAll('.speak-btn').forEach(btn => {
+    btn.addEventListener('click', () => speak(btn.getAttribute('data-say')));
+  });
+  box.querySelectorAll('.thumb-btn').forEach(btn => {
+    btn.addEventListener('click', () => openImageViewer(btn.getAttribute('data-img')));
+  });
+}
+
+function openImageViewer(src) {
+  const img = document.getElementById('imgViewerImg');
+  img.src = src;
+  document.getElementById('imgViewer').classList.remove('hidden');
+}
+
+function openImageViewerClose() {
+  document.getElementById('imgViewer').classList.add('hidden');
+  document.getElementById('imgViewerImg').src = '';
+}
+
+function renderMonsters() {
+  const box = document.getElementById('monsters');
+  const monsters = allStuckPoints();
+  if (!monsters.length) {
+    box.innerHTML = '<div class="empty-tip">🎈 太厉害了，目前一只小怪兽都没有！</div>';
+    return;
+  }
+  const pending = monsters.filter(m => m.status !== 'cleared');
+  const cleared = monsters.filter(m => m.status === 'cleared');
+  box.innerHTML =
+    pending.map(m =>
+      '<div class="monster-card"><span class="monster-emoji">👾</span>' +
+      '<span><div class="monster-topic">' + rubyHtml(m.topic) + '</div>' +
+      (m.note ? '<div class="monster-note">' + escapeHtml(m.note) + '</div>' : '') + '</span>' +
+      '<span class="monster-status">⚔️</span></div>').join('') +
+    cleared.map(m =>
+      '<div class="monster-card cleared"><span class="monster-emoji">🏆</span>' +
+      '<span><div class="monster-topic">' + rubyHtml(m.topic) + '</div>' +
+      '<div class="monster-note">' + (m.clearedDate ? fmtDate(m.clearedDate) + ' 攻克' : '已攻克') + '</div></span>' +
+      '<span class="monster-status">✅</span></div>').join('');
+}
+
+function renderSubjectBars() {
+  const box = document.getElementById('subjectBars');
+  const count = {};
+  (DATA.days || []).forEach(d => (d.learned || []).forEach(l => {
+    count[l.subject] = (count[l.subject] || 0) + 1;
+  }));
+  const entries = Object.entries(count).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    box.innerHTML = '<div class="empty-tip">还没有知识点统计</div>';
+    return;
+  }
+  const max = entries[0][1];
+  box.innerHTML = entries.map(([sub, n]) => {
+    const color = SUBJECT_COLORS[sub] || SUBJECT_COLORS['其他'];
+    return '<div class="bar-row"><span class="bar-label">' + escapeHtml(sub) + '</span>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(n / max * 100) + '%;background:' + color + '"></div></div>' +
+      '<span class="bar-num">' + n + '</span></div>';
+  }).join('');
+}
+
+function renderHabitHistory() {
+  const box = document.getElementById('habitHistory');
+  const habits = allHabits();
+  if (!habits.length) { box.innerHTML = ''; return; }
+  const groups = {};
+  habits.forEach(h => { (groups[h.name] = groups[h.name] || []).push(h); });
+  box.innerHTML = '<div class="habit-history">' + Object.entries(groups).map(([name, list]) => {
+    const dots = list.map(h =>
+      '<span class="dot ' + (habitDone(h) ? 'ok' : 'no') + '" title="' + h.date + '"></span>').join(' ');
+    let streak = 0;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (habitDone(list[i])) streak++;
+      else break;
+    }
+    return '<div class="habit-row"><span class="name">' + rubyHtml(name) + '</span>' + dots +
+      (streak >= 2 ? '<span class="streak">🔥 连续' + streak + '天</span>' : '') + '</div>';
+  }).join('') + '</div>';
+}
+
+function renderWeekly() {
+  const box = document.getElementById('weekly');
+  const weekly = DATA.weekly || [];
+  if (!weekly.length) {
+    box.innerHTML = '<div class="empty-tip">第一份周报星期五就会诞生啦</div>';
+    return;
+  }
+  const w = weekly[weekly.length - 1];
+  box.innerHTML = '<div class="weekly-card"><h3>📮 ' + escapeHtml(w.dateRange || w.week) + '</h3>' +
+    '回顾了 <b>' + (w.reviewDays || 0) + '</b> 天，学到 <b>' + (w.totalLearned || 0) + '</b> 个知识点，' +
+    '习惯打卡 <b>' + (w.habitsDone || 0) + '/' + (w.habitsTotal || 0) + '</b>，' +
+    '攻克卡点 <b>' + (w.stuckCleared || 0) + '</b> 个' +
+    ((w.highlights || []).length ? '<br>🌟 ' + w.highlights.map(escapeHtml).join('<br>🌟 ') : '') +
+    ((w.nextWeekFocus || []).length ? '<br>🎯 下周关注：' + w.nextWeekFocus.map(escapeHtml).join('、') : '') +
+    '</div>';
+}
+
+function renderAll() {
+  renderHeader();
+  renderStats();
+  renderTodayHabits();
+  renderTimeline();
+  renderMonsters();
+  renderSubjectBars();
+  renderHabitHistory();
+  renderWeekly();
+}
+
+async function init() {
+  document.getElementById('imgViewer').addEventListener('click', openImageViewerClose);
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    document.addEventListener('pointerdown', prewarm);
+  }
+  try {
+    DATA = await loadData();
+    DATA.days = DATA.days || [];
+    DATA.weekly = DATA.weekly || [];
+    openImageViewerClose();
+    renderAll();
+  } catch (e) {
+    const b = document.getElementById('errBanner');
+    b.style.display = 'block';
+    if (location.protocol === 'file:') {
+      b.innerHTML = '这个页面是被直接双击打开的（file:// 方式），浏览器不允许这样读取本地数据。<br>' +
+        '请改用浏览器地址栏访问成长家园门户：<b><a href="http://localhost:8090/">http://localhost:8090/</a></b>（看板直达：<a href="http://localhost:8090/learn/web/dashboard.html">http://localhost:8090/learn/web/dashboard.html</a>）<br>' +
+        '如果打不开，先在成长家园门户的 web 文件夹运行 <code>python preview_server.py</code> 启动 8090 服务器。';
+    } else {
+      b.textContent = '数据加载失败：请确认预览服务器已启动（python preview_server.py），或使用内嵌数据的单文件版本。';
+    }
+  }
+}
+
+init();
+</script>
+</body>
+</html>

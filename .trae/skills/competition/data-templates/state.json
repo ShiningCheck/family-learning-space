@@ -1,0 +1,7 @@
+{
+  "enrollment": {},
+  "enrollmentUpdated": "",
+  "records": {},
+  "updated": "",
+  "_说明": "records 形如 { \"<项目id>:<步骤id>\": { \"YYYY-MM-DD\": { \"v\": 1, \"ts\": 1730000000000 } } }；按 ts 取新合并，取消写 v:0。enrollment 形如 { \"performance\": \"instrument\", \"artwork\": \"drawing\" }。"
+}

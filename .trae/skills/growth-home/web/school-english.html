@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学校英语</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<script src="/vendor/voice.js"></script>
+<script src="/components/homework-section.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 50px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+  .hero {
+    margin: 16px 0 18px;
+    background: var(--c, #12B886);
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff;
+    text-align: center;
+    padding: 22px 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 24px; opacity: 0.55; }
+  .hero-emoji { font-size: 54px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 32px; font-weight: 900; margin-top: 4px; line-height: 1.7; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .goal { font-size: 16px; margin-top: 4px; font-weight: 700; opacity: 0.95; line-height: 1.8; }
+  .hero .textbook { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 800; background: rgba(255,255,255,0.2); border-radius: 999px; padding: 3px 14px; }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 16px; margin-bottom: 16px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .streak-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .streak { font-size: 20px; font-weight: 900; color: var(--acc-deep, #E8590C); }
+  .dots { display: flex; gap: 8px; }
+  .dot { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--soft, #8D7357); }
+  .dot i { width: 20px; height: 20px; border-radius: 50%; display: block; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); }
+  .dot.ok i { background: #51CF66; }
+  .dot.today { font-weight: 900; color: var(--ink, #4A3B2A); }
+
+  .unit-head { display: flex; align-items: center; gap: 14px; }
+  .unit-badge {
+    flex: none; width: 64px; height: 64px; border-radius: 18px;
+    background: var(--c, #12B886); border: 4px solid var(--edge, #4A3B2A);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;
+    box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+  }
+  .unit-badge .u-n { font-size: 24px; font-weight: 900; line-height: 1.05; }
+  .unit-badge .u-sub { font-size: 11px; font-weight: 700; opacity: 0.9; }
+  .unit-info .u-title { font-size: 24px; font-weight: 900; line-height: 1.8; }
+  .unit-info .u-date { font-size: 14px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  .note-box {
+    border: 3px dashed var(--acc, #12B886); border-radius: 18px;
+    padding: 12px 14px; background: #F0FBF6;
+    font-size: 15px; line-height: 1.8; color: var(--ink, #4A3B2A); font-weight: 700;
+  }
+  .note-box .note-title { font-size: 17px; font-weight: 900; margin-bottom: 4px; }
+
+  .sub-title { font-size: 17px; font-weight: 900; margin: 2px 0 8px; line-height: 1.8; }
+  .speak-hint { margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.8; }
+  .med-item { margin-bottom: 12px; }
+  .med-item:last-child { margin-bottom: 0; }
+  .med-item .m-label { font-size: 16px; font-weight: 800; margin-bottom: 8px; line-height: 1.4; }
+  .med-item video { width: 100%; border-radius: 14px; border: 3px solid var(--edge, #4A3B2A); background: #000; }
+
+  /* 内容组：一组内容（一个视频/一段材料）下边跟着一个打卡标志（原来听/看/说三个打卡已按用户要求删掉） */
+  .grp { border: 3px solid var(--edge, #4A3B2A); border-radius: 18px; background: var(--card, #FFFDF7); padding: 12px; margin-bottom: 14px; }
+  .grp:last-child { margin-bottom: 0; }
+  .grp.grp-done { background: #F4FCF6; }
+  .grp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .grp-head .g-emoji { font-size: 24px; line-height: 1.4; }
+  .grp-head .g-title { font-size: 19px; font-weight: 900; line-height: 1.6; }
+  .grp .g-desc { font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.7; margin-bottom: 8px; }
+  .grp-empty { font-size: 15px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.9; }
+  .sec-check { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .sec-btn {
+    font-family: inherit; font-size: 17px; font-weight: 900; color: #fff; line-height: 1.4;
+    background: #12B886; border: 3.5px solid var(--edge, #4A3B2A); border-radius: 16px;
+    padding: 10px 16px; cursor: pointer; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .sec-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+  .sec-btn.done { background: #51CF66; }
+  .progress-line { text-align: center; font-size: 18px; font-weight: 900; margin-bottom: 14px; }
+  .all-done { text-align: center; font-size: 15px; color: #2B8A3E; font-weight: 800; margin-top: 10px; }
+
+  /* 日期条：标明这次打卡是给哪一天打的（点日历回看过去时显示「回到今天」） */
+  .date-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border: 2.5px solid #12B886; border-radius: 18px; padding: 10px 12px;
+    background: #F2FCF8; margin-bottom: 12px; font-size: 15px; font-weight: 800; line-height: 1.5;
+    color: var(--ink, #4A3B2A);
+  }
+  .date-banner .db-back {
+    flex: none; font-family: inherit; font-size: 13px; font-weight: 900; color: #fff;
+    background: #12B886; border: 2.5px solid var(--edge, #4A3B2A); border-radius: 999px;
+    padding: 5px 11px; cursor: pointer; box-shadow: 0 2px 0 var(--edge, #4A3B2A);
+  }
+  .date-banner .db-back:active { transform: translateY(2px); box-shadow: none; }
+
+  #celebrate {
+    position: fixed; inset: 0; z-index: 99;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    background: color-mix(in srgb, var(--paper, #FFF6E9) 92%, transparent);
+  }
+  #celebrate.hidden { display: none; }
+  .cel-emoji { font-size: 92px; animation: bounce 0.65s infinite alternate; }
+  .cel-msg { font-size: 30px; font-weight: 900; color: var(--acc-deep, #E8590C); text-align: center; line-height: 1.8; padding: 0 20px; }
+  @keyframes bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-22px) scale(1.1); } }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero" id="hero">
+      <span class="deco" style="left:12px;top:12px">✨</span>
+      <span class="deco" style="right:14px;bottom:12px">🌟</span>
+      <div class="hero-emoji">📚</div>
+      <h1>学校英语</h1>
+      <div class="goal" id="heroGoal"></div>
+      <span class="textbook" id="heroTextbook"></span>
+    </header>
+
+    <div class="card">
+      <div class="streak-row">
+        <span class="streak" id="streak"></span>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+
+    <div class="card" id="unitCard"></div>
+
+    <div class="card" id="noteCard"></div>
+
+    <div class="card" id="groupsCard"></div>
+
+    <div class="card" id="speakCard">
+      <div class="sub-title" id="speakTitle">🗣️ 说 · 跟读模仿，录下来</div>
+      <div id="speakVoice"></div>
+      <div id="speakVoiceList"></div>
+      <div class="speak-hint">录错了想重录？点这条录音右边的 🗑 就能删掉（音频和文字一起删）。</div>
+    </div>
+
+    <div class="card" id="hwCard"></div>
+  </div>
+</div>
+
+<div id="celebrate" class="hidden">
+  <div class="cel-emoji" id="celEmoji">🎉</div>
+  <div class="cel-msg" id="celMsg"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let CHILD_NAME = '';
+let GOAL = '每天听一听、看一看、说一说，磨出语感';
+let TEXTBOOK = '外研社《新交际英语》';
+let UNITS = [];
+let RECORDS = {};
+let UNIT = null;
+let SEL_DATE = '';   // 正在打卡/回看的那一天（默认今天；点日历能回到过去补打卡）
+const TASKS = ['listen', 'watch', 'speak'];
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStr(new Date()); }
+function parseD(s) {
+  const p = String(s || '').split('-');
+  const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  return isNaN(d.getTime()) ? null : d;
+}
+function cnDate(s) {
+  const d = parseD(s);
+  if (!d) return String(s || '');
+  const wk = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + wk;
+}
+function selDay() { return SEL_DATE || todayStr(); }
+function getDay(date) { if (!RECORDS[date]) RECORDS[date] = {}; return RECORDS[date]; }
+// ===== 打卡点＝内容组（和辅导班一样：一组内容下边跟着一个打卡）=====
+// 原来听/看/说三个分别打卡已删掉。groups 没写就「一条材料一组」——
+// 学校再发新视频，这里自动多出一组，不用改代码；想把几条材料合成一组、或给组起个好懂的名字，
+// 就在 data/school_english.json 的 units[].groups 里写 [{ id, emoji, title, desc, materials: ['v1','v2'] }]。
+function groupsOf(u) {
+  const mats = (u && u.materials) || [];
+  const gs = (u && u.groups) || [];
+  if (!gs.length) {
+    return mats.map(m => ({ id: m.id, emoji: '🎬', title: m.label || '资料', desc: '', materials: [m] }));
+  }
+  const used = {};
+  const out = gs.map((g, i) => {
+    const ms = [];
+    (g.materials || []).forEach(id => {
+      const m = mats.filter(x => x.id === id)[0];
+      if (m) { ms.push(m); used[m.id] = true; }
+    });
+    return {
+      id: g.id || ('g' + (i + 1)), emoji: g.emoji || '📚',
+      title: g.title || '内容', desc: g.desc || '', materials: ms
+    };
+  });
+  mats.filter(m => !used[m.id]).forEach(m => out.push({ id: m.id, emoji: '🎬', title: m.label || '资料', desc: '', materials: [m] }));
+  return out;
+}
+function groupDone(u, g, ds) { return !!((RECORDS[ds || selDay()] || {})[g.id]); }
+// 按日期找那天的单元：写了 start/end 的按区间找（找不到就取此前最近一次更新），
+// 没写日期区间的就用数组最后那个（新单元往后追加）。
+function unitForDay(ds) {
+  const dated = UNITS.filter(u => u.start && u.end);
+  if (!dated.length) return UNITS[UNITS.length - 1] || null;
+  const hit = dated.filter(u => u.start <= ds && ds <= u.end)[0];
+  if (hit) return hit;
+  const past = dated.filter(u => u.end < ds).sort((a, b) => (a.end < b.end ? 1 : -1))[0];
+  if (past) return past;
+  return dated.slice().sort((a, b) => (a.start < b.start ? -1 : 1))[0];
+}
+// 改造前老的 listen/watch/speak 三维记录只作兼容读：日历圆点、连续天数照旧认它们
+function legacyAny(rec) { return TASKS.some(t => !!(rec && rec[t])); }
+function legacyAll(rec) { return TASKS.every(t => !!(rec && rec[t])); }
+function dayAnyOn(ds) {
+  const u = unitForDay(ds);
+  if (groupsOf(u).some(g => groupDone(u, g, ds))) return true;
+  return legacyAny(RECORDS[ds] || {});
+}
+function dayDoneOn(ds) {
+  const u = unitForDay(ds);
+  const gs = groupsOf(u);
+  if (gs.length) return gs.every(g => groupDone(u, g, ds));
+  return legacyAll(RECORDS[ds] || {});
+}
+
+// 朗读：优先播放电脑端预生成的音频（data/tts/），没有对应音频时自动降级到浏览器朗读。
+function speak(text, lang) {
+  const lg = lang === 'zh' ? 'zh' : 'en';
+  if (window.TTS) { TTS.speak(text, lg); return; }
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lg === 'en' ? 'en-US' : 'zh-CN';
+    u.rate = lg === 'en' ? 0.72 : 0.9;
+    speechSynthesis.speak(u);
+  }, 50);
+}
+function showCelebration(emoji, msg) {
+  $('celEmoji').textContent = emoji;
+  $('celMsg').innerHTML = rubyHtml(msg);
+  $('celebrate').classList.remove('hidden');
+  speak(msg, 'zh');
+  setTimeout(() => $('celebrate').classList.add('hidden'), 2600);
+}
+
+function calcStreak() {
+  let streak = 0;
+  const d = new Date();
+  if (!dayDoneOn(dateStr(d))) d.setDate(d.getDate() - 1);
+  while (dayDoneOn(dateStr(d))) { streak++; d.setDate(d.getDate() - 1); }
+  return streak;
+}
+function renderStreak() {
+  const streak = calcStreak();
+  const ds = selDay();
+  const isToday = ds === todayStr();
+  const gs = groupsOf(UNIT);
+  const doneCount = gs.filter(g => groupDone(UNIT, g, ds)).length;
+  $('streak').textContent = streak >= 2
+    ? '🔥 连续 ' + streak + ' 天'
+    : (doneCount && gs.length
+      ? '🌱 ' + (isToday ? '今日' : '这天') + ' ' + doneCount + '/' + gs.length + ' 组内容完成'
+      : (isToday ? '🌱 今天先看一组吧'
+        : (legacyAny(RECORDS[ds] || {}) ? '🌱 这天是改造前的记录（当时按听/看/说）' : '🌱 这天没有打卡记录')));
+  const box = $('dots');
+  const names = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = dateStr(d);
+    const ok = dayDoneOn(key);
+    html += '<span class="dot' + (ok ? ' ok' : '') + (i === 0 ? ' today' : '') + '">' +
+      '<i></i>' + (i === 0 ? '今' : names[d.getDay()]) + '</span>';
+  }
+  box.innerHTML = html;
+}
+
+function renderUnit() {
+  const u = UNIT;
+  $('unitCard').innerHTML =
+    '<div class="unit-head">' +
+    '<div class="unit-badge"><span class="u-n">' + escapeHtml(u.title || '第1单元') + '</span><span class="u-sub">' + escapeHtml(u.subtitle || '') + '</span></div>' +
+    '<div class="unit-info"><div class="u-title">' + rubyHtml((u.title || '') + ' · ' + (u.subtitle || '')) + '</div>' +
+    '<div class="u-date">' + escapeHtml(u.dateLabel || '本周') + '</div></div>' +
+    '</div>';
+}
+
+function renderNote() {
+  const note = (UNIT && UNIT.teacherNote) || '';
+  if (!note) { $('noteCard').style.display = 'none'; return; }
+  $('noteCard').style.display = 'block';
+  $('noteCard').innerHTML =
+    '<div class="note-box"><div class="note-title">💌 老师寄语</div>' + escapeHtml(note) + '</div>';
+}
+
+// 内容组（＝打卡点）：一组内容 + 它下面的一个打卡标志。
+// 打卡记录写在服务器上（跨设备同步），按钮就地更新、不整块重画（视频重画会重新加载），失败再画回原样。
+function renderGroups() {
+  const ds = selDay();
+  const isToday = ds === todayStr();
+  const gs = groupsOf(UNIT);
+  const doneCount = gs.filter(g => groupDone(UNIT, g, ds)).length;
+  let html = '<div class="sub-title">🎬 这次的内容（一组内容下边一个打卡）</div>' +
+    '<div class="date-banner"><span>' +
+    (isToday ? '📌 今天的打卡' : ('🕘 ' + cnDate(ds) + ' 的打卡')) + '</span>' +
+    (isToday ? '' : '<button class="db-back" id="dbBack" type="button">回到今天</button>') + '</div>' +
+    '<div class="progress-line">' + (isToday ? '今日 ' : '这天 ') + doneCount + ' / ' + gs.length + ' 组内容完成</div>';
+  if (!gs.length) {
+    html += '<div class="grp-empty">老师还没发资料，等资料到了这里就会有一组一组的内容和打卡。</div>';
+  }
+  html += gs.map(g => {
+    const done = groupDone(UNIT, g, ds);
+    return '<div class="grp' + (done ? ' grp-done' : '') + '">' +
+      '<div class="grp-head"><span class="g-emoji">' + escapeHtml(g.emoji) + '</span>' +
+      '<span class="g-title">' + rubyHtml(g.title) + '</span></div>' +
+      (g.desc ? '<div class="g-desc">' + escapeHtml(g.desc) + '</div>' : '') +
+      (g.materials || []).map(m =>
+        '<div class="med-item">' +
+        (m.label && m.label !== g.title ? '<div class="m-label">' + escapeHtml(m.label) + '</div>' : '') +
+        '<video controls loop preload="none" src="' + escapeHtml(m.url) + '"></video></div>'
+      ).join('') +
+      '<div class="sec-check"><button class="sec-btn' + (done ? ' done' : '') +
+      '" data-grp="' + escapeHtml(g.id) + '" type="button">' +
+      (done ? '✅ 已打卡' : '✋ 看完了，打卡') + '</button></div>' +
+      '</div>';
+  }).join('');
+  html += (gs.length && doneCount === gs.length
+    ? '<div class="all-done">🎉 ' + (isToday ? '今天' : '这天') + gs.length + ' 组内容都打卡啦！</div>' : '');
+  $('groupsCard').innerHTML = html;
+  const back = $('dbBack');
+  if (back) back.addEventListener('click', () => gotoDay(todayStr()));
+  $('groupsCard').querySelectorAll('[data-grp]').forEach(btn => {
+    btn.addEventListener('click', () => toggleGroup(btn, btn.getAttribute('data-grp')));
+  });
+}
+
+// 只更新「今日 x/N 组内容完成」那一行（打卡按钮是就地改的，不整块重画）
+function updateGroupProgress() {
+  const ds = selDay();
+  const gs = groupsOf(UNIT);
+  const el = $('groupsCard').querySelector('.progress-line');
+  if (!el) return;
+  el.textContent = (ds === todayStr() ? '今日 ' : '这天 ') +
+    gs.filter(g => groupDone(UNIT, g, ds)).length + ' / ' + gs.length + ' 组内容完成';
+}
+
+// 切到某一天：页面自己的内容组卡 + 录音区 + 作业区块（含日历/「某天打卡内容」）一起跟着走，
+// 所以回看过去某天时，按钮勾的就是那天，能给历史日期补打卡。
+function gotoDay(ds) {
+  SEL_DATE = ds || todayStr();
+  UNIT = unitForDay(SEL_DATE) || UNIT;
+  renderStreak();
+  renderUnit();
+  renderNote();
+  renderGroups();
+  renderSpeakVoice();
+  if (!window.HwSection) return;
+  HwSection.setDay(SEL_DATE);
+  HwSection.refresh();
+}
+
+// 点某一组内容下边的打卡标志
+async function toggleGroup(btn, gid) {
+  const ds = selDay();
+  const g = groupsOf(UNIT).filter(x => x.id === gid)[0] || { id: gid, title: '' };
+  const rec = getDay(ds);
+  const next = !rec[gid];
+  const wasDone = dayDoneOn(ds);
+  rec[gid] = next;
+  btn.classList.toggle('done', next);
+  btn.textContent = next ? '✅ 已打卡' : '✋ 看完了，打卡';
+  const card = btn.closest ? btn.closest('.grp') : null;
+  if (card) card.classList.toggle('grp-done', next);
+  renderStreak();
+  updateGroupProgress();
+  if (window.HwSection) HwSection.refreshDay();   // 「某天打卡内容」面板跟着变
+  try {
+    const r = await fetch('/api/school/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: ds, key: gid, done: next })
+    });
+    const j = await r.json();
+    if (!(j && j.ok)) throw new Error((j && j.error) || '保存失败');
+  } catch (e) {
+    rec[gid] = !next;
+    renderStreak();
+    renderGroups();
+    if (window.HwSection) HwSection.refreshDay();
+    speak('没保存上，再试一次', 'zh');
+    return;
+  }
+  const gs = groupsOf(UNIT);
+  const allDone = !!gs.length && gs.every(x => groupDone(UNIT, x, ds));
+  const tip = $('groupsCard').querySelector('.all-done');
+  if (allDone && !tip) {
+    $('groupsCard').insertAdjacentHTML('beforeend', '<div class="all-done">🎉 ' + (ds === todayStr() ? '今天' : '这天') + gs.length + ' 组内容都打卡啦！</div>');
+  }
+  if (!allDone && tip) tip.remove();
+  if (next) {
+    if (!wasDone && allDone) {
+      showCelebration('🎉', (ds === todayStr() ? '今天' : cnDate(ds)) + '的内容全打卡，你真棒！');
+    } else {
+      speak((g.title || '这一组') + '，打卡成功', 'zh');
+    }
+  } else {
+    speak('已取消，没关系', 'zh');
+  }
+}
+
+function renderAll() {
+  renderStreak();
+  renderUnit();
+  renderNote();
+  renderGroups();
+}
+
+// 「说」任务（task id = speak）：跟读录音区。录音/上传交给通用组件 vendor/voice.js，
+// 服务器会自动把录音识别成英文文字并留档；场景名按单元 id 区分，下方列出该单元最近的录音。
+// 下方列表每条都能 ▶️ 播放 / ✏️ 改文字 / 🗑 删除，录错了可以直接删掉。
+// 「说」跟读录音区（不是打卡点，录音本身就是"说"的痕迹；内容组的勾选打卡走 /api/school/checkin）。
+let speakScope = '';
+function listSpeakVoice() {
+  if (!window.Voice || !speakScope) return;
+  Voice.listInto('#speakVoiceList', {
+    scope: speakScope,
+    limit: 10,
+    empty: '还没有录音',
+    onDeleted: listSpeakVoice
+  });
+}
+function renderSpeakVoice() {
+  if (!window.Voice) return;
+  const unitId = (UNIT && UNIT.id) || 'unit';
+  speakScope = 'school-english-speak-' + unitId;
+  Voice.attach({
+    mount: '#speakVoice',
+    scope: speakScope,
+    lang: 'en',
+    compact: true,
+    date: selDay(),   // 录音记在当前选中的那天（回看过去时，就是给那天补录）
+    meta: { page: '学校英语' },
+    onSaved: listSpeakVoice,
+    onDeleted: listSpeakVoice
+  });
+  listSpeakVoice();
+}
+
+// 「作业」区块：把作业打卡 + 添加作业挂到本页，只显示归属「学校英语」的作业卡。
+// 科目名/图标/配色以 activities.json 的 subjects 为准，取不到时用下面的兜底值。
+const HW_SUBJECT = { id: 'school-english', name: '学校英语', emoji: '🎧', color: '#12B886' };
+async function mountHomework() {
+  let meta = HW_SUBJECT;
+  try {
+    const res = await fetch('/api/home', { cache: 'no-store' });
+    const d = await res.json();
+    const hit = (((d.activities || {}).subjects) || []).find(s => s.id === HW_SUBJECT.id);
+    if (hit) meta = hit;
+  } catch (e) { /* 用兜底值 */ }
+  HwSection.mount({
+    mount: '#hwCard',
+    subject: HW_SUBJECT.id,
+    subjectName: meta.name || HW_SUBJECT.name,
+    emoji: meta.emoji || HW_SUBJECT.emoji,
+    color: meta.color || HW_SUBJECT.color,
+    date: function () { return selDay(); },
+    allowAdd: true,
+    importFromBoard: false,
+    showLearned: false,
+    // 打卡项＝内容组（一组内容一个打卡）交给模块按同一套样式列出来
+    dayChecks: function (iso) {
+      const u = unitForDay(iso) || UNIT;
+      const rec = RECORDS[iso] || {};
+      return groupsOf(u).map(function (g) {
+        return {
+          name: (g.emoji ? g.emoji + ' ' : '') + (g.title || g.id),
+          detail: g.desc || '',
+          done: !!rec[g.id]
+        };
+      });
+    },
+    // 「说」的跟读录音：按那天列出来（音频 + 文字双显示）
+    dayVoices: function () {
+      return speakScope ? [{ scope: speakScope, label: '说 · 跟读录音（点 ▶️ 听，文字就是他说的）' }] : [];
+    },
+    // 在日历里点了某一天：页面自己的内容组卡、录音区、作业卡都跟着切到那天
+    onPickDate: function (iso) {
+      SEL_DATE = iso;
+      UNIT = unitForDay(SEL_DATE) || UNIT;
+      renderStreak();
+      renderUnit();
+      renderNote();
+      renderGroups();
+      renderSpeakVoice();
+      if (window.HwSection) HwSection.refresh();
+    },
+    meta: { page: '学校英语', subject: HW_SUBJECT.id }
+  });
+}
+
+async function init() {
+  const err = $('errTip');
+  try {
+    const res = await fetch('/api/school/data', { cache: 'no-store' });
+    const data = await res.json();
+    CHILD_NAME = (data.childName || '').trim();
+    UNITS = (data.units || []).filter(u => u && Array.isArray(u.materials) && u.materials.length);
+    RECORDS = data.records || {};
+    if (data.goal) GOAL = data.goal;
+    if (data.textbook) TEXTBOOK = data.textbook;
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+  if (!UNITS.length) {
+    err.style.display = 'block';
+    err.textContent = '没有找到学校英语内容，请检查 data/school_english.json。';
+    return;
+  }
+  UNIT = unitForDay(todayStr()) || UNITS[UNITS.length - 1];
+  SEL_DATE = todayStr();   // 默认打卡给今天；想补打卡就在下面的日历里点那一天
+  $('heroGoal').innerHTML = rubyHtml(GOAL);
+  $('heroTextbook').textContent = TEXTBOOK;
+  $('app').style.display = 'block';
+  renderAll();
+  renderSpeakVoice();
+  mountHomework();
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('#hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+
+// 视频点击播放后自动全屏 + 循环播放（孩子看得更清楚，也能反复看）；已在全屏中不重复请求，失败静默忽略
+document.addEventListener('play', e => {
+  const v = e.target;
+  if (!v || v.tagName !== 'VIDEO') return;
+  v.loop = true;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const req = v.requestFullscreen || v.webkitRequestFullscreen || v.msRequestFullscreen;
+  if (req) {
+    try { const p = req.call(v); if (p && p.catch) p.catch(() => {}); } catch (err) {}
+  } else if (typeof v.webkitEnterFullscreen === 'function') {
+    try { v.webkitEnterFullscreen(); } catch (err) {}
+  }
+}, true);
+</script>
+</body>
+</html>

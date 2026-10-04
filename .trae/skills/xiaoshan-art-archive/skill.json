@@ -1,0 +1,6 @@
+{
+  "url": "art",
+  "code": ["web", "SKILL.md", "data-templates"],
+  "data": ["data", "images", "audio", "output"],
+  "standalone": { "mode": "none" }
+}

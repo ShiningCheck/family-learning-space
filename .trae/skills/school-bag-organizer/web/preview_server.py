@@ -10,6 +10,10 @@
 反馈必须经过本地服务器转发，是因为浏览器直连第三方接口会被 CORS 拦住；
 同时断网时能先落盘、联网后自动补发，一条都不丢。
 中转服务地址默认留空：未配置时反馈只存本机 data/feedback/inbox/，绝不外发。
+
+注意：本技能的数据（config、课表、通知、反馈）落在**仓库之外的 data-root**（见
+.trae/rules/project_rules.md 第 8 节），通过 tools/data_paths.py 解析。未配置会直接报错。
+门户（growth-home）已包含本页全部功能，推荐用 `python setup.py --start` 启动门户。
 """
 import http.server
 import json
@@ -25,11 +29,20 @@ import webbrowser
 from feedback_backend import FeedbackBackend
 
 PORT = 8090
-# 以技能根目录（parent of web/）为根，使 /web/checklist.html 与 /data/*.json 都可达
-DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 以技能根目录（parent of web/）为代码根，使 /web/checklist.html 可达
+DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))       # 代码目录
+WORKSPACE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(DIR)))  # 仓库根
 PAGE_URL = "/web/checklist.html"
 
-backend = FeedbackBackend(DIR, PORT, "书包整理清单")
+sys.path.insert(0, os.path.join(WORKSPACE_ROOT, "tools"))
+import data_paths  # noqa: E402
+
+try:
+    BAG_DATA = str(data_paths.skill_dir("school-bag-organizer") / "data")
+except data_paths.DataRootNotConfigured as _exc:
+    raise SystemExit("[数据区未配置] %s\n请先在仓库根运行：python setup.py" % _exc)
+
+backend = FeedbackBackend(DIR, PORT, "书包整理清单", data_dir=BAG_DATA)
 
 
 def get_local_ip():
@@ -61,7 +74,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             path = urllib.parse.unquote(path, errors="surrogatepass")
         except UnicodeDecodeError:
             path = urllib.parse.unquote(path)
-        return super().translate_path(posixpath.normpath(path))
+        path = posixpath.normpath(path)
+        segments = [s for s in path.split("/") if s and s != ".."]
+        # 数据 URL /data/… 落在仓库之外的 data-root；页面 /web/… 仍走仓库里的代码目录
+        if segments[:1] == ["data"]:
+            return os.path.join(BAG_DATA, *segments[1:])
+        return super().translate_path(path)
 
     def send_json(self, obj, status=200):
         payload = json.dumps(obj, ensure_ascii=False).encode("utf-8")

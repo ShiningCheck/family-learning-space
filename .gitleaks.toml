@@ -1,0 +1,32 @@
+# gitleaks 隐私规则（GitHub Actions CI 使用）
+# 说明：真实敏感词表在 <data-root>/personal/privacy-guard-words.txt（仓库外、不入库），
+# CI 侧只做通用检查：默认密钥规则 + 中国手机号/身份证号 + 个人数据路径。
+title = "family-learning-space privacy rules"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "第三方代码与本地化资源不扫描"
+paths = [
+  '''(^|/)vendor/''',
+  '''tools/tchsrc/''',
+  '''(^|/)node_modules/''',
+]
+
+[[rules]]
+id = "cn-mobile-number"
+description = "疑似中国大陆手机号"
+regex = '''(?<!\d)1[3-9]\d{9}(?!\d)'''
+tags = ["PII"]
+entropy = 0
+[rules.allowlist]
+description = "时间戳/长数字串中的误报"
+regexes = ['''\d{12,}''']
+
+[[rules]]
+id = "cn-id-card"
+description = "疑似中国大陆身份证号"
+regex = '''(?<!\d)\d{6}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx](?!\d)'''
+tags = ["PII"]
+entropy = 0

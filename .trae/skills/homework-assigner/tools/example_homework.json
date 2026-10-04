@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-22",
+  "dateLabel": "9月22日",
+  "chinese": {
+    "chars": [
+      { "c": "七", "py": "qī" }, { "c": "八", "py": "bā" },
+      { "c": "九", "py": "jiǔ" }, { "c": "十", "py": "shí" },
+      { "c": "人", "py": "rén" }, { "c": "天", "py": "tiān" },
+      { "c": "口", "py": "kǒu" }, { "c": "田", "py": "tián" }
+    ],
+    "readTitle": "二、朗读并背诵",
+    "readLines": [
+      "一片两片三四片，五片六片七八片。九片十片无数片，飞入芦花都不见。"
+    ],
+    "recite": {
+      "title": "《咏鹅》〔唐〕骆宾王",
+      "lines": ["鹅，鹅，鹅，曲项向天歌。", "白毛浮绿水，红掌拨清波。"],
+      "blank": 2
+    },
+    "minutes": 12
+  },
+  "math": {
+    "items": [
+      "5 可以分成几和几？把 5 根小棒分成两堆，有哪几种分法？",
+      "4 可以分成几和几？",
+      "3 可以分成几和几？"
+    ],
+    "image": "textbooks/pages/数学/p030.jpg",
+    "imageLabel": "课本第25页「做一做」第1题",
+    "imagePrompt": "说说图上画了什么，怎样用加法来表示？",
+    "minutes": 15
+  },
+  "english": {
+    "sentences": [
+      "Hello! My name is ______________.",
+      "I'm ______________ years old.",
+      "My favourite colour is ______________.",
+      "My favourite number is ______________."
+    ],
+    "tip": "小提示：本周学了字母 S、M，找一找上面哪些词里有这两个字母。",
+    "minutes": 10
+  }
+}

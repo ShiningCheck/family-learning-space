@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设置 · 家庭学习空间</title>
+<script src="/vendor/themes.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:"Yuanti SC","YouYuan","PingFang SC","Microsoft YaHei",sans-serif;
+  background-color:var(--paper,#FFF6E9);color:var(--ink,#4A3B2A);
+  padding-bottom:80px;transition:background-color .35s ease,color .35s ease}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+h1{font-size:26px;font-weight:900;margin:20px 0 4px}
+.sub{font-size:13px;color:var(--soft,#8D7357);margin-bottom:18px}
+.card{background:var(--card,#fff);border:3px solid var(--edge,#4A3B2A);
+  border-radius:22px;box-shadow:0 6px 0 var(--edge,#4A3B2A);padding:18px;margin-bottom:18px}
+.card h2{font-size:18px;font-weight:900;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:14px;font-weight:700;margin-bottom:5px;color:var(--soft,#8D7357)}
+.field input{width:100%;padding:10px 12px;font-size:16px;border:2px solid var(--line,#FFE3B3);
+  border-radius:12px;background:var(--bg,#FFF8F0);color:var(--ink,#4A3B2A)}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.theme-btn{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--line,#FFE3B3);
+  border-radius:14px;background:var(--bg,#FFF8F0);cursor:pointer;font-size:15px;font-weight:700;
+  color:var(--ink,#4A3B2A);transition:.15s}
+.theme-btn.on{border-color:var(--acc,#FF922B);background:var(--acc,#FF922B);color:#fff}
+.skill{display:flex;align-items:center;justify-content:space-between;padding:10px 0;
+  border-bottom:1px dashed var(--line,#FFE3B3)}
+.skill:last-child{border-bottom:none}
+.skill .sn{font-size:16px;font-weight:700}
+.toggle{position:relative;width:48px;height:26px;background:var(--line,#ddd);border-radius:13px;
+  cursor:pointer;transition:.2s;border:2px solid var(--edge,#4A3B2A)}
+.toggle.on{background:var(--acc,#FF922B)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;
+  border-radius:50%;transition:.2s}
+.toggle.on::after{left:24px}
+.mono{font-family:Consolas,monospace;font-size:13px;word-break:break-all;color:var(--soft,#8D7357)}
+.actions{display:flex;gap:12px;margin-top:6px}
+.btn{flex:1;padding:14px;font-size:17px;font-weight:900;border:3px solid var(--edge,#4A3B2A);
+  border-radius:16px;cursor:pointer;text-align:center;box-shadow:0 5px 0 var(--edge,#4A3B2A)}
+.btn.primary{background:var(--acc,#FF922B);color:#fff}
+.btn.ghost{background:var(--card,#fff);color:var(--ink,#4A3B2A)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--edge,#4A3B2A)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink,#4A3B2A);
+  color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;font-weight:700;opacity:0;
+  transition:.3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚙️ 设置</h1>
+  <div class="sub">改动会实时保存到数据区，其它设备打开即生效。</div>
+
+  <div class="card">
+    <h2>👨‍👩‍👧 孩子档案</h2>
+    <div class="field"><label>名字 / 昵称</label><input id="f_childName" placeholder="孩子的名字"></div>
+    <div class="field"><label>学校（可留空）</label><input id="f_school" placeholder="学校名称"></div>
+    <div class="field"><label>年级</label><input id="f_grade" placeholder="一年级"></div>
+    <div class="field"><label>班级（可留空）</label><input id="f_className" placeholder="如 2班"></div>
+    <div class="field"><label>学期</label><input id="f_semester" placeholder="2026-2027学年度第一学期"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎨 主题皮肤</h2>
+    <div class="themes" id="themes"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧩 功能开关</h2>
+    <div id="skills"></div>
+    <div class="sub" style="margin-top:10px">关掉的功能会从门户首页隐藏，数据不会丢。</div>
+  </div>
+
+  <div class="card">
+    <h2>🗄️ 数据区位置</h2>
+    <div class="mono" id="dataRoot"></div>
+    <div class="sub" style="margin-top:8px">孩子的打卡、录音、画作、课表都存在这个目录（仓库之外），删掉它即回到出厂状态。</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn ghost" onclick="back()">← 返回首页</button>
+    <button class="btn primary" onclick="save()">保存</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var THEMES = (window.GrowthThemes && GrowthThemes.THEMES) || {};
+var SKILL_NAMES = {
+  'web':'门户','learn':'学习看板','report':'日报','chinese':'语文','math':'数学',
+  'class':'辅导班英语','school':'学校英语','bag':'书包','art':'画作','lib':'图书馆',
+  'reading':'读书','comp':'比赛','homework':'作业管理'
+};
+var state = { config:{}, skills:[], disabled:[] };
+
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')}, 1800); }
+
+function renderThemes(){
+  var box=document.getElementById('themes');
+  var cur = (window.GrowthThemes && GrowthThemes.current()) || '';
+  box.innerHTML='';
+  Object.keys(THEMES).forEach(function(id){
+    var t=THEMES[id];
+    var b=document.createElement('button');
+    b.className='theme-btn'+(id===cur?' on':'');
+    b.textContent=(t.emoji||'')+' '+t.name;
+    b.onclick=function(){
+      if(window.GrowthThemes) GrowthThemes.set(id);
+      renderThemes();
+    };
+    box.appendChild(b);
+  });
+}
+
+function renderSkills(){
+  var box=document.getElementById('skills');
+  box.innerHTML='';
+  state.skills.forEach(function(s){
+    var name = SKILL_NAMES[s.url] || s.id;
+    var row=document.createElement('div');
+    row.className='skill';
+    row.innerHTML='<span class="sn">'+name+'</span>';
+    var t=document.createElement('div');
+    t.className='toggle'+(s.enabled?' on':'');
+    t.onclick=function(){ s.enabled=!s.enabled; t.className='toggle'+(s.enabled?' on':''); };
+    row.appendChild(t);
+    box.appendChild(row);
+  });
+}
+
+function load(){
+  fetch('/api/settings',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    if(!j || !j.ok) return;
+    state.config=j.config||{}; state.skills=j.skills||[];
+    state.disabled = state.skills.filter(function(s){return !s.enabled}).map(function(s){return s.url});
+    document.getElementById('f_childName').value=state.config.childName||'';
+    document.getElementById('f_school').value=state.config.school||'';
+    document.getElementById('f_grade').value=state.config.grade||'';
+    document.getElementById('f_className').value=state.config.className||'';
+    document.getElementById('f_semester').value=state.config.semester||'';
+    document.getElementById('dataRoot').textContent=j.dataRoot||'';
+    renderThemes(); renderSkills();
+  }).catch(function(){ toast('连不上服务器，稍后再试'); });
+}
+
+function save(){
+  var disabled = state.skills.filter(function(s){return !s.enabled}).map(function(s){return s.url});
+  var payload = {
+    childName: document.getElementById('f_childName').value,
+    school: document.getElementById('f_school').value,
+    grade: document.getElementById('f_grade').value,
+    className: document.getElementById('f_className').value,
+    semester: document.getElementById('f_semester').value,
+    disabled_skills: disabled
+  };
+  fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)}).then(function(r){return r.json()}).then(function(j){
+    if(j && j.ok){ toast('已保存 ✓'); } else { toast('保存失败'); }
+  }).catch(function(){ toast('保存失败，检查服务器'); });
+}
+
+function back(){ location.href='/'; }
+load();
+</script>
+</body>
+</html>

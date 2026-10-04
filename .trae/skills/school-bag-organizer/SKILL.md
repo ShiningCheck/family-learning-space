@@ -1,8 +1,9 @@
-***
+---
 
-name: "school-bag-organizer"
+name: school-bag-organizer
 description: "管理课表与课程用具要求，处理班级通知截图，生成每日书包整理清单。当用户发送班级通知截图、询问'明天带什么''书包整理''课程提醒'或需要根据课表准备物品时调用。"
------------------------------------------------------------------------------------------------
+agent_created: true
+---
 
 # 书包整理助手
 
@@ -10,18 +11,15 @@ description: "管理课表与课程用具要求，处理班级通知截图，生
 
 ## 目录结构
 
-本技能所有文件均位于技能文件夹内，便于打包发布。以技能根目录为基准（即本 `SKILL.md` 所在目录）：
+代码全部在技能文件夹内，便于打包发布；**真实数据在仓库之外**。以技能根目录为基准（即本 `SKILL.md` 所在目录）：
+
+**代码侧**（公开、可分发）：
 
 ```
 school-bag-organizer/
 ├── SKILL.md                     # 本文件
-├── data/                        # 当前用户的真实数据（运行时读写）
-│   ├── config.json              # 孩子姓名、学校、年级、班级、教材版本、morningCutoff
-│   ├── schedule.json            # 永久课表
-│   ├── course_requirements.json # 每门课的永久用具要求
-│   ├── notifications.json       # 历史通知记录
-│   ├── holidays.json            # 中国法定节假日/调休/寒暑假（通用数据，非个人信息）
-│   └── feedback/                # 用户反馈本地收件箱（运行时生成，不入库）
+├── skill.json                   # 声明 url=bag / 代码目录 / 数据目录 / standalone.mode=localstorage
+├── DATA.md                      # 数据落在哪里（仓库之外的 data-root）
 ├── data-templates/              # 发布用的通用示例数据（不含任何个人信息）
 │   ├── config.json
 │   ├── schedule.json
@@ -33,14 +31,22 @@ school-bag-organizer/
     ├── checklist.html           # 主页面（双模式：动态fetch / 内嵌数据）
     ├── preview_server.py        # 局域网预览服务器（含 /api/feedback 反馈出口）
     ├── feedback_backend.py      # 反馈本地后端（落盘 + 转发 + 补发 + 限流）
-    ├── build_standalone.js      # 生成 Cloud 模式自包含单文件
+    ├── build_standalone.js      # 生成 Cloud 模式自包含单文件（产物落 data-root，绝不写回仓库）
     └── vendor/
         ├── pinyin-pro.js        # 本地拼音库（无需联网）
         ├── themes.js            # 主题配置
         └── feedback.js          # 页内「提建议」反馈组件（见「用户反馈通道」）
 ```
 
-**路径解析**：所有数据读写均相对技能根目录。例如数据文件路径为 `<技能根目录>/data/config.json`。
+**数据侧**（**仓库之外**，本技能目录里没有 `data/`）：`<data-root>/bag/data/`
+（`config.json` 孩子姓名/学校/年级/班级/教材版本/morningCutoff、`schedule.json` 永久课表、
+`course_requirements.json` 每门课用具要求、`notifications.json` 历史通知、
+`holidays.json` 法定节假日（通用数据）、`feedback/` 反馈本地收件箱）。
+路径一律走 `tools/data_paths.py` 的 `skill_dir("school-bag-organizer")` 解析，细节见同目录 `DATA.md`。
+
+**单文件版（standalone）**：`standalone.mode = "localstorage"`——课表/用具要求来自 data-root 的 `data/`，
+每天的收拾书包勾选只存 `localStorage`（不必落服务器）；生成的自包含单文件写入 `<data-root>/bag/share/`，
+**绝不写回仓库**（含真实信息的单文件不入库、不随包分发）。
 
 ## 首次使用引导（重要）
 
@@ -81,6 +87,7 @@ school-bag-organizer/
    - 课表变更 → 更新 `data/schedule.json`
    - 课程用具要求更新/新增 → 更新 `data/course_requirements.json`
    - 长期有效的规章制度 → 记录到 `data/notifications.json`，标记 `type: "permanent"`
+   - **改完课表或用具要求后补一次配音**：调用 `voice-dubbing` 技能（`python .trae/skills/voice-dubbing/tools/gen_tts.py`），让新增的课程名与用具名称都有朗读音频，否则手机上点 🔊 可能没声音
 
    **一次性通知**（执行完即可）：
    - 填表、交回执、签字等 → 记录到 `data/notifications.json`，标记 `type: "one_time"`
@@ -88,6 +95,8 @@ school-bag-organizer/
    - 若通知要求明天携带某物，务必在该条目中加入 `items_to_bring` 字段
    - **必须填写 `deadline` 字段**（需要上交/完成的日期，格式 `YYYY-MM-DD`）。若通知未写明日期，根据上下文推断（如"明天带回"→ 明天日期），推断不出时向用户确认
    - **顺延机制**：deadline 之后通知不会自动消失。页面会逐日检查该通知的物品是否在当天清单中被勾选——没勾选说明没带去学校，通知自动顺延到第二天（卡片上显示橙色"已顺延 N 天"徽章），直到用户在浏览器中真正勾选了所有物品（= 已带去学校），通知才从后续清单中消失
+   - **按截止日出现**：只有目标日期（今天／下一个上学日／自选日期）**到达或超过**该通知的 `deadline` 时，该通知才会出现在清单里，所以两周后的任务不会提前刷屏；交表类通知会在"今晚整理、明天上交"的前一晚自然出现。
+   - 一次通知若涉及两个不同日期（如"9月17日前交知情同意书"+"9月28日接种带证件"），应拆成两条 `one_time` 记录，各写各的 `deadline` 与 `items_to_bring`，让它们分别在临近各自日期时出现
    - 只有当用户明确告知"已经交了/不需要了"时，才把 `status` 改为 `"done"`
 
 3. **处理完成后**，向用户总结：提取了哪些通知、哪些记为永久数据、哪些是一次性任务及截止时间、是否需要立即更新书包清单。
@@ -98,7 +107,7 @@ school-bag-organizer/
 2. 读取 `data/config.json`、`data/schedule.json`、`data/course_requirements.json`、`data/notifications.json`、`data/holidays.json`。
 3. 匹配目标日期的课程与各课用具要求，叠加相关的一次性通知物品。
 4. 生成交互式 HTML checklist（见下方"两种交付模式"）。
-5. 页面要求：适合 6 岁儿童——大复选框、拼音标注（本地 pinyin-pro 库）、语音朗读（Web Speech API）、音色选择、勾选进度环、全部完成庆祝动画。勾选状态用 localStorage 按"日期+孩子名"存储。
+5. 页面要求：适合 6 岁儿童——大复选框、拼音标注（本地 pinyin-pro 库）、语音朗读（内容统一播放 `voice-dubbing` 技能预生成的 edge-tts 音频，不再依赖手机自带语音）、勾选进度环、全部完成庆祝动画。勾选状态用 localStorage 按"日期+孩子名"存储。
 6. 若某门课没有记录用具要求，在页面中标注"暂无特殊用具要求"。
 
 ### 2.5 显示时间规则（重要）
@@ -118,6 +127,19 @@ school-bag-organizer/
 - 上学日早上 9 点前（morningCutoff 可在 `config.json` 调整）打开同一页面即可核对当天书包。
 - 调休上班日（如国庆前后的周日补课）按上学日处理；若当地学校不跟随调休，可在 `holidays.json` 的 `workdays`/`holidays` 中按需调整。
 - 每年 11 月左右国务院发布下一年放假安排后，应更新 `holidays.json`（用户可发通知截图，或直接采用官方通知内容）。
+
+### 2.6 按日期查看（自选某一天的清单）
+
+页面上有一个「📅 按日期查看」按钮，供家长**指定任意一天**准备书包（比如提前替三天后、假期返校日整理）：
+
+- 点开后是系统日历选择器（可选范围：今天前 30 天 ~ 今天后 180 天），选中某天立即出那天的清单。
+- 自选模式下**按"那一天"本身出清单**，不再走"下一个上学日"推断：那天有课就列那天的课程与用具；
+  那天是休息日就显示"这天休息"大卡片＋下个上学日提示。
+- 目标日期若与自然周几不同（调休补课，见 `schedule.json` 的 `makeupDays`），日期行会标注"· 按X课表"。
+- 界面反馈：标题变为"书包整理清单"，日期行尾部显示"· 自选"，按钮点亮并显示所选日期；
+  面板里有「回到今天」按钮可恢复自动模式。
+- 勾选状态按"日期+孩子名"分别存 `localStorage`（见 `getStorageKey()`），**自选日期的勾选与当天清单互不影响**。
+- 自选日期同样套用 2.5 的规则与通知"按截止日出现/顺延"逻辑。
 
 ### 3. 两种交付模式（重要）
 
@@ -151,6 +173,7 @@ school-bag-organizer/
 - "更新课表" → 引导用户提供新课表
 - "添加课程要求" → 记录新的用具要求
 - "查看待办通知" → 列出所有未完成的一次性通知
+- "想看某一天要带什么" → 直接用页面上的「📅 按日期查看」选日期（见 2.6），无需改数据
 
 ## 数据结构
 
@@ -241,11 +264,19 @@ school-bag-organizer/
 
 ## 打包发布
 
-本技能可独立打包分享给其他家长。发布步骤：
+**不要手工复制 `data/` 再删隐私内容**——那种做法一定会漏。统一用仓库根目录的打包器：
 
-1. **清空真实数据**：把 `data/` 下四个文件替换为 `data-templates/` 中的示例内容（避免泄露孩子的姓名、学校、通知等隐私）。
-2. **打包**：将整个 `school-bag-organizer/` 文件夹压缩为 zip，或直接放入目标项目的 `.trae/skills/` 目录。
-3. **新用户首次使用**：技能会读取 `data/` 中的示例数据。引导新用户提供孩子姓名、学校、课表、用具要求，逐步覆盖示例内容。
+```bash
+python tools/build_dist.py --skills school-bag-organizer     # 出 dist/school-bag-organizer.zip
+```
+
+打包器按项目规则第 8 节执行：白名单取件（`data/` 根本不参与复制）→ 用 `data-templates/` 重建包内
+`data/` → 归一 `SKILL.md` frontmatter（`---`、name 去引号、补 `agent_created`）→ 出包后自动解开 zip
+扫敏感词/手机号/身份证/本机路径，命中就删包中止。
+
+发布前自查：`python tools/privacy_guard.py --all`（这一步 CI 与 pre-commit 钩子也会跑）。
+
+新用户拿到包后：`python setup.py` 填孩子信息与课表 → `python setup.py --start` 起网页服务。
 
 ## 注意事项
 

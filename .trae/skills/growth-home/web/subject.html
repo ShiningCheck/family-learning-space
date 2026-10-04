@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语文作业</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/feedback.js"></script>
+<script src="/vendor/voice.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 60px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+  .hero {
+    margin: 16px 0 18px;
+    background: var(--c, #E8590C);
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff; text-align: center; padding: 22px 16px 20px;
+    position: relative; overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 24px; opacity: 0.55; }
+  .hero-emoji { font-size: 54px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 32px; font-weight: 900; margin-top: 4px; line-height: 1.7; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .goal { font-size: 16px; margin-top: 4px; font-weight: 700; opacity: 0.96; line-height: 1.8; }
+  .hero .tag { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 800; background: rgba(255,255,255,0.2); border-radius: 999px; padding: 3px 14px; }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 16px; margin-bottom: 16px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+  .quick-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .quick-link {
+    flex: 1; min-width: 132px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 15px; font-weight: 900; color: var(--ink, #4A3B2A); text-decoration: none;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 16px; padding: 11px 8px;
+    background: var(--line, #FFF1DB); box-shadow: 0 3px 0 var(--edge, #4A3B2A);
+  }
+  .quick-link:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero" id="hero">
+      <span class="deco" style="left:12px;top:12px">✨</span>
+      <span class="deco" style="right:14px;bottom:12px">🌟</span>
+      <div class="hero-emoji" id="heroEmoji">📖</div>
+      <h1 id="heroName">语文</h1>
+      <div class="goal" id="heroGoal"></div>
+      <span class="tag" id="heroTag"></span>
+    </header>
+
+    <div class="card" id="hwCard"></div>
+
+    <div class="card" id="moreCard" style="display:none">
+      <div class="quick-row" id="moreLinks"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/components/homework-section.js"></script>
+<script>
+// 「语文」「数学」共用一个页面：门户标签分别带 ?subject=chinese / ?subject=math，
+// 页面按 subject 取科目信息（activities.json 的 subjects），
+// 再把「作业打卡 + 添加作业」整块交给共享模块 homework-section.js 渲染。
+const $ = id => document.getElementById(id);
+let CHILD_NAME = '';
+let SUBJECTS = [];
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else out += escapeHtml(ch);
+  }
+  return out;
+}
+
+function param(name) {
+  const m = new RegExp('[?&]' + name + '=([^&#]*)').exec(location.search || '');
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+// 兜底：activities.json 里没写全时也能用
+const FALLBACK = {
+  chinese: { id: 'chinese', name: '语文', emoji: '📖', color: '#E8590C' },
+  math: { id: 'math', name: '数学', emoji: '🧮', color: '#1C7ED6' }
+};
+
+function renderMore(curId) {
+  const others = SUBJECTS.filter(s => s.id !== curId);
+  if (!others.length) return;
+  $('moreCard').style.display = 'block';
+  $('moreLinks').innerHTML = others.map(s =>
+    '<a class="quick-link" href="' + escapeHtml(s.page || ('subject.html?subject=' + encodeURIComponent(s.id))) + '">' +
+    '<span>' + escapeHtml(s.emoji || '📚') + '</span><span>' + escapeHtml(s.name) + '</span></a>').join('');
+}
+
+async function init() {
+  const err = $('errTip');
+  const subId = param('subject') || 'chinese';
+  try {
+    const res = await fetch('/api/home', { cache: 'no-store' });
+    const data = await res.json();
+    CHILD_NAME = ((data.config || {}).childName || '').trim();
+    SUBJECTS = ((data.activities || {}).subjects || []);
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+  const sub = SUBJECTS.find(s => s.id === subId) || FALLBACK[subId] || FALLBACK.chinese;
+  const name = sub.name || '语文';
+
+  $('hero').style.setProperty('--c', sub.color || '#E8590C');
+  $('heroEmoji').textContent = sub.emoji || '📖';
+  $('heroName').innerHTML = rubyHtml(name) + '作业';
+  document.title = (CHILD_NAME ? CHILD_NAME + '的' : '') + name + '作业';
+  $('heroGoal').textContent = '今天的' + name + '作业在这里打卡，爸妈也能随时加一项';
+  $('heroTag').textContent = CHILD_NAME ? (CHILD_NAME + ' · ' + name) : name;
+
+  HwSection.mount({
+    mount: '#hwCard',
+    subject: sub.id,
+    subjectName: name,
+    emoji: sub.emoji || '📖',
+    color: sub.color || '#E8590C',
+    date: function () { return HwSection.todayStr(); },
+    allowAdd: true,
+    importFromBoard: true,
+    showLearned: true,
+    pageCalendar: true,   // 整页一个「打卡日历 + 点某天看当天全部打卡内容」
+    meta: { page: name, subject: sub.id }
+  });
+
+  renderMore(sub.id);
+  $('app').style.display = 'block';
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('#hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+
+// 视频点击播放后自动全屏 + 循环播放（孩子看得更清楚，也能反复看）；已在全屏中不重复请求，失败静默忽略
+document.addEventListener('play', e => {
+  const v = e.target;
+  if (!v || v.tagName !== 'VIDEO') return;
+  v.loop = true;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const req = v.requestFullscreen || v.webkitRequestFullscreen || v.msRequestFullscreen;
+  if (req) {
+    try { const p = req.call(v); if (p && p.catch) p.catch(() => {}); } catch (err) {}
+  } else if (typeof v.webkitEnterFullscreen === 'function') {
+    try { v.webkitEnterFullscreen(); } catch (err) {}
+  }
+}, true);
+</script>
+</body>
+</html>

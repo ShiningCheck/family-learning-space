@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日日报</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    background-image: radial-gradient(var(--dot, #FFE0B8) 2.5px, transparent 2.5px);
+    background-size: 28px 28px;
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 60px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+
+  .hero {
+    margin: 16px 0 14px;
+    background: #20C997;
+    border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--edge, #4A3B2A);
+    color: #fff; text-align: center; padding: 20px 16px 18px;
+    position: relative; overflow: hidden;
+  }
+  .hero .deco { position: absolute; font-size: 24px; opacity: 0.5; }
+  .hero-emoji { font-size: 52px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+  .hero h1 { font-size: 30px; font-weight: 900; margin-top: 4px; line-height: 1.7; }
+  .hero h1 rt { color: rgba(255,255,255,0.85); }
+  .hero .date { font-size: 17px; margin-top: 2px; font-weight: 800; opacity: 0.97; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .toolbar input[type=date] {
+    flex: 1; font-family: inherit; font-size: 17px; font-weight: 700; color: var(--ink, #4A3B2A);
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 14px; padding: 10px 12px;
+    background: var(--card, #FFFDF7);
+  }
+  .print-btn {
+    flex: none; font-family: inherit; font-size: 17px; font-weight: 900; color: var(--ink, #4A3B2A);
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 14px; padding: 10px 16px; cursor: pointer;
+    background: #FFD43B; box-shadow: 0 4px 0 var(--edge, #4A3B2A);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .print-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge, #4A3B2A); }
+
+  .card {
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A); border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    padding: 16px; margin-bottom: 16px;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
+  }
+
+  /* 总结 */
+  .summary { display: flex; align-items: center; gap: 16px; }
+  .ring {
+    flex: none; width: 96px; height: 96px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 7px solid var(--edge, #4A3B2A);
+    background: conic-gradient(var(--acc, #20C997) 0deg, var(--line, #FFF1DB) 0deg);
+    position: relative;
+  }
+  .ring::after {
+    content: ''; position: absolute; inset: 9px; border-radius: 50%;
+    background: var(--card, #fff); border: 3px solid var(--edge, #4A3B2A);
+  }
+  .ring .r-pct { position: relative; z-index: 2; font-size: 22px; font-weight: 900; color: var(--ink, #4A3B2A); line-height: 1.1; }
+  .ring .r-lbl { position: relative; z-index: 2; font-size: 11px; font-weight: 800; color: var(--soft, #8D7357); }
+  .sum-text { flex: 1; min-width: 0; }
+  .sum-text .s-title { font-size: 22px; font-weight: 900; line-height: 1.6; }
+  .sum-text .s-sub { font-size: 14px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.6; }
+  .sum-text .s-msg { font-size: 15px; font-weight: 800; color: var(--acc-deep, #E8590C); margin-top: 2px; }
+
+  /* 今日所学（可选） */
+  .learned-note { font-size: 14px; line-height: 1.8; color: var(--soft, #6B5B45); margin-bottom: 12px; }
+
+  .sec-title { font-size: 19px; font-weight: 900; margin-bottom: 12px; line-height: 1.8; }
+  .sec-title .sub { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    padding: 12px 14px; margin-bottom: 10px; background: var(--card, #FFFDF7);
+  }
+  .item:last-child { margin-bottom: 0; }
+  .item .i-emoji { font-size: 32px; flex: none; }
+  .item .i-body { flex: 1; min-width: 0; }
+  .item .i-cat { font-size: 11px; font-weight: 800; color: var(--soft, #8D7357); letter-spacing: 1px; }
+  .item .i-name { font-size: 18px; font-weight: 800; line-height: 1.7; }
+  .item .i-note { font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; line-height: 1.5; }
+  .item .i-status { flex: none; font-size: 14px; font-weight: 900; white-space: nowrap; }
+  .item.done { background: #E7FBEA; }
+  .item.done .i-status { color: #2B8A3E; }
+  .item.todo { background: #FFF1F1; }
+  .item.todo .i-status { color: #C92A2A; }
+
+  .empty { text-align: center; color: var(--soft, #8D7357); font-size: 15px; padding: 18px 0; line-height: 2; }
+
+  /* 作业完成情况（按科目） */
+  .hwr { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 13px; }
+  .hwr:last-child { margin-bottom: 0; }
+  .hwr-emoji { font-size: 26px; flex: none; line-height: 1.3; }
+  .hwr-body { flex: 1; min-width: 0; }
+  .hwr-name { font-size: 17px; font-weight: 900; line-height: 1.7; }
+  .hwr-name .hwr-count { font-size: 14px; font-weight: 800; color: var(--soft, #8D7357); margin-left: 6px; }
+  .hwr-bar { height: 14px; border: 2.5px solid var(--edge, #4A3B2A); border-radius: 999px; background: var(--line, #FFF1DB); overflow: hidden; margin: 3px 0 5px; }
+  .hwr-bar i { display: block; height: 100%; background: #51CF66; }
+  .hwr-note { font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.6; }
+  .hwr-note b { color: #C92A2A; }
+
+  #errTip { display: none; text-align: center; color: #C92A2A; font-size: 17px; line-height: 1.9; padding: 40px 20px; }
+
+  /* 打印：压缩到一张 A4 纸 */
+  @media print {
+    @page { size: A4; margin: 10mm; }
+    .no-print, .ghfb-btn, .ghfb-hint, .ghfb-mask, .ghfb-conf { display: none !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { background: #fff !important; background-image: none !important; padding: 0; }
+    .wrap { max-width: 100%; padding: 0; }
+
+    .hero { margin: 0 0 3mm; padding: 4mm 4mm; border-radius: 10px; box-shadow: none; border-width: 2px; }
+    .hero .deco { display: none; }
+    .hero-emoji { font-size: 26px; }
+    .hero h1 { font-size: 19px; margin-top: 0; line-height: 1.4; }
+    .hero .date { font-size: 12px; margin-top: 0; }
+
+    .card { padding: 3mm 4mm; margin-bottom: 3mm; border-width: 2px; box-shadow: none; border-radius: 12px; }
+
+    .summary { gap: 4mm; }
+    .ring { width: 52px; height: 52px; border-width: 4px; }
+    .ring::after { inset: 5px; border-width: 2px; }
+    .ring .r-pct { font-size: 13px; }
+    .ring .r-lbl { font-size: 8px; }
+    .sum-text .s-title { font-size: 15px; line-height: 1.4; }
+    .sum-text .s-sub { font-size: 10.5px; }
+    .sum-text .s-msg { font-size: 12px; }
+
+    .sec-title { font-size: 14px; margin-bottom: 2mm; }
+    .sec-title .sub { font-size: 10px; }
+    .learned-note { font-size: 10.5px; margin-bottom: 2mm; }
+
+    /* 两列排布：把已完成/未完成条目压缩成两列，省一半竖向空间 */
+    #doneList, #todoList { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm; }
+    .item { padding: 1.8mm 2.5mm; margin-bottom: 0; border-width: 1.5px; gap: 2mm; border-radius: 9px; page-break-inside: avoid; break-inside: avoid; }
+    .item .i-emoji { font-size: 18px; }
+    .item .i-cat { font-size: 7.5px; }
+    .item .i-name { font-size: 12px; line-height: 1.35; }
+    .item .i-note { font-size: 9.5px; line-height: 1.3; }
+    .item .i-status { font-size: 10px; }
+
+    .empty { font-size: 11px; padding: 2mm 0; }
+
+    .hwr { margin-bottom: 1.5mm; gap: 2mm; }
+    .hwr-emoji { font-size: 15px; }
+    .hwr-name { font-size: 12px; line-height: 1.4; }
+    .hwr-name .hwr-count { font-size: 10px; }
+    .hwr-bar { height: 7px; border-width: 1.5px; margin: 1px 0 2px; }
+    .hwr-note { font-size: 9.5px; line-height: 1.3; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errTip"></div>
+  <div id="app" style="display:none">
+    <header class="hero">
+      <span class="deco" style="left:12px;top:12px">📋</span>
+      <span class="deco" style="right:14px;bottom:12px">⭐</span>
+      <div class="hero-emoji">📋</div>
+      <h1 id="heroName">每日日报</h1>
+      <div class="date" id="heroDate"></div>
+    </header>
+
+    <div class="toolbar no-print">
+      <input type="date" id="datePick">
+      <button class="print-btn" id="printBtn" type="button">🖨️ 打印</button>
+    </div>
+
+    <div class="card" id="summaryCard">
+      <div class="summary">
+        <div class="ring" id="ring"><span class="r-pct" id="rPct">0%</span><span class="r-lbl">完成</span></div>
+        <div class="sum-text">
+          <div class="s-title" id="sTitle"></div>
+          <div class="s-sub" id="sSub"></div>
+          <div class="s-msg" id="sMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="hwCard" style="display:none">
+      <div class="sec-title">📝 作业完成情况<span class="sub" id="hwSub"></span></div>
+      <div id="hwSummary"></div>
+    </div>
+
+    <div class="card" id="learnedCard" style="display:none">
+      <div class="sec-title">📚 今天学了</div>
+      <div class="learned-note" id="learnedNote"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">✅ 已完成<span class="sub" id="doneSub"></span></div>
+      <div id="doneList"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">⬜ 未完成<span class="sub" id="todoSub"></span></div>
+      <div id="todoList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let CONFIG = {};
+let ACTIVITIES = [];
+let HOMEWORK = [];
+let SUBJECTS = [];     // 科目清单（activities.json 的 subjects）：作业按它分科汇报
+let DAYS = [];
+let BOOKS = {};        // booklist.json 的书（含 chapters），用来把「读了第几章」写成章节名
+let reportDate = '';
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else out += escapeHtml(ch);
+  }
+  return out;
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStr(new Date()); }
+function fmtCN(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const wk = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 星期' + wk;
+}
+
+function readLS(key, fallback) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
+}
+
+// 打卡记录现在也落在服务器上（换台设备勾的也算数），日报优先取服务器那份；
+// 服务器连不上就退回本机缓存，不影响查看。
+let SERVER_ACT = {};
+
+async function loadServerActs() {
+  await Promise.all(ACTIVITIES.map(async t => {
+    try {
+      const res = await fetch('/api/tracker?tab=' + encodeURIComponent(t.id), { cache: 'no-store' });
+      if (!res.ok) return;
+      const d = await res.json();
+      if (d && d.ok) SERVER_ACT[t.id] = d.records || {};
+    } catch (e) { /* 忽略，用本机缓存 */ }
+  }));
+}
+
+// 活动打卡记录（读书/家务/运动/书单）
+function actRecord(tabId) {
+  const local = readLS('gh_' + tabId + '_' + (CONFIG.childName || 'child'), {})[reportDate] || null;
+  const remote = (SERVER_ACT[tabId] || {})[reportDate] || null;
+  if (!remote) return local;
+  if (!local) return remote;
+  return (Number(remote.ts) || 0) >= (Number(local.ts) || 0) ? remote : local;
+}
+// 作业打卡记录（含「握笔练习」这类长期作业）：服务器上那份优先，取不到退回本机缓存
+let SERVER_HW = {};
+
+async function loadServerHomework() {
+  try {
+    const res = await fetch('/api/homework/checkins', { cache: 'no-store' });
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d && d.ok) SERVER_HW = d.records || {};
+  } catch (e) { /* 忽略，用本机缓存 */ }
+}
+
+function markOf(m) {
+  if (m && typeof m === 'object') return { v: m.v ? 1 : 0, ts: Number(m.ts) || 0 };
+  return m ? { v: 1, ts: 0 } : null;
+}
+function hwChecked(itemId) {
+  let pick = markOf((readLS('hw_' + (CONFIG.childName || 'child'), {})[itemId] || {})[reportDate]);
+  const remote = markOf((SERVER_HW[itemId] || {})[reportDate]);
+  if (!pick) pick = remote;
+  else if (remote) {
+    if (!pick.ts && !remote.ts) pick = { v: (pick.v || remote.v) ? 1 : 0, ts: 0 };
+    else pick = remote.ts >= pick.ts ? remote : pick;
+  }
+  return !!(pick && pick.v);
+}
+
+function buildItems() {
+  const items = [];
+
+  // 1) 读书/家务/运动/书单（activities 标签页）
+  ACTIVITIES.forEach(t => {
+    const rec = actRecord(t.id);
+    let done = false, note = '';
+    if (t.type === 'single') { done = !!(rec && rec.done); note = (rec && rec.note) || ''; }
+    else if (t.type === 'progress') {
+      // 书单：那天读到哪几章就写哪几章（书名·章节名），读得清楚、家长看得明白
+      const chaps = (rec && rec.chapters) || [];
+      done = !!(rec && rec.done);
+      note = chaps.length
+        ? chaps.map(c => {
+          const it = (t.items || []).find(x => x.id === c.book) || {};
+          const b = BOOKS[c.book] || {};
+          const cn = (b.chapters || [])[c.idx] || ('第 ' + (c.idx + 1) + ' 章');
+          return (it.name || b.title || c.book) + '·' + cn;
+        }).join('、')
+        : (done ? '这天读过书单（当时还没记具体章节）' : '');
+    }
+    else {
+      const doneList = (rec && rec.items) || [];
+      done = doneList.length > 0;
+      note = doneList.map(id => {
+        const it = (t.items || []).find(x => x.id === id);
+        return it ? it.name : id;
+      }).join('、');
+    }
+    items.push({ cat: '每日打卡', name: t.name, emoji: t.emoji || '⭐', done: done, note: note });
+  });
+
+  // 2) 作业卡（当天在有效期内的，按科目归类）
+  const hwList = hwToday();
+  const hwNames = new Set(hwList.map(x => x.item.name));
+  hwList.forEach(x => {
+    items.push({
+      cat: subjName(x.subject) + '作业',
+      name: x.item.name,
+      emoji: x.item.emoji || '📝',
+      done: x.done,
+      note: x.item.desc || ''
+    });
+  });
+
+
+  // 4) 学习看板：习惯打卡项 + 作业
+  //    已经做成作业卡的那几条不再重复列（作业卡里有更细的完成情况），免得同一件事数两遍
+  const day = DAYS.find(d => d.date === reportDate);
+  if (day) {
+    (day.habits || []).forEach(h => {
+      if (hwNames.has(h.name)) return;
+      items.push({ cat: '学习任务', name: h.name, emoji: '📚', done: !!h.done, note: h.detail || '' });
+    });
+    (day.homework || []).forEach(h => {
+      const nm = typeof h === 'string' ? h : (h.name || h.content || h.title || '');
+      const dt = typeof h === 'object' ? (h.detail || '') : '';
+      if (nm && !hwNames.has(nm)) items.push({ cat: '学习任务', name: nm, emoji: '📚', done: false, note: dt });
+    });
+  }
+
+  return items;
+}
+
+// ---- 作业：当天在有效期内的作业卡（按科目分组汇报）----
+// 作业卡的打卡已挪到各学科页（语文 / 数学 / 辅导班 / 学校英语），
+// 但记录仍落在同一份 data/homework_checkins.json，所以日报拿到的是同一份完成情况。
+function subjMeta(id) { return SUBJECTS.find(s => s.id === id) || null; }
+function subjName(id) { const s = subjMeta(id); return s ? s.name : '其它'; }
+
+function hwToday() {
+  const out = [];
+  HOMEWORK.forEach(h => {
+    if (h.start && h.start > reportDate) return;
+    if (h.end && h.end < reportDate) return;
+    out.push({ item: h, done: hwChecked(h.id), subject: h.subject || '' });
+  });
+  return out;
+}
+
+function renderHomework() {
+  const card = document.getElementById('hwCard');
+  const list = hwToday();
+  if (!list.length) { card.style.display = 'none'; return; }
+
+  // 先按 activities.json 的科目顺序排，没归科的（老数据）统一放最后
+  const ids = (SUBJECTS.length ? SUBJECTS.map(s => s.id) : []).filter(id => list.some(x => x.subject === id));
+  list.forEach(x => { if (!x.subject && ids.indexOf('') < 0) ids.push(''); });
+  const done = list.filter(x => x.done).length;
+  document.getElementById('hwSub').textContent =
+    '共 ' + list.length + ' 项，已完成 ' + done + ' 项' + (list.length ? '（' + Math.round(done / list.length * 100) + '%）' : '');
+
+  document.getElementById('hwSummary').innerHTML = ids.map(id => {
+    const g = list.filter(x => x.subject === id);
+    const meta = subjMeta(id);
+    const gd = g.filter(x => x.done).length;
+    const pct = Math.round(gd / g.length * 100);
+    const todo = g.filter(x => !x.done).map(x => x.item.name);
+    return '<div class="hwr">' +
+      '<span class="hwr-emoji">' + escapeHtml((meta && meta.emoji) || '📝') + '</span>' +
+      '<div class="hwr-body">' +
+      '<div class="hwr-name">' + escapeHtml((meta && meta.name) || '其它') + '作业' +
+      '<span class="hwr-count">' + gd + '/' + g.length + '</span></div>' +
+      '<div class="hwr-bar"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="hwr-note">' + (todo.length
+        ? '还没完成：<b>' + todo.map(escapeHtml).join('、') + '</b>'
+        : '✅ 全部完成') + '</div>' +
+      '</div></div>';
+  }).join('');
+  card.style.display = 'block';
+}
+
+function learnedSummary() {
+  const day = DAYS.find(d => d.date === reportDate);
+  if (!day || !(day.learned || []).length) return '';
+  return (day.learned || []).map(l => (l.subject ? '【' + l.subject + '】' : '') + l.content).join('<br>');
+}
+
+function itemHtml(it) {
+  return '<div class="item ' + (it.done ? 'done' : 'todo') + '">' +
+    '<span class="i-emoji">' + escapeHtml(it.emoji) + '</span>' +
+    '<div class="i-body">' +
+    '<div class="i-cat">' + escapeHtml(it.cat) + '</div>' +
+    '<div class="i-name">' + rubyHtml(it.name) + '</div>' +
+    (it.note ? '<div class="i-note">' + escapeHtml(it.note) + '</div>' : '') +
+    '</div>' +
+    '<span class="i-status">' + (it.done ? '✅ 已完成' : '⬜ 未完成') + '</span>' +
+    '</div>';
+}
+
+function render() {
+  document.getElementById('heroDate').textContent = fmtCN(reportDate);
+  const name = CONFIG.childName || '小朋友';
+  document.getElementById('heroName').innerHTML = rubyHtml(name) + '的日报';
+  document.title = name + '的日报 ' + fmtCN(reportDate);
+
+  const items = buildItems();
+  const done = items.filter(i => i.done);
+  const todo = items.filter(i => !i.done);
+  const total = items.length;
+  const pct = total ? Math.round(done.length / total * 100) : 0;
+
+  // 总结
+  const ring = document.getElementById('ring');
+  ring.style.setProperty('--acc', '#20C997');
+  ring.style.background = 'conic-gradient(#20C997 ' + (pct * 3.6) + 'deg, var(--line,#FFF1DB) ' + (pct * 3.6) + 'deg)';
+  document.getElementById('rPct').textContent = pct + '%';
+  document.getElementById('sTitle').textContent = '完成 ' + done.length + ' / ' + total + ' 项';
+  document.getElementById('sSub').textContent = total ? '' : '这一天还没有安排任务';
+  let msg;
+  if (!total) msg = '先到「作业管理」或各学科页安排一下今天的任务吧';
+  else if (pct === 100) msg = '🏆 全部完成，太棒了！';
+  else if (pct >= 60) msg = '💪 完成一大半了，继续加油！';
+  else if (pct > 0) msg = '🌱 开了个好头，把剩下的也做完吧';
+  else msg = '😅 还没开始，今天就动起来吧';
+  document.getElementById('sMsg').textContent = msg;
+
+  // 作业完成情况（按科目）
+  renderHomework();
+
+  // 今日所学
+  const learned = learnedSummary();
+  const lc = document.getElementById('learnedCard');
+  if (learned) {
+    lc.style.display = 'block';
+    document.getElementById('learnedNote').innerHTML = learned;
+  } else {
+    lc.style.display = 'none';
+  }
+
+  // 已完成 / 未完成
+  document.getElementById('doneSub').textContent = done.length ? ('共 ' + done.length + ' 项') : '';
+  document.getElementById('todoSub').textContent = todo.length ? ('共 ' + todo.length + ' 项') : '';
+  document.getElementById('doneList').innerHTML = done.length ? done.map(itemHtml).join('') : '<div class="empty">还没有已完成的项目</div>';
+  document.getElementById('todoList').innerHTML = todo.length ? todo.map(itemHtml).join('') : '<div class="empty">🎉 没有未完成的项目</div>';
+}
+
+async function loadAll() {
+  const [home, hw, learn] = await Promise.all([
+    fetch('/api/home', { cache: 'no-store' }).then(r => r.json()),
+    fetch('/api/homework', { cache: 'no-store' }).then(r => r.json()),
+    fetch('/api/data', { cache: 'no-store' }).then(r => r.json())
+  ]);
+  CONFIG = home.config || {};
+  ACTIVITIES = (home.activities || {}).tabs || [];
+  SUBJECTS = (home.activities || {}).subjects || [];
+  ((home.booklist || {}).books || []).forEach(b => { if (b && b.id) BOOKS[b.id] = b; });
+  HOMEWORK = hw.items || [];
+  DAYS = learn.days || [];
+}
+
+async function init() {
+  const err = document.getElementById('errTip');
+  try {
+    await loadAll();
+    await Promise.all([loadServerActs(), loadServerHomework()]);
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
+    return;
+  }
+  reportDate = todayStr();
+  const dp = document.getElementById('datePick');
+  dp.value = reportDate;
+  dp.addEventListener('change', () => {
+    reportDate = dp.value || todayStr();
+    render();
+  });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  render();
+  document.getElementById('app').style.display = 'block';
+}
+
+init();
+
+if (window.GrowthThemes) {
+  const syncHeroDeco = t => {
+    const ds = document.querySelectorAll('.hero .deco');
+    if (t && t.deco && ds.length) ds.forEach((el, i) => { el.textContent = t.deco[i % t.deco.length]; });
+  };
+  syncHeroDeco(GrowthThemes.THEMES[GrowthThemes.current()]);
+  document.addEventListener('themechange', e => syncHeroDeco(e.detail));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的画廊</title>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/voice.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--paper, #FFF6E9);
+    color: var(--ink, #4A3B2A);
+    padding-bottom: 70px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.5em; color: var(--soft, #B08968); font-weight: normal; }
+  .hidden { display: none !important; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    background: linear-gradient(135deg, var(--hero-a, #FFB84D) 0%, var(--hero-b, #FF922B) 100%);
+    border-radius: 0 0 36px 36px;
+    padding: 26px 16px 24px;
+    color: #fff; text-align: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    transition: background 0.35s ease;
+  }
+  .greet { font-size: 30px; font-weight: 900; line-height: 1.7; letter-spacing: 2px; }
+  .greet rt { color: rgba(255, 255, 255, 0.85); }
+  .sub { font-size: 16px; margin-top: 6px; opacity: 0.95; font-weight: 700; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: -20px auto 8px; position: relative; }
+  @media (max-width: 460px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--card, #fff); border-radius: 20px; padding: 12px 6px;
+    text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 3px solid var(--line, #FFE3B3);
+  }
+  .stat .num { font-size: 28px; font-weight: 800; color: var(--acc, #FF922B); }
+  .stat .lbl { font-size: 13px; color: var(--soft, #8D7357); margin-top: 2px; }
+
+  section { margin-top: 26px; }
+  .sec-title { font-size: 24px; font-weight: 800; margin-bottom: 12px; line-height: 1.8; }
+
+  .wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .art-card {
+    background: var(--card, #fff); border: 3px solid var(--line, #FFE3B3);
+    border-radius: 18px; padding: 8px 8px 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .art-card:active { transform: scale(0.97); }
+  .art-card .ph { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--paper, #FFF6E9); }
+  .art-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ph-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; }
+  .art-card .no { position: absolute; left: 6px; top: 6px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
+  .art-card .t { font-size: 16px; font-weight: 800; margin-top: 8px; line-height: 1.7; text-align: center; }
+  .art-card .d { font-size: 12px; color: var(--soft, #8D7357); text-align: center; margin-top: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--line, #FFF1DB); color: var(--acc-deep, #B06A00); }
+
+  .card {
+    background: var(--card, #fff); border-radius: 24px; padding: 18px;
+    border: 3px solid var(--line, #FFE3B3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 14px;
+  }
+  .card h4 { font-size: 17px; margin-bottom: 8px; color: var(--soft, #8D7357); }
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+  .rank-name { width: 100px; flex: none; font-size: 16px; font-weight: 800; line-height: 1.7; }
+  .rank-bar { flex: 1; height: 16px; border-radius: 999px; background: var(--line, #FFEFD5); overflow: hidden; }
+  .rank-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--hero-a, #FFB84D), var(--hero-b, #FF922B)); }
+  .rank-n { flex: none; width: 48px; text-align: right; font-weight: 800; color: var(--acc-deep, #E8590C); }
+
+  .months { display: flex; align-items: flex-end; gap: 10px; height: 130px; padding-top: 8px; }
+  .m-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  .m-n { font-size: 13px; font-weight: 800; color: var(--acc-deep, #E8590C); }
+  .m-bar { width: 100%; max-width: 46px; border-radius: 10px 10px 4px 4px; background: linear-gradient(180deg, var(--hero-a, #FFB84D), var(--hero-b, #FF922B)); min-height: 4px; }
+  .m-lbl { font-size: 12px; color: var(--soft, #8D7357); font-weight: 700; }
+
+  .shelf-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card, #fff); border: 3px solid var(--line, #FFE3B3);
+    border-radius: 20px; padding: 14px 16px; margin-bottom: 12px;
+    text-decoration: none; color: var(--ink, #4A3B2A);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+  .shelf-item:active { transform: scale(0.98); }
+  .shelf-item .b-emoji { font-size: 36px; }
+  .shelf-item .b-name { font-size: 18px; font-weight: 800; line-height: 1.6; }
+  .shelf-item .b-meta { font-size: 13px; color: var(--soft, #8D7357); }
+  .shelf-item .go { margin-left: auto; font-size: 22px; }
+
+  .empty-tip {
+    background: var(--card, #fff); border-radius: 24px; padding: 34px 20px;
+    text-align: center; font-size: 18px; color: var(--soft, #8D7357);
+    border: 3px dashed var(--line, #FFE3B3); line-height: 2;
+  }
+  .empty-tip .big { font-size: 52px; display: block; margin-bottom: 8px; }
+
+  .modal { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; padding: 18px; }
+  .m-panel {
+    width: min(94vw, 600px); max-height: 92dvh; overflow: auto;
+    background: var(--card, #fff); border: 4px solid var(--edge, #4A3B2A);
+    border-radius: 26px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); padding: 16px;
+  }
+  .m-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .m-title { font-size: 22px; font-weight: 900; line-height: 1.7; flex: 1; }
+  .m-btn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); font-size: 18px; cursor: pointer; }
+  .m-img { width: 100%; border-radius: 16px; border: 3px solid var(--line, #FFE3B3); background: var(--paper, #FFF6E9); display: block; max-height: 52dvh; object-fit: contain; }
+  .m-quote { margin-top: 12px; background: var(--line, #FFF9DB); border-radius: 16px; padding: 12px 14px; font-size: 16px; line-height: 2; white-space: pre-wrap; }
+  .m-meta { margin-top: 10px; font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; }
+  audio { width: 100%; margin-top: 10px; }
+
+  .fab {
+    /* bottom 让开右下角「💌 提建议」悬浮按钮：两者都贴右下角时会把「记一幅画」挡住 */
+    position: fixed; right: 18px; bottom: 74px; z-index: 40;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--hero-b, #FF922B); color: #fff;
+    border: 4px solid var(--edge, #4A3B2A); border-radius: 999px;
+    padding: 14px 22px; font-size: 19px; font-weight: 900; cursor: pointer;
+    box-shadow: 0 6px 0 var(--edge, #4A3B2A); font-family: inherit;
+  }
+  .fab:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge, #4A3B2A); }
+  .fab .plus { font-size: 26px; line-height: 1; }
+
+  .up-pick {
+    display: flex; align-items: center; justify-content: center;
+    border: 3px dashed var(--line, #FFE3B3); border-radius: 18px;
+    min-height: 150px; background: var(--paper, #FFF6E9); cursor: pointer;
+    overflow: hidden;
+  }
+  .up-pick img { max-width: 100%; max-height: 280px; object-fit: contain; display: block; }
+  .up-pick-hint { color: var(--soft, #8D7357); font-size: 18px; font-weight: 700; }
+  .up-desc {
+    width: 100%; margin-top: 12px; min-height: 84px; resize: vertical;
+    border: 3px solid var(--line, #FFE3B3); border-radius: 16px;
+    padding: 12px; font-size: 16px; font-family: inherit; color: var(--ink, #4A3B2A);
+    background: var(--card, #fff);
+  }
+  .up-desc:focus { outline: none; border-color: var(--hero-b, #FF922B); }
+  .up-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .rec-btn {
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 999px;
+    background: var(--line, #FFF1DB); color: var(--ink, #4A3B2A);
+    padding: 10px 18px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .rec-btn.recording { background: #FFD8D8; }
+  .rec-del {
+    border: 2px solid var(--edge, #4A3B2A); border-radius: 999px;
+    background: var(--card, #fff); color: var(--ink, #4A3B2A);
+    padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .up-actions { margin-top: 16px; }
+  .up-submit {
+    width: 100%; border: 4px solid var(--edge, #4A3B2A); border-radius: 18px;
+    background: var(--hero-b, #FF922B); color: #fff; padding: 14px;
+    font-size: 19px; font-weight: 900; cursor: pointer; font-family: inherit;
+    box-shadow: 0 5px 0 var(--edge, #4A3B2A);
+  }
+  .up-submit:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--edge, #4A3B2A); }
+  .up-submit:disabled { opacity: 0.6; }
+  .up-msg { margin-top: 10px; font-size: 14px; color: var(--soft, #8D7357); font-weight: 700; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="greet" id="pageTitle">我的画廊</div>
+  <div class="sub" id="subLine"></div>
+</header>
+
+<div class="wrap">
+  <div class="stat-strip" id="statStrip"></div>
+
+  <section>
+    <div class="sec-title" id="wallTitle"></div>
+    <div id="wallBox"></div>
+  </section>
+
+  <section>
+    <div class="sec-title" id="statTitle"></div>
+    <div class="card" id="charBox"></div>
+    <div class="card" id="monthBox"></div>
+  </section>
+
+  <section>
+    <div class="sec-title" id="shelfTitle"></div>
+    <div id="shelfBox"></div>
+  </section>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="m-panel">
+    <div class="m-head">
+      <div class="m-title" id="mTitle"></div>
+      <button class="m-btn" id="mSpeak" type="button">🔊</button>
+      <button class="m-btn" id="mClose" type="button">✖</button>
+    </div>
+    <img class="m-img" id="mImg" alt="画作">
+    <div class="m-quote" id="mQuote"></div>
+    <audio id="mAudio" controls class="hidden"></audio>
+    <div class="chips" id="mChips" style="justify-content:flex-start"></div>
+    <div class="m-meta" id="mMeta"></div>
+  </div>
+</div>
+
+<button class="fab" id="uploadFab" type="button"><span class="plus">＋</span>记一幅画</button>
+
+<div class="modal hidden" id="upModal">
+  <div class="m-panel">
+    <div class="m-head">
+      <div class="m-title">记一幅新画</div>
+      <button class="m-btn" id="upClose" type="button">✖</button>
+    </div>
+    <label class="up-pick" id="pickLabel">
+      <input type="file" id="upFile" accept="image/*" hidden>
+      <img id="upPreview" class="hidden" alt="">
+      <span class="up-pick-hint" id="pickHint">📷 点这里选一张画</span>
+    </label>
+    <textarea class="up-desc" id="upDesc" placeholder="孩子说了什么？写下来…也可以点下面的 🎤 录音，说完自动变成文字"></textarea>
+    <div class="up-rec" id="recBox"></div>
+    <div class="up-actions">
+      <button class="up-submit" id="upSubmit" type="button">保存这幅画</button>
+    </div>
+    <div class="up-msg" id="upMsg"></div>
+  </div>
+</div>
+
+<script>
+let CONFIG = { childName: '', archiveTitle: '我的画廊' };
+let INDEX = [], CHARS = {}, OUTPUTS = [];
+let CURRENT = null;
+
+const $ = id => document.getElementById(id);
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function rubyHtml(text) {
+  let out = '';
+  for (const ch of Array.from(text || '')) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + escapeHtml(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else {
+      out += escapeHtml(ch);
+    }
+  }
+  return out;
+}
+
+function resolvePath(p) {
+  if (!p) return '';
+  if (/^(https?:)?\//.test(p)) return p;
+  return '../' + p;
+}
+
+async function loadJSON(p) {
+  try {
+    const r = await fetch(p, { cache: 'no-store' });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+
+function speak(text) {
+  // 优先播放电脑端预生成的配音音频（data/tts/），没有对应音频时自动降级浏览器朗读
+  try {
+    if (window.TTS) { TTS.speak(text, 'zh'); return; }
+    if (!('speechSynthesis' in window) || !text) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.95;
+    speechSynthesis.cancel();
+    setTimeout(() => speechSynthesis.speak(u), 50);
+  } catch (e) {}
+}
+
+function renderHeader() {
+  $('pageTitle').innerHTML = rubyHtml(CONFIG.archiveTitle || (CONFIG.childName + '的画廊'));
+  document.title = CONFIG.archiveTitle || (CONFIG.childName + '的画廊');
+  const charCount = Object.keys(CHARS).length;
+  $('subLine').textContent = '已收集 ' + INDEX.length + ' 幅画 · ' + charCount + ' 个卡通形象';
+}
+
+function renderStats() {
+  const now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const monthNew = INDEX.filter(p => (p.date || '').slice(0, 7) === ym).length;
+  const stats = [
+    { n: INDEX.length, l: '画作' },
+    { n: Object.keys(CHARS).length, l: '卡通形象' },
+    { n: monthNew, l: '本月新作' },
+    { n: OUTPUTS.length, l: '画册成品' }
+  ];
+  $('statStrip').innerHTML = stats.map(s =>
+    '<div class="stat"><div class="num">' + s.n + '</div><div class="lbl">' + escapeHtml(s.l) + '</div></div>').join('');
+}
+
+function renderWall() {
+  $('wallTitle').innerHTML = rubyHtml('画作墙');
+  if (!INDEX.length) {
+    $('wallBox').innerHTML = '<div class="empty-tip"><span class="big">🖼️</span>还没有画作哦～<br>画一幅新画，让妈妈记进来吧！</div>';
+    return;
+  }
+  const list = INDEX.slice().sort((a, b) => String(b.id).localeCompare(String(a.id)));
+  $('wallBox').innerHTML = '<div class="wall">' + list.map(p => {
+    const chars = (p.characters || []).slice(0, 3);
+    return '<div class="art-card" data-id="' + escapeHtml(p.id) + '">' +
+      '<div class="ph"><span class="no">No.' + escapeHtml(p.id) + '</span>' +
+      '<img loading="lazy" src="' + escapeHtml(resolvePath(p.image)) + '" alt="' + escapeHtml(p.title) + '" ' +
+      'onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'beforeend\',\'<div class=ph-fallback>🎨</div>\')">' +
+      '</div>' +
+      '<div class="t">' + rubyHtml(p.title || '') + '</div>' +
+      '<div class="d">' + escapeHtml(p.date || '') + '</div>' +
+      (chars.length ? '<div class="chips">' + chars.map(c => '<span class="chip">' + escapeHtml(c) + '</span>').join('') + '</div>' : '') +
+      '</div>';
+  }).join('') + '</div>';
+  $('wallBox').querySelectorAll('.art-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const p = INDEX.find(x => String(x.id) === el.getAttribute('data-id'));
+      if (p) openModal(p);
+    });
+  });
+}
+
+function renderCharStats() {
+  $('statTitle').innerHTML = rubyHtml('形象统计');
+  const entries = Object.entries(CHARS)
+    .map(([name, c]) => ({ name, n: (c.appearances || []).length }))
+    .sort((a, b) => b.n - a.n);
+  if (!entries.length) {
+    $('charBox').innerHTML = '<div class="empty-tip"><span class="big">🐣</span>还没有卡通形象，<br>记第一幅画时就会出现啦！</div>';
+  } else {
+    const max = Math.max(1, entries[0].n);
+    $('charBox').innerHTML = '<h4>形象出现排行</h4>' + entries.map(e =>
+      '<div class="rank-row"><div class="rank-name">' + rubyHtml(e.name) + '</div>' +
+      '<div class="rank-bar"><i style="width:' + Math.round(e.n / max * 100) + '%"></i></div>' +
+      '<div class="rank-n">' + e.n + ' 幅</div></div>').join('');
+  }
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), lbl: (d.getMonth() + 1) + '月', n: 0 });
+  }
+  INDEX.forEach(p => {
+    const k = (p.date || '').slice(0, 7);
+    const m = months.find(x => x.key === k);
+    if (m) m.n++;
+  });
+  const maxM = Math.max(1, ...months.map(m => m.n));
+  $('monthBox').innerHTML = '<h4>月度趋势（近6个月）</h4><div class="months">' + months.map(m =>
+    '<div class="m-col"><div class="m-n">' + (m.n || '') + '</div>' +
+    '<div class="m-bar" style="height:' + Math.round(m.n / maxM * 82) + 'px"></div>' +
+    '<div class="m-lbl">' + m.lbl + '</div></div>').join('') + '</div>';
+}
+
+function renderShelf() {
+  $('shelfTitle').innerHTML = rubyHtml('画册书架');
+  if (!OUTPUTS.length) {
+    $('shelfBox').innerHTML = '<div class="empty-tip"><span class="big">📚</span>还没有画册成品，<br>累积 10 幅画就可以整理啦！</div>';
+    return;
+  }
+  const emoji = { '画册': '🖼️', '故事册': '📖', '绘本': '🎨' };
+  $('shelfBox').innerHTML = OUTPUTS.map(o =>
+    '<a class="shelf-item" href="' + escapeHtml(resolvePath(o.file)) + '" target="_blank">' +
+    '<span class="b-emoji">' + (emoji[o.type] || '📘') + '</span>' +
+    '<span><div class="b-name">' + rubyHtml(o.title || o.type) + '</div>' +
+    '<div class="b-meta">' + escapeHtml(o.type || '') + ' · ' + escapeHtml(o.date || '') + '</div></span>' +
+    '<span class="go">➜</span></a>').join('');
+}
+
+function openModal(p) {
+  CURRENT = p;
+  $('mTitle').innerHTML = rubyHtml('No.' + p.id + ' ' + (p.title || ''));
+  $('mImg').src = resolvePath(p.image);
+  $('mQuote').textContent = p.description || '（这幅画还没有描述，快听听' + (CONFIG.childName || '孩子') + '怎么说！）';
+  const audio = $('mAudio');
+  if (p.audio) { audio.src = resolvePath(p.audio); audio.classList.remove('hidden'); }
+  else { audio.classList.add('hidden'); audio.removeAttribute('src'); }
+  const chips = [].concat(p.characters || [], p.tags || []);
+  $('mChips').innerHTML = chips.map(c => '<span class="chip">' + escapeHtml(c) + '</span>').join('');
+  $('mMeta').textContent = 'No.' + p.id + ' · ' + (p.date || '');
+  $('modal').classList.remove('hidden');
+  speak((p.title || '') + '。' + (p.description || ''));
+}
+
+function closeModal() {
+  $('modal').classList.add('hidden');
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const audio = $('mAudio');
+  audio.pause();
+}
+
+async function reload() {
+  const [idx, ch, out] = await Promise.all([
+    loadJSON('../data/index.json'),
+    loadJSON('../data/characters.json'),
+    loadJSON('../data/outputs.json')
+  ]);
+  INDEX = Array.isArray(idx) ? idx : [];
+  CHARS = (ch && typeof ch === 'object') ? ch : {};
+  OUTPUTS = Array.isArray(out) ? out : [];
+  renderHeader();
+  renderStats();
+  renderWall();
+  renderCharStats();
+  renderShelf();
+}
+
+async function init() {
+  const cfg = await loadJSON('../data/config.json');
+  if (cfg) CONFIG = cfg;
+  await reload();
+  $('mClose').addEventListener('click', closeModal);
+  $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  $('mSpeak').addEventListener('click', () => {
+    if (CURRENT) speak((CURRENT.title || '') + '。' + (CURRENT.description || ''));
+  });
+  setupUpload();
+}
+
+let voiceCtl = null, lastVoice = null;
+
+// 录音/上传录音交给全站通用的「语音记录」组件：录完自动识别成文字填入描述框，
+// 音频与文字一起存到门户服务器的 data/voice/ 里（不再只是随画一起提交）。
+function setupVoice() {
+  lastVoice = null;
+  if (!window.Voice) return;
+  if (!voiceCtl) {
+    voiceCtl = Voice.attach({
+      mount: '#recBox',
+      scope: 'art-describe',
+      lang: 'zh',
+      autoFill: '#upDesc',
+      meta: { page: '画作页' },
+      onSaved: rec => { lastVoice = rec; }
+    });
+  } else {
+    voiceCtl.reset();
+  }
+}
+
+function setupUpload() {
+  $('uploadFab').addEventListener('click', () => {
+    $('upModal').classList.remove('hidden');
+    $('upMsg').textContent = '';
+    setupVoice();
+  });
+
+  function closeUp() {
+    $('upModal').classList.add('hidden');
+  }
+  $('upClose').addEventListener('click', closeUp);
+  $('upModal').addEventListener('click', e => { if (e.target.id === 'upModal') closeUp(); });
+
+  $('upFile').addEventListener('change', () => {
+    const file = $('upFile').files[0];
+    if (!file) return;
+    $('upPreview').src = URL.createObjectURL(file);
+    $('upPreview').classList.remove('hidden');
+    $('pickHint').classList.add('hidden');
+  });
+
+  $('upSubmit').addEventListener('click', async () => {
+    const file = $('upFile').files[0];
+    if (!file) { $('upMsg').textContent = '请先选一张画'; return; }
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('description', $('upDesc').value || '');
+    // 刚录的那段语音已经在服务器存档了（audio + 识别文字），这里只把地址挂到画作记录上
+    if (lastVoice && lastVoice.url) {
+      fd.append('voiceUrl', lastVoice.url);
+      fd.append('voiceId', lastVoice.id || '');
+    }
+    const d = new Date();
+    fd.append('date', d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+    $('upSubmit').disabled = true;
+    $('upMsg').textContent = '保存中…';
+    try {
+      const r = await fetch('/api/art/upload', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (j && j.ok) {
+        $('upMsg').textContent = '已保存：No.' + j.record.id + ' ' + j.record.title;
+        $('upFile').value = '';
+        $('upPreview').classList.add('hidden');
+        $('upPreview').removeAttribute('src');
+        $('pickHint').classList.remove('hidden');
+        $('upDesc').value = '';
+        if (voiceCtl) voiceCtl.reset();
+        lastVoice = null;
+        await reload();
+        setTimeout(() => { $('upModal').classList.add('hidden'); $('upMsg').textContent = ''; }, 700);
+      } else {
+        $('upMsg').textContent = '保存失败：' + ((j && j.error) || '未知错误');
+      }
+    } catch (e) {
+      $('upMsg').textContent = '请求失败：' + e.message;
+    } finally {
+      $('upSubmit').disabled = false;
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

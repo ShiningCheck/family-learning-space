@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>比赛</title>
+<script src="/vendor/themes.js"></script>
+<script src="/vendor/pinyin-pro.js"></script>
+<script src="/vendor/tts.js"></script>
+<script src="/vendor/voice.js"></script>
+<script src="/vendor/feedback.js"></script>
+<style>
+  :root { font-size: 18px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 14px 14px 96px; font-family: system-ui, "Microsoft YaHei", sans-serif;
+    color: var(--ink, #4A3B2A); background: var(--bg, #FFF9F0);
+  }
+  h1 { font-size: 1.45rem; margin: 6px 0 4px; }
+  .sync { font-size: .82rem; font-weight: 800; opacity: .8; margin: 2px 0 10px; }
+  .card {
+    border: 3px solid var(--line, #FFE3B3); border-radius: 18px; padding: 14px; margin: 12px 0;
+    background: var(--card, #fff);
+  }
+  .card h2 { font-size: 1.12rem; margin: 0 0 10px; }
+  .sub { font-size: .88rem; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.65; }
+  .big {
+    display: block; width: 100%; text-align: left; padding: 14px 16px; font-size: 1.05rem; font-weight: 800;
+    border-radius: 16px; border: 3px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB);
+    color: var(--ink, #4A3B2A); margin-top: 8px; font-family: inherit; line-height: 1.5;
+  }
+  .big:active { transform: translateY(2px); }
+  .big .st { float: right; font-size: 1.2rem; }
+  .big[aria-pressed="true"] { background: #D3F9D8; border-color: #2F9E44; }
+  .big .tip { display: block; font-size: .8rem; font-weight: 700; color: var(--soft, #8D7357); margin-top: 4px; }
+  .pick {
+    padding: 12px 14px; font-size: 1rem; font-weight: 800; border-radius: 999px;
+    border: 3px solid var(--edge, #4A3B2A); background: var(--card, #fff); color: var(--ink, #4A3B2A);
+    margin: 6px 8px 0 0; font-family: inherit;
+  }
+  .pick[aria-pressed="true"] { background: #FFE8CC; border-color: #E8590C; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar { font-size: .95rem; font-weight: 900; margin: 4px 0 8px; }
+  .chip {
+    display: inline-block; font-size: .8rem; font-weight: 800; padding: 3px 10px; border-radius: 999px;
+    background: var(--line, #FFF1DB); border: 2px solid var(--line, #FFE3B3); margin: 0 6px 6px 0;
+  }
+  .chip.warn { background: #FFF3BF; border-color: #F59F00; }
+  .chip.ok { background: #D3F9D8; border-color: #2F9E44; }
+  ol.req { margin: 6px 0 6px 1.1rem; padding: 0; }
+  ol.req li { margin: 6px 0; font-size: .95rem; line-height: 1.7; }
+  .sec-t { font-size: .95rem; font-weight: 900; margin: 12px 0 2px; }
+  .tool {
+    border: 2px solid var(--edge, #4A3B2A); border-radius: 999px; background: var(--line, #FFF1DB);
+    padding: 7px 14px; font-size: .85rem; font-weight: 800; font-family: inherit; color: var(--ink, #4A3B2A);
+  }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+  .cal-w { text-align: center; font-size: .78rem; font-weight: 900; color: var(--soft, #8D7357); }
+  .cal-d {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 12px; border: 2px solid transparent;
+    background: var(--paper, #FFF6E9); font-size: .95rem; font-weight: 800; font-family: inherit;
+    color: var(--ink, #4A3B2A); display: flex; align-items: center; justify-content: center;
+  }
+  .cal-d.blank { visibility: hidden; }
+  .cal-d.today { border-color: #4DABF7; }
+  .cal-d.sel { border-color: #E8590C; border-width: 3px; }
+  .cal-d.has { background: #D3F9D8; }
+  .cal-d .n {
+    position: absolute; right: 3px; bottom: 2px; font-size: .66rem; font-weight: 900; color: #2F9E44;
+  }
+  .day-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; border-top: 2px dashed var(--line, #FFE3B3); }
+  .day-item:first-of-type { border-top: none; }
+  .day-item .nm { flex: 1 1 auto; font-size: .95rem; font-weight: 800; line-height: 1.6; }
+  .day-item .st { flex: 0 0 auto; font-size: .85rem; font-weight: 900; }
+  .ok { color: #2F9E44; }
+  .no { color: #ADB5BD; }
+  .empty { text-align: center; opacity: .65; padding: 14px 0; font-weight: 700; }
+  .fold-t {
+    width: 100%; text-align: left; font-size: 1rem; font-weight: 900; font-family: inherit; color: var(--ink, #4A3B2A);
+    background: var(--line, #FFF1DB); border: 3px solid var(--line, #FFE3B3); border-radius: 14px; padding: 12px 14px;
+  }
+  .fold-b { display: none; margin-top: 8px; }
+  .fold-b.open { display: block; }
+  ruby rt { display: none; font-size: .58em; font-weight: 700; color: var(--soft, #8D7357); }
+  body.show-py ruby rt { display: inline; }
+  #cele {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 104px; max-width: 92vw;
+    background: #D3F9D8; border: 3px solid #2F9E44; border-radius: 16px; padding: 12px 18px;
+    font-size: 1rem; font-weight: 900; color: #2B8A3E; box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    z-index: 60; display: none; text-align: center;
+  }
+  #cele.show { display: block; animation: pop .35s ease-out; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.8); opacity: 0 } to { transform: translateX(-50%) scale(1); opacity: 1 } }
+</style>
+</head>
+<body>
+<h1>🏆 比赛 <button class="tool" id="pyToggle" style="float:right;margin-top:6px">拼音</button></h1>
+<div class="sync" id="sync">⏳ 正在读取服务器上的比赛信息…</div>
+
+<div class="card" id="overview"></div>
+
+<div class="card">
+  <h2>🙋 我们参加哪一项</h2>
+  <div class="sub">每类最多选一项；都不参加就点「先不参加」。选完下面只留你选的那几项要求。</div>
+  <div id="picks"></div>
+</div>
+
+<div class="card" id="reqCard"></div>
+
+<div class="card">
+  <h2>✅ 备赛清单</h2>
+  <div class="sub" id="prepDateBar"></div>
+  <div class="bar" id="prepBar"></div>
+  <div id="prepList"></div>
+</div>
+
+<div class="card">
+  <h2>📅 打卡日历</h2>
+  <div class="cal-head">
+    <button class="tool" id="calPrev">◀ 上个月</button>
+    <div style="font-size:1.02rem;font-weight:900" id="calTitle"></div>
+    <button class="tool" id="calNext">下个月 ▶</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="row" style="margin-top:8px">
+    <button class="tool" id="calToday">回到今天</button>
+    <span class="sub" id="calSum"></span>
+  </div>
+  <div id="dayCard" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h2>🎤 练习心得（说一句）</h2>
+  <div class="sub">练完一段、录完视频，点一下录音说说今天练到哪儿了。音频和文字都会存下来。</div>
+  <div id="recBox" style="margin-top:8px"></div>
+  <div class="sec-t">🎧 这天录的音</div>
+  <div id="voiceList"></div>
+</div>
+
+<div class="card">
+  <button class="fold-t" id="foldAll">📖 全部项目的要求（点开看）</button>
+  <div class="fold-b" id="allBox"></div>
+  <button class="fold-t" id="foldNotes" style="margin-top:10px">📌 注意事项（点开看）</button>
+  <div class="fold-b" id="notesBox"></div>
+</div>
+
+<div id="cele"></div>
+
+<script>
+'use strict';
+
+const API = '/api/competition';
+const CACHE_KEY = 'competition:cache';
+const SCOPE = 'competition';
+
+let notice = null;          // 活动通知（项目/要求/老师/邮箱），来自服务器 data/notice.json
+let cfg = {};               // 孩子姓名/年级，来自服务器 data/config.json
+let S = { enrollment: {}, enrollmentUpdated: 0, records: {} };
+let curDate = ymd(new Date());   // 正在给哪一天打卡（点日历可以补记）
+let calY, calM;
+let online = false, pushing = false, dirty = false;
+
+/* ---------------- 小工具 ---------------- */
+function ymd(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function ruby(text) {
+  let out = '';
+  Array.from(String(text || '')).forEach(ch => {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      let py = '';
+      try { if (window.pinyinPro) py = pinyinPro.pinyin(ch, { toneType: 'symbol' }); } catch (e) { py = ''; }
+      out += py ? '<ruby>' + ch + '<rp>(</rp><rt>' + esc(py) + '</rt><rp>)</rp></ruby>' : ch;
+    } else out += esc(ch);
+  });
+  return out;
+}
+function cnDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const w = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + w;
+}
+function setSync(t) { document.getElementById('sync').textContent = t; }
+function allItems() {
+  const out = [];
+  ((notice && notice.categories) || []).forEach(c => (c.items || []).forEach(i => out.push({ cat: c, item: i })));
+  return out;
+}
+function findItem(id) { return allItems().filter(x => x.item.id === id)[0] || null; }
+
+/* ---------------- 服务器读写：唯一的数据出口 ---------------- */
+async function pull() {
+  try {
+    const r = await fetch(API, { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    notice = j.notice || null;
+    cfg = { childName: j.childName || '', grade: j.grade || '', className: j.className || '' };
+    S = mergeInto(j.state || {}, S);          // 服务器为准；本地更新的那几条先留住，随后补推
+    online = true;
+    setSync('☁️ 已同步到服务器');
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ notice: notice, cfg: cfg, state: S })); } catch (e) {}
+    if (dirty) push();
+  } catch (e) {
+    online = false;
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if (c) { notice = notice || c.notice; cfg = c.cfg || cfg; S = mergeInto(c.state || {}, S); }
+    } catch (_) {}
+    setSync('⚠️ 暂时连不上服务器，先用本机记录（联网后自动补上）');
+    if (!S.records) S.records = {};
+  }
+  render();
+}
+
+// 把服务器来的状态并进本机：同一 项+天 比 ts 取新
+function mergeInto(server, local) {
+  const out = { enrollment: {}, enrollmentUpdated: 0, records: {} };
+  const se = (server && server.enrollment) || {};
+  const le = (local && local.enrollment) || {};
+  const stu = Number((server && server.enrollmentUpdated) || 0);
+  const ltu = Number((local && local.enrollmentUpdated) || 0);
+  out.enrollment = ltu > stu ? le : se;
+  out.enrollmentUpdated = Math.max(stu, ltu);
+  const sr = (server && server.records) || {};
+  const lr = (local && local.records) || {};
+  const keys = {};
+  Object.keys(sr).forEach(k => keys[k] = 1);
+  Object.keys(lr).forEach(k => keys[k] = 1);
+  Object.keys(keys).forEach(k => {
+    const day = {};
+    const a = sr[k] || {}, b = lr[k] || {};
+    const days = {};
+    Object.keys(a).forEach(d => days[d] = 1);
+    Object.keys(b).forEach(d => days[d] = 1);
+    Object.keys(days).forEach(d => {
+      const ra = a[d], rb = b[d];
+      if (!ra) { day[d] = rb; return; }
+      if (!rb) { day[d] = ra; return; }
+      day[d] = (Number(rb.ts) || 0) >= (Number(ra.ts) || 0) ? rb : ra;
+    });
+    out.records[k] = day;
+  });
+  return out;
+}
+
+async function push() {
+  if (pushing) { dirty = true; return; }
+  pushing = true; dirty = false;
+  try {
+    const r = await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enrollment: S.enrollment, enrollmentUpdated: S.enrollmentUpdated, records: S.records })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    if (j && j.ok) {
+      S = mergeInto(j.state || S, S);
+      online = true;
+      setSync('☁️ 已同步到服务器');
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ notice: notice, cfg: cfg, state: S })); } catch (e) {}
+    } else throw new Error('bad');
+  } catch (e) {
+    online = false;
+    dirty = true;                    // 下一轮 pull 成功后自动补推，不用等用户再点
+    setSync('⚠️ 没存上服务器，稍后自动重试');
+  }
+  pushing = false;
+  render();
+}
+
+/* ---------------- 打卡记录 ---------------- */
+function stepState(itemId, stepId) {
+  const rec = S.records[itemId + ':' + stepId] || {};
+  let best = -1, done = false, date = '';
+  Object.keys(rec).forEach(d => {
+    const r = rec[d] || {};
+    const ts = Number(r.ts) || 0;
+    if (ts >= best) { best = ts; done = Number(r.v) === 1; date = done ? d : ''; }
+  });
+  return { done: done, date: date };
+}
+function putLocal(key, date, rec) {
+  const k = S.records[key] || (S.records[key] = {});
+  k[date] = rec;
+}
+function toggleStep(itemId, stepId, itemName) {
+  const key = itemId + ':' + stepId;
+  const st = stepState(itemId, stepId);
+  const now = Date.now();
+  if (st.done) {
+    putLocal(key, curDate, { v: 0, ts: now });
+    if (st.date && st.date !== curDate) putLocal(key, st.date, { v: 0, ts: now - 1 });
+    render();
+    push();
+  } else {
+    putLocal(key, curDate, { v: 1, ts: now });
+    render();
+    push();
+    celebrate('🎉 ' + itemName + ' 打卡成功，你真棒！');
+  }
+}
+function pickProject(catId, itemId) {
+  S.enrollment = S.enrollment || {};
+  // 再点一次同一项、或点「先不参加」→ 从报名里去掉（空＝不参加，服务端才好把旧的清掉）
+  if (!itemId || S.enrollment[catId] === itemId) delete S.enrollment[catId];
+  else S.enrollment[catId] = itemId;
+  S.enrollmentUpdated = Date.now();
+  render();
+  push();
+}
+function countsByDate() {
+  const out = {};
+  Object.keys(S.records).forEach(k => {
+    const rec = S.records[k] || {};
+    Object.keys(rec).forEach(d => {
+      if (Number((rec[d] || {}).v) === 1) out[d] = (out[d] || 0) + 1;
+    });
+  });
+  return out;
+}
+
+/* ---------------- 渲染 ---------------- */
+function chosenItems() {
+  const en = S.enrollment || {};
+  return allItems().filter(x => en[x.cat.id] === x.item.id);
+}
+
+function render() {
+  if (!notice) {
+    document.getElementById('overview').innerHTML =
+      '<h2>还没有活动信息</h2><div class="sub">服务器上还没有 <b>data/notice.json</b>：把学校发的比赛通知按模板整理进去，这一页就有内容了。</div>';
+    ['picks', 'reqCard', 'prepList', 'calGrid', 'dayCard', 'voiceList', 'allBox', 'notesBox']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+    document.getElementById('prepBar').textContent = '';
+    document.getElementById('prepDateBar').textContent = '';
+    document.getElementById('calTitle').textContent = '';
+    document.getElementById('calSum').textContent = '';
+    mountVoice();
+    return;
+  }
+  if (!calY) { const d = new Date(curDate + 'T00:00:00'); calY = d.getFullYear(); calM = d.getMonth(); }
+  renderOverview();
+  renderPicks();
+  renderReqs();
+  renderPrep();
+  renderCal();
+  renderDay();
+  renderAll();
+  mountVoice();
+}
+
+function daysLeft() {
+  const t = new Date(ymd(new Date()) + 'T00:00:00');
+  const d = new Date((notice.deadline || ymd(new Date())) + 'T00:00:00');
+  return Math.round((d - t) / 86400000);
+}
+function renderOverview() {
+  const who = [cfg.childName, cfg.grade, cfg.className].filter(Boolean).join(' · ');
+  const left = daysLeft();
+  let tip;
+  if (left > 1) tip = '<span class="chip warn">距离上交还有 ' + left + ' 天</span>';
+  else if (left === 1) tip = '<span class="chip warn">明天就要上交啦</span>';
+  else if (left === 0) tip = '<span class="chip warn">今天就是上交日</span>';
+  else tip = '<span class="chip">上交日已过（' + esc(notice.deadlineText || notice.deadline || '') + '）</span>';
+  document.getElementById('overview').innerHTML =
+    '<h2>🏫 ' + esc(notice.title || '比赛通知') + '</h2>' +
+    '<div class="sub">' +
+      (notice.theme ? '主题：' + esc(notice.theme) + '<br>' : '') +
+      (notice.school ? '学校：' + esc(notice.school) + '<br>' : '') +
+      (who ? '参加人：' + esc(who) + '<br>' : '') +
+      (notice.prepText ? '筹备时间：' + esc(notice.prepText) + '<br>' : '') +
+      '上交时间：' + esc(notice.deadlineText || notice.deadline || '') +
+    '</div>' +
+    '<div class="row" style="margin-top:8px">' + tip +
+      '<button class="tool" id="readAll">🔊 读一遍通知</button></div>' +
+    (notice.intro ? '<div class="sub" style="margin-top:8px">' + esc(notice.intro) + '</div>' : '');
+  const rb = document.getElementById('readAll');
+  if (rb) rb.addEventListener('click', () => speak([notice.title, notice.intro, notice.prepText, notice.notes ? notice.notes.join(' ') : ''].join('。')));
+}
+
+function renderPicks() {
+  const en = S.enrollment || {};
+  let h = '';
+  ((notice.categories) || []).forEach(c => {
+    h += '<div style="margin-top:6px"><span class="chip">' + esc(c.emoji || '') + ' ' + ruby(c.name) + '</span>' +
+      (c.hint ? '<span class="sub">' + esc(c.hint) + '</span>' : '') + '</div><div class="row">';
+    (c.items || []).forEach(it => {
+      const on = en[c.id] === it.id;
+      h += '<button class="pick" data-cat="' + esc(c.id) + '" data-item="' + esc(it.id) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+        esc(it.emoji || '') + ' ' + ruby(it.name) + (on ? ' ✓' : '') + '</button>';
+    });
+    h += '<button class="pick" data-cat="' + esc(c.id) + '" data-item="" aria-pressed="' + (en[c.id] ? 'false' : 'true') + '">先不参加</button>';
+    h += '</div>';
+  });
+  document.getElementById('picks').innerHTML = h;
+  document.querySelectorAll('#picks .pick').forEach(b => {
+    b.addEventListener('click', () => pickProject(b.getAttribute('data-cat'), b.getAttribute('data-item')));
+  });
+}
+
+function reqHtml(x) {
+  const it = x.item;
+  let h = '<div style="margin-top:6px"><span class="chip ok">' + esc(x.cat.emoji || '') + ' ' + ruby(x.cat.name) + '</span>' +
+    '<b style="font-size:1.05rem">' + esc(it.emoji || '') + ' ' + ruby(it.name) + '</b></div>';
+  const meta = [];
+  if (it.teacher) meta.push('负责老师：' + esc(it.teacher));
+  if (it.email) meta.push('邮箱：' + esc(it.email));
+  if (it.grade) meta.push('面向：' + esc(it.grade));
+  if (meta.length) h += '<div class="sub">' + meta.join(' · ') + '</div>';
+  if ((it.show || []).length) h += '<div class="sec-t">🎯 展示要求</div><ol class="req">' + it.show.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol>';
+  if ((it.record || []).length) h += '<div class="sec-t">🎥 录制要求</div><ol class="req">' + it.record.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol>';
+  if (it.submit) h += '<div class="sec-t">📮 上交要求</div><div class="sub">' + esc(it.submit) + '</div>';
+  h += '<div class="row" style="margin-top:8px"><button class="tool" data-read="' + esc(it.id) + '">🔊 读一遍要求</button></div>';
+  return h;
+}
+
+function renderReqs() {
+  const sel = chosenItems();
+  const host = document.getElementById('reqCard');
+  if (!sel.length) {
+    host.innerHTML = '<h2>📋 要求速查</h2><div class="empty">上面选一下要参加的项目，这里就显示它的全部要求</div>';
+    return;
+  }
+  host.innerHTML = '<h2>📋 要求速查</h2>' + sel.map(x => reqHtml(x)).join('<hr style="border:none;border-top:2px dashed var(--line,#FFE3B3);margin:14px 0">');
+}
+
+function renderPrep() {
+  const sel = chosenItems();
+  const isToday = curDate === ymd(new Date());
+  document.getElementById('prepDateBar').innerHTML = sel.length
+    ? ('正在给 <b>' + esc(cnDate(curDate)) + '</b>' + (isToday ? '（今天）' : '（补记：这天完成的也记得上）') + ' 打卡 —— 点下面的步骤，就是在那天完成的。')
+    : '先在上面选一下要参加的项目，下面就有备赛步骤了。';
+  const listHost = document.getElementById('prepList');
+  const barHost = document.getElementById('prepBar');
+  if (!sel.length) { listHost.innerHTML = '<div class="empty">还没有选项目</div>'; barHost.textContent = ''; return; }
+
+  let h = '', tot = 0, done = 0;
+  sel.forEach(x => {
+    const it = x.item, ps = it.prep || [];
+    const dn = ps.filter(p => stepState(it.id, p.id).done).length;
+    tot += ps.length; done += dn;
+    h += '<div class="sec-t">' + esc(it.emoji || '') + ' ' + ruby(it.name) + '（' + dn + '/' + ps.length + '）</div>';
+    if (!ps.length) { h += '<div class="empty">这个项目没有整理出步骤，照上面的要求做就行</div>'; return; }
+    ps.forEach(p => {
+      const st = stepState(it.id, p.id);
+      h += '<button class="big" data-step="' + esc(it.id + ':' + p.id) + '" data-item="' + esc(it.id) + '" aria-pressed="' + (st.done ? 'true' : 'false') + '">' +
+        esc(p.emoji || '✅') + ' ' + ruby(p.name) +
+        '<span class="st">' + (st.done ? '✓' : '○') + '</span>' +
+        (p.tip ? '<span class="tip">' + esc(p.tip) + '</span>' : '') +
+        (st.done && st.date ? '<span class="tip">' + esc(cnDate(st.date)) + ' 完成</span>' : '') +
+        '</button>';
+    });
+  });
+  listHost.innerHTML = h;
+  barHost.innerHTML = '🎯 备赛进度：<b>' + done + ' / ' + tot + '</b> 项完成' +
+    (tot && done === tot ? '　🎉 全部搞定！' : '') +
+    (!isToday ? '　<button class="tool" id="backToday">回到今天打卡</button>' : '');
+  const bt = document.getElementById('backToday');
+  if (bt) bt.addEventListener('click', () => { curDate = ymd(new Date()); const d = new Date(curDate + 'T00:00:00'); calY = d.getFullYear(); calM = d.getMonth(); render(); });
+  listHost.querySelectorAll('[data-step]').forEach(b => {
+    b.addEventListener('click', () => {
+      const parts = b.getAttribute('data-step').split(':');
+      const x = findItem(b.getAttribute('data-item'));
+      toggleStep(parts[0], parts[1], x ? x.item.name : '');
+    });
+  });
+}
+
+function renderCal() {
+  const title = calY + ' 年 ' + (calM + 1) + ' 月';
+  document.getElementById('calTitle').textContent = title;
+  const cnt = countsByDate();
+  const today = ymd(new Date());
+  const start = new Date(calY, calM, 1).getDay();
+  const dn = new Date(calY, calM + 1, 0).getDate();
+  let h = ['日', '一', '二', '三', '四', '五', '六'].map(w => '<div class="cal-w">' + w + '</div>').join('');
+  for (let i = 0; i < start; i++) h += '<div class="cal-d blank"></div>';
+  let monthHits = 0;
+  for (let d = 1; d <= dn; d++) {
+    const iso = calY + '-' + String(calM + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const n = cnt[iso] || 0;
+    if (n) monthHits++;
+    const cls = ['cal-d'];
+    if (n) cls.push('has');
+    if (iso === today) cls.push('today');
+    if (iso === curDate) cls.push('sel');
+    h += '<button class="' + cls.join(' ') + '" data-day="' + iso + '">' + d +
+      (n ? '<span class="n">' + n + '</span>' : '') + '</button>';
+  }
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = h;
+  grid.querySelectorAll('[data-day]').forEach(b => {
+    b.addEventListener('click', () => { curDate = b.getAttribute('data-day'); render(); });
+  });
+  document.getElementById('calSum').textContent = '本月：打卡 ' + monthHits + ' 天（绿点＝那天完成了几项）';
+}
+
+function renderDay() {
+  const sel = chosenItems();
+  const label = cnDate(curDate) + (curDate === ymd(new Date()) ? '（今天）' : '');
+  let h = '<div class="sec-t">📌 ' + esc(label) + ' 打卡内容</div>';
+  let any = false;
+  sel.forEach(x => {
+    const ps = x.item.prep || [];
+    if (!ps.length) return;
+    const rec = S.records;
+    const lines = ps.map(p => {
+      const key = x.item.id + ':' + p.id;
+      const r = (rec[key] || {})[curDate];
+      const st = stepState(x.item.id, p.id);
+      const thatDay = r && Number(r.v) === 1;
+      if (thatDay) any = true;
+      let mark = '—', cls = 'no';
+      if (thatDay) { mark = '✓ 这天完成'; cls = 'ok'; }
+      else if (st.done) { mark = '✓ ' + cnDate(st.date); cls = 'ok'; }
+      return '<div class="day-item"><div class="nm">' + esc(p.emoji || '') + ' ' + esc(p.name) + '</div>' +
+        '<div class="st ' + cls + '">' + esc(mark) + '</div></div>';
+    }).join('');
+    h += '<div class="sec-t" style="margin-top:10px">' + esc(x.item.emoji || '') + ' ' + esc(x.item.name) + '</div>' + lines;
+  });
+  if (!sel.length) h += '<div class="empty">还没有选项目</div>';
+  document.getElementById('dayCard').innerHTML = h;
+
+  // 那天的录音（音频 + 文字双显示）
+  const vhost = document.getElementById('voiceList');
+  if (!window.Voice) { vhost.innerHTML = '<div class="empty">录音组件没加载</div>'; return; }
+  if (voiceListedFor === curDate) return;     // 每 15 秒的自动刷新不重画这段，免得打断改文字
+  voiceListedFor = curDate;
+  vhost.innerHTML = '<div class="sub">正在读取…</div>';
+  Voice.listInto(vhost, {
+    scope: SCOPE, date: curDate, limit: 30,
+    empty: '这天还没录音，点上面的「🎤 说一句」录一段吧',
+    onDeleted: () => { voiceListedFor = ''; renderDay(); }
+  });
+}
+
+function renderAll() {
+  document.getElementById('allBox').innerHTML = allItems().map(x => reqHtml(x)).join('<hr style="border:none;border-top:2px dashed var(--line,#FFE3B3);margin:14px 0">');
+  document.getElementById('notesBox').innerHTML = (notice.notes || []).length
+    ? '<ol class="req">' + notice.notes.map(n => '<li>' + esc(n) + '</li>').join('') + '</ol>' +
+      (notice.issuer || notice.issuedText ? '<div class="sub">' + esc(notice.issuer || '') + (notice.issuedText ? '　' + esc(notice.issuedText) : '') + '</div>' : '')
+    : '<div class="empty">通知里没有注意事项</div>';
+}
+
+/* ---------------- 录音（音频 + 文字双显示） ---------------- */
+let voiceMountedFor = '';
+let voiceListedFor = '';
+function mountVoice() {
+  if (!window.Voice || voiceMountedFor === curDate) return;
+  try {
+    Voice.attach({
+      mount: '#recBox', scope: SCOPE, lang: 'zh', date: curDate, compact: true,
+      meta: { page: '比赛' },
+      onSaved: () => { voiceListedFor = ''; renderDay(); }
+    });
+    voiceMountedFor = curDate;
+  } catch (e) { /* 组件不可用就不显示录音 */ }
+}
+
+/* ---------------- 朗读 / 庆祝 ---------------- */
+function speak(text) {
+  if (window.TTS) { TTS.speak(text, 'zh'); return; }
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  speechSynthesis.speak(u);
+}
+let celeTimer = null;
+function celebrate(msg) {
+  const el = document.getElementById('cele');
+  el.textContent = msg + '（点一下关掉）';
+  el.classList.add('show');
+  if (celeTimer) clearTimeout(celeTimer);
+  celeTimer = setTimeout(() => el.classList.remove('show'), 4000);
+}
+document.getElementById('cele').addEventListener('click', function () { this.classList.remove('show'); });
+
+/* ---------------- 事件与刷新 ---------------- */
+document.getElementById('calPrev').addEventListener('click', () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
+document.getElementById('calNext').addEventListener('click', () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
+document.getElementById('calToday').addEventListener('click', () => {
+  curDate = ymd(new Date());
+  const d = new Date(curDate + 'T00:00:00'); calY = d.getFullYear(); calM = d.getMonth();
+  render();
+});
+document.getElementById('foldAll').addEventListener('click', () => document.getElementById('allBox').classList.toggle('open'));
+document.getElementById('foldNotes').addEventListener('click', () => document.getElementById('notesBox').classList.toggle('open'));
+document.getElementById('pyToggle').addEventListener('click', function () {
+  document.body.classList.toggle('show-py');
+  this.setAttribute('aria-pressed', document.body.classList.contains('show-py') ? 'true' : 'false');
+});
+// 「🔊 读一遍要求」按钮是随时重画的，所以用事件代理，不给每个按钮单独挂
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest ? e.target.closest('[data-read]') : null;
+  if (!b) return;
+  const x = findItem(b.getAttribute('data-read'));
+  if (!x) return;
+  speak(x.item.name + '。展示要求：' + (x.item.show || []).join(' ') + '。录制要求：' + (x.item.record || []).join(' ') + '。' + (x.item.submit || ''));
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+setInterval(pull, 15000);
+pull();
+</script>
+</body>
+</html>

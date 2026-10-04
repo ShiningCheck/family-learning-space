@@ -1,0 +1,8 @@
+{
+  "levelNote": "层号从最下层往上数，最下层是第 1 层",
+  "shelves": [
+    { "id": "main", "name": "客厅书架", "emoji": "🛋️", "levels": 4, "note": "" },
+    { "id": "entry", "name": "玄关书架", "emoji": "🚪", "levels": 3, "note": "" },
+    { "id": "second", "name": "卧室书架", "emoji": "🛏️", "levels": 3, "note": "" }
+  ]
+}

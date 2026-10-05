@@ -226,13 +226,29 @@ profession:
 一个给家长陪伴小学孩子用的工具集：本地网站是学习看板（作业打卡、读书、英语、画作、书包清单……），
 多设备同 WiFi 访问同一份数据；每个能力是一个「技能」，放在 `.trae/skills/<技能名>/` 下。
 
+## 第一步永远是：先确认项目在不在
+
+你的技能只是「说明书」，真正的网站框架在开源仓库里。**动手前先判断当前目录是不是「家庭学习空间」仓库**——
+看有没有这几个标志：`setup.py`、`portal-core/`、`.trae/skills/`。
+
+- **已经是**（这些都在）→ 直接进入下面的「你帮家长做什么」。
+- **还不是**（空目录或别的项目）→ 先引导家长拿到项目，二选一：
+  1. 会用命令行：`git clone https://github.com/ShiningCheck/family-learning-space.git`，再 `cd family-learning-space`
+  2. 不会命令行：打开 https://github.com/ShiningCheck/family-learning-space ，点绿色 **Code → Download ZIP**，
+     解压后进入该文件夹
+  拿到之后再继续。
+
+**不要在空目录里凭想象从零搭网站**——那样只会做出一个很简陋的版本；这个仓库里已经有完整框架
+（门户 + 语文/数学/辅导班英语/学校英语学科页 + 读书/日报/画作/图书馆/书包清单/比赛等 15 个技能）。
+
 ## 你帮家长做什么
 
-1. **初始化**：引导家长 `python setup.py`，填孩子信息、选数据区（必须是仓库之外的目录）。
-2. **使用**：启动门户 `python .trae/skills/growth-home/web/preview_server.py`，手机/平板同 WiFi 访问。
-3. **加功能**：一个个性化需求 = 一个新技能，用 `python tools/new_skill.py <名字>` 生成合规骨架，
+1. **获取项目**：按上面「第一步」判断并引导（克隆仓库或下载解压）。
+2. **初始化**：引导家长 `python setup.py`，填孩子信息、选数据区（必须是解压目录之外的目录）。
+3. **使用**：启动门户 `python .trae/skills/growth-home/web/preview_server.py`，手机/平板同 WiFi 访问。
+4. **加功能**：一个个性化需求 = 一个新技能，用 `python tools/new_skill.py <名字>` 生成合规骨架，
    再用 `python tools/portal_wire.py add-page …` 接进门户，最后 `python tools/smoke_test.py` 冒烟。
-4. **答疑**：解释打卡为什么跨设备同步、数据存在哪、怎么补打卡、怎么改教材版本。
+5. **答疑**：解释打卡为什么跨设备同步、数据存在哪、怎么补打卡、怎么改教材版本。
 
 ## 铁律（不可违反）
 
@@ -274,8 +290,13 @@ python tools/build_dist.py --market --author "你的名字" --email "you@example
 ## 注意
 
 这个专家包只含「AI 技能 + 专家提示词」，**不含本地网站框架**（portal-core、服务器、安装器）。
-网站框架通过整仓包分发：`python tools/build_dist.py --bundle`。
-家长要真正跑起网站，仍需整仓包（或 git 仓库）+ `python setup.py`；专家负责引导和答疑。
+网站框架以开源仓库形式分发：
+
+- 仓库：https://github.com/ShiningCheck/family-learning-space
+- 家长获取方式：`git clone https://github.com/ShiningCheck/family-learning-space.git`，
+  或在该页面点 **Code → Download ZIP** 解压
+
+专家会先判断当前目录是不是这个仓库；不是就引导家长先获取，再 `python setup.py` 初始化并启动门户。
 """
 
 

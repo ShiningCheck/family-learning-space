@@ -26,6 +26,10 @@
  *   meta         附带信息（对象，如 { page: '打卡页' }）
  *   maxSeconds   录音最长秒数，默认 120，到点自动停
  *   compact      true 时按钮更小（适合卡片内嵌）
+ *   endpoint     自定义上传地址（默认 /api/voice；跟读评分走 /api/class/speech/eval）
+ *   fields       随录音一起提交的额外字段（对象，或返回对象的函数；如 { target, key, date }）
+ *   busyText     "正在处理"提示的前缀（默认「正在识别成文字」）
+ *   deletable    false 时隐藏「🗑 删除」按钮（自定义接口没有删除能力时用）
  *   onText(t,rec)  识别出文字后回调
  *   onSaved(rec)   存档完成后回调（拿到 record.url / record.id / record.text）
  *   onDeleted(id)  删掉刚录这条后回调（列表页用它刷新下方历史列表）
@@ -128,7 +132,15 @@
     if (meta.meta) {
       try { fd.append('meta', JSON.stringify(meta.meta)); } catch (e) { /* 忽略 */ }
     }
-    return fetch('/api/voice', { method: 'POST', body: fd }).then(function (r) {
+    // 额外表单字段（如跟读评分的 target / key）：支持对象或返回对象的函数
+    if (meta.fields) {
+      for (var k in meta.fields) {
+        if (Object.prototype.hasOwnProperty.call(meta.fields, k) && meta.fields[k] != null) {
+          fd.append(k, String(meta.fields[k]));
+        }
+      }
+    }
+    return fetch(meta.endpoint || '/api/voice', { method: 'POST', body: fd }).then(function (r) {
       return r.json().then(function (j) {
         if (!r.ok || !j || !j.ok) throw new Error((j && j.error) || ('HTTP ' + r.status));
         return j.record;
@@ -174,6 +186,15 @@
     var fillMode = opts.fillMode === 'replace' ? 'replace' : 'append';
     var maxSeconds = opts.maxSeconds || 120;
     var small = opts.compact ? ' vr-sm' : '';
+    var endpoint = opts.endpoint || '';
+    var extraFields = opts.fields || null;
+    var busyText = opts.busyText || '正在识别成文字';
+    var deletable = opts.deletable !== false;
+
+    function resolveFields() {
+      try { return typeof extraFields === 'function' ? extraFields() : extraFields; }
+      catch (e) { return null; }
+    }
 
     mount.innerHTML =
       '<div class="vr" data-scope="' + esc(scope) + '">' +
@@ -181,7 +202,7 @@
       '<button class="vr-btn vr-rec' + small + '" type="button">🎤 录音</button>' +
       '<button class="vr-btn vr-up' + small + '" type="button">📁 上传录音</button>' +
       '<button class="vr-btn vr-retry vr-hide' + small + '" type="button">🔁 重试上传</button>' +
-      '<button class="vr-btn vr-del vr-hide" type="button">🗑 删除</button>' +
+      (deletable ? '<button class="vr-btn vr-del vr-hide" type="button">🗑 删除</button>' : '') +
       '</div>' +
       '<div class="vr-status vr-hide"></div>' +
       '<div class="vr-text vr-hide"></div>' +
@@ -229,7 +250,7 @@
       hideAudio();
       recBtn.textContent = '🎤 录音';
       recBtn.classList.remove('vr-recording');
-      delBtn.classList.add('vr-hide');
+      if (delBtn) delBtn.classList.add('vr-hide');
       retryBtn.classList.add('vr-hide');
       textEl.classList.add('vr-hide');
       textEl.textContent = '';
@@ -242,7 +263,7 @@
       st.objUrl = URL.createObjectURL(blob);
       audioEl.src = st.objUrl;
       audioEl.classList.remove('vr-hide');
-      delBtn.classList.remove('vr-hide');
+      if (delBtn) delBtn.classList.remove('vr-hide');
     }
 
     function send(blob, filename) {
@@ -252,14 +273,15 @@
       upBtn.setAttribute('disabled', 'disabled');
       retryBtn.classList.add('vr-hide');
       var waited = 0;
-      setStatus('正在识别成文字…（语音越长越慢，先别关页面） 0 秒');
+      setStatus(busyText + '…（语音越长越慢，先别关页面） 0 秒');
       st.tick = window.setInterval(function () {
         waited += 1;
-        setStatus('正在识别成文字…（语音越长越慢，先别关页面） ' + waited + ' 秒');
+        setStatus(busyText + '…（语音越长越慢，先别关页面） ' + waited + ' 秒');
       }, 1000);
 
       upload(blob, filename, {
-        scope: scope, lang: lang, date: dateStr, meta: opts.meta
+        scope: scope, lang: lang, date: dateStr, meta: opts.meta,
+        endpoint: endpoint, fields: resolveFields()
       }).then(function (rec) {
         st.last = rec;
         window.clearInterval(st.tick);
@@ -360,7 +382,7 @@
     });
 
     // 「🗑 删除」：还没存上时只清掉本地预览；已经存好的那条连服务器上的音频和文字一起删掉。
-    delBtn.addEventListener('click', function () {
+    if (delBtn) delBtn.addEventListener('click', function () {
       var rec = st.last;
       if (!rec) { reset(); return; }
       if (!window.confirm('删除这条录音？音频和文字都会删掉，删了就找不回来。')) return;

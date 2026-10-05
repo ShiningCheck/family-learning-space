@@ -11,7 +11,7 @@ description: "给成长家园门户批量补配音：把新增的单词句子、
 
 所以页面改成**优先播放电脑端预先合成好的 mp3**：能配到音频就直接播，配不到才退回浏览器朗读，两条都不行会在页面底部弹出原因提示。本技能负责那批 mp3 的生成与维护。
 
-产物位置：`growth-home/data/tts/`（`index.json` 清单 + `audio/<hash>.mp3`），由门户以 `/data/tts/` 托管给所有页面。
+产物位置：`<data-root>/web/data/tts/`（growth-home 命名空间；`index.json` 清单 + `audio/<hash>.mp3`），由门户以 `/data/tts/` 托管给所有页面。
 
 ## 什么时候调用
 
@@ -66,17 +66,17 @@ node .trae/skills/voice-dubbing/tools/verify_tts.js
 
 脚本从数据文件里推导出需要配音的文本，不用手工登记：
 
-| 数据文件 | 生成的句子 |
+| 数据文件（架构 v2 后内容按技能归位到 data-root） | 生成的句子 |
 | --- | --- |
-| `growth-home/data/english_class.json` | 辅导班的板块单词、句子、课文对白、歌词、默写词 |
-| `growth-home/data/activities.json` | 「X 打卡成功，你真棒！」「X 全部完成，你是小能手！」；`subjects` 里每个科目的「X作业全部完成，你真棒！」 |
-| `growth-home/data/booklist.json` | 书单里**每一章的名字**（勾一章就念这一章叫什么；加新书自动补） |
-| `growth-home/data/homework.json` | 「X 打卡成功，你真棒！」（学科页每张作业卡的庆祝语） |
-| `growth-home/data/config.json` 等 | 页面里的固定中文提示语（见脚本里的 `FIXED_ZH`） |
-| `learning-growth-board/data/days/*.json` | 每天"学到什么"的朗读内容 |
-| `school-bag-organizer/data/course_requirements.json` | 课程名、每样用具；整理完毕的庆祝语 |
-| `home-library/data/books.json` | 每本书的「书名＋简介」 |
-| `xiaoshan-art-archive/data/index.json` | 每幅画的「标题＋孩子口述」 |
+| `<data-root>/class/data/english_class.json`（english-class） | 辅导班的板块单词、句子、课文对白、歌词、默写词 |
+| `<data-root>/core/data/activities.json`（core 命名空间） | 「X 打卡成功，你真棒！」「X 全部完成，你是小能手！」；`subjects` 里每个科目的「X作业全部完成，你真棒！」 |
+| `<data-root>/reading/data/booklist.json`（reading） | 书单里**每一章的名字**（勾一章就念这一章叫什么；加新书自动补） |
+| `<data-root>/{chinese,math,class}/data/homework.json`（各学科技能） | 「X 打卡成功，你真棒！」（学科页每张作业卡的庆祝语） |
+| `<data-root>/web/data/config.json` 等 | 页面里的固定中文提示语（见脚本里的 `FIXED_ZH`） |
+| `<data-root>/learn/data/days/*.json` | 每天"学到什么"的朗读内容 |
+| `<data-root>/bag/data/course_requirements.json` | 课程名、每样用具；整理完毕的庆祝语 |
+| `<data-root>/lib/data/books.json` | 每本书的「书名＋简介」 |
+| `<data-root>/art/data/index.json` | 每幅画的「标题＋孩子口述」 |
 
 ## 常见处理
 

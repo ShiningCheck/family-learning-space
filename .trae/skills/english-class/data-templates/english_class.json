@@ -2,5 +2,12 @@
   "goal": "",
   "weeklyTarget": "",
   "roadmap": [],
-  "units": []
+  "units": [],
+  "speechEval": {
+    "mode": "local",
+    "provider": "",
+    "endpoint": "",
+    "apiKey": "",
+    "passScore": 60
+  }
 }

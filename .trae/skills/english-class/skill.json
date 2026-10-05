@@ -1,6 +1,6 @@
 {
   "url": "class",
-  "code": ["web", "api.py", "SKILL.md", "data-templates"],
+  "code": ["web", "api.py", "speech_eval.py", "SKILL.md", "data-templates"],
   "data": ["data"],
   "enabled": true,
   "origin": "official",

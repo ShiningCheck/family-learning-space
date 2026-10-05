@@ -3,16 +3,36 @@
  * 用法：node .trae/skills/voice-dubbing/tools/verify_tts.js
  * 输出：每条数据的漏配数量 + 播放优先级是否按预期工作；有漏配时退出码为 1。
  *
- * 原理：页面侧 web/vendor/tts.js 按「文本」查 growth-home/data/tts/index.json，
+ * 原理：页面侧 portal-core/vendor/tts.js 按「文本」查 <data-root>/web/data/tts/index.json，
  * 这里把同一批文本取出来逐条比对，确保生成脚本覆盖了所有页面入口。
+ * 内容文件已按架构 v2 归位到各技能自己的 data/（仓库之外的 data-root），
+ * 路径解析与 tools/data_paths.py 一致：优先读 skill.json 的 url，缺省退回固定约定表。
  */
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
 const SKILLS = path.resolve(__dirname, '..', '..');
-const GH = path.join(SKILLS, 'growth-home');
-const INDEX = path.join(GH, 'data', 'tts', 'index.json');
+const REPO = path.resolve(SKILLS, '..', '..');
+const ROOT = JSON.parse(fs.readFileSync(path.join(REPO, 'local.json'), 'utf8')).data_root;
+
+const NS_FALLBACK = {
+  'growth-home': 'web', 'learning-growth-board': 'learn', 'school-bag-organizer': 'bag',
+  'xiaoshan-art-archive': 'art', 'home-library': 'lib', 'competition': 'comp'
+};
+function namespace(skill) {
+  try {
+    const m = JSON.parse(fs.readFileSync(path.join(SKILLS, skill, 'skill.json'), 'utf8'));
+    if (m.url) return m.url;
+  } catch (e) {}
+  return NS_FALLBACK[skill] || ('skills/' + skill);
+}
+function dataDir(skill) { return path.join(ROOT, namespace(skill), 'data'); }
+function readJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+
+const GH_DATA = dataDir('growth-home');
+const CORE_DATA = path.join(ROOT, 'core', 'data');
+const INDEX = path.join(GH_DATA, 'tts', 'index.json');
 
 if (!fs.existsSync(INDEX)) {
   console.error('找不到配音清单：' + INDEX + '\n请先运行 gen_tts.py 生成。');
@@ -57,24 +77,24 @@ global.document = docStub;
 global.Audio = AudioStub;
 global.SpeechSynthesisUtterance = makeUtterance;
 global.fetch = async (url) => (url === '/data/tts/index.json'
-  ? { ok: true, json: async () => JSON.parse(fs.readFileSync(INDEX, 'utf8')) }
+  ? { ok: true, json: async () => readJson(INDEX) }
   : { ok: false, status: 404, json: async () => ({}) });
 
 // tts.js 已收拢到 portal-core/vendor/ 单源（架构 v2 第 2 步，技能里不再有 vendor 副本）
-const CORE_VENDOR = path.resolve(SKILLS, '..', '..', 'portal-core', 'vendor');
+const CORE_VENDOR = path.resolve(REPO, 'portal-core', 'vendor');
 vm.runInThisContext(fs.readFileSync(path.join(CORE_VENDOR, 'tts.js'), 'utf8'));
 
 /* ---------- 收集运行时会朗读的文本 ---------- */
-const ghData = rel => JSON.parse(fs.readFileSync(path.join(GH, 'data', rel), 'utf8'));
-const skillData = (skill, rel) => JSON.parse(fs.readFileSync(path.join(SKILLS, skill, 'data', rel), 'utf8'));
+const ghData = rel => readJson(path.join(GH_DATA, rel));
+const skillData = (skill, rel) => readJson(path.join(dataDir(skill), rel));
 const fill = (s, name) => String(s == null ? '' : s).replace(/\{name\}/g, name);
 const childName = ghData('config.json').childName;
 
 const enTexts = [], zhTexts = [];
 const push = (arr, src, text) => { if (text && String(text).trim()) arr.push([src, String(text)]); };
 
-// 英语：打卡 / 辅导班
-ghData('english_class.json').units.forEach(u => {
+// 英语：打卡 / 辅导班（内容归 english-class 技能）
+skillData('english-class', 'english_class.json').units.forEach(u => {
   (u.sections || []).forEach(s => {
     (s.items || []).forEach(it => push(enTexts, 'class:item', fill(it.en, childName)));
     (s.sentences || []).forEach(x => push(enTexts, 'class:sentence', fill(x.en, childName)));
@@ -91,18 +111,19 @@ ghData('english_class.json').units.forEach(u => {
   '自由阅读', '书单', '读完啦！', '这本书读完啦，你是小书虫！'
 ].forEach(t => push(zhTexts, 'fixed', t));
 
-// 打卡页 / 作业页 / 看板
-ghData('activities.json').tabs.forEach(t => {
+// 打卡页 / 作业页 / 看板（标签配置归 core 命名空间）
+readJson(path.join(CORE_DATA, 'activities.json')).tabs.forEach(t => {
   push(zhTexts, 'tracker', t.name + '打卡成功，你真棒！');
   push(zhTexts, 'tracker', t.name + '全部完成，你是小能手！');
 });
-ghData('homework.json').items.forEach(it => push(zhTexts, 'homework', it.name + ' 打卡成功，你真棒！'));
-// 书单：每一章的名字（勾一章念一章的名字）
-ghData('booklist.json').books.forEach(b => (b.chapters || []).forEach(c => push(zhTexts, 'booklist', c)));
-const daysDir = path.join(SKILLS, 'learning-growth-board', 'data', 'days');
+['subject-chinese', 'subject-math', 'english-class'].forEach(subj =>
+  skillData(subj, 'homework.json').items.forEach(it => push(zhTexts, 'homework', it.name + ' 打卡成功，你真棒！')));
+// 书单：每一章的名字（勾一章念一章的名字，归 reading 技能）
+skillData('reading', 'booklist.json').books.forEach(b => (b.chapters || []).forEach(c => push(zhTexts, 'booklist', c)));
+const daysDir = path.join(dataDir('learning-growth-board'), 'days');
 if (fs.existsSync(daysDir)) {
   fs.readdirSync(daysDir).filter(f => f.endsWith('.json')).forEach(f => {
-    const d = JSON.parse(fs.readFileSync(path.join(daysDir, f), 'utf8'));
+    const d = readJson(path.join(daysDir, f));
     (d.learned || []).forEach(l => push(zhTexts, 'dashboard', l.content));
   });
 }

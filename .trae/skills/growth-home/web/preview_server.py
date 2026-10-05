@@ -2526,6 +2526,8 @@ def _skill_api_context(skill):
         "CORE_DATA": CORE_DATA,
         "SKILL_DATA": str(data_paths.skill_dir(skill) / "data"),
         "MAX_BODY_BYTES": MAX_BODY_BYTES,
+        # 本机离线语音识别引擎（可能为 None：没装 faster-whisper）
+        "asr_engine": asr_engine,
         # 仍留在主服务器的 collector（core 归属），供技能聚合路由复用
         "collect_home_data": collect_home_data,
         "collect_learn_data": collect_learn_data,

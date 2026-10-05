@@ -51,3 +51,14 @@ __pycache__/
 *.log
 .DS_Store
 Thumbs.db
+
+# ===== 第三方教材解析器（MIT；按 tools/README.md 的约定，发布包默认不包含）=====
+tools/tchsrc/
+tools/tchMaterial-parser.zip
+
+# ===== tools/upgrade.py 的升级备份（可回滚的临时目录，不入库）=====
+.upgrade_backup_*/
+
+# ===== 跨 app 技能目录联接（Windows 目录联接，不入库）=====
+.agents/skills/
+.codebuddy/skills/

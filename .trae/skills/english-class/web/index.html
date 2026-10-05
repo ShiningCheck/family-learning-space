@@ -227,6 +227,119 @@
   .cal-legend { margin-top: 11px; font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; line-height: 1.8; }
   .cal-legend b { color: #E8590C; }
 
+  /* 跟读练习 */
+  .sh-hint { font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); }
+  .sh-group { margin-bottom: 12px; }
+  .sh-gtitle {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 15px; font-weight: 900; color: var(--acc-deep, #E8590C); margin: 6px 0 8px; line-height: 1.6;
+  }
+  .sh-gprog {
+    margin-left: auto; flex: none; font-size: 12px; font-weight: 900; color: var(--soft, #8D7357);
+    background: var(--line, #FFF1DB); border: 2px solid var(--edge, #4A3B2A);
+    border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+  }
+  .sh-gprog.ok { background: #B2F2BB; color: #2B8A3E; }
+  /* 一个知识点一块，块与块之间用虚线分开（同一张卡里） */
+  .sh-group + .sh-group { border-top: 3px dashed var(--line, #FFE3B3); padding-top: 14px; margin-top: 4px; }
+  .sh-row {
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    padding: 11px 12px; margin-bottom: 10px; background: var(--card, #FFFDF7);
+  }
+  .sh-line { display: flex; align-items: center; gap: 10px; }
+  .sh-tag {
+    flex: none; font-size: 12px; font-weight: 900; color: #fff; background: var(--c, #F76707);
+    border: 2px solid var(--edge, #4A3B2A); border-radius: 999px; padding: 2px 8px;
+  }
+  .sh-txt { flex: 1; min-width: 0; }
+  .sh-en { font-size: 20px; font-weight: 900; line-height: 1.45; word-break: break-word; }
+  .sh-zh { font-size: 13px; color: var(--soft, #8D7357); margin-top: 2px; }
+  .sh-words { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+  .sh-words:empty { display: none; }
+  .sh-words .w {
+    font-size: 14px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+    border: 2px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB);
+  }
+  .sh-words .w.ok { background: #B2F2BB; }
+  .sh-words .w.wrong { background: #FFC9C9; }
+  .sh-words .w.miss { background: #FFE3E3; opacity: 0.75; text-decoration: line-through; }
+  .sh-score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+  .sh-score:empty { display: none; }
+  .sc-badge { font-size: 17px; font-weight: 900; color: #fff; border-radius: 999px; padding: 3px 12px; border: 2.5px solid var(--edge, #4A3B2A); background: #868E96; }
+  .sc-badge.great { background: #2F9E44; }
+  .sc-badge.ok { background: #F08C00; }
+  .sc-badge.try { background: #E03131; }
+  .sc-sub { font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); }
+  .sc-star { font-size: 15px; }
+  .sc-try { font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); }
+  .sh-rec { margin-top: 9px; }
+
+  /* 跟读 PK：孩子一句、家长一句，各录各的、各看各的 */
+  .sh-pk { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+  @media (max-width: 560px) { .sh-pk { grid-template-columns: 1fr; } }
+  .sh-side { border: 2.5px dashed var(--line, #FFE3B3); border-radius: 14px; padding: 8px 9px; }
+  .sh-side.child { border-color: #74C0FC; background: #F1F8FF; }
+  .sh-side.parent { border-color: #FFA94D; background: #FFF7EF; }
+  .sh-role { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 900; color: var(--ink, #4A3B2A); }
+  .sh-role .sh-crown { margin-left: auto; font-size: 15px; }
+  .sh-side .sh-words { margin-top: 7px; }
+  .sh-side .sh-score { margin-top: 6px; gap: 6px; }
+  .sh-side .sc-badge { font-size: 15px; padding: 2px 10px; }
+  .sh-side .sc-sub, .sh-side .sc-try { font-size: 11px; }
+  .sh-side .sh-rec { margin-top: 7px; }
+
+  /* 语法小知识：中文讲解，不跟读，作为跟读卡末尾的参考块 */
+  .gram-ref {
+    margin-top: 14px; padding: 12px 14px; border: 3px dashed var(--edge, #4A3B2A);
+    border-radius: 18px; background: #FAF8FF;
+  }
+  .gram-ref .gr-t { font-size: 15px; font-weight: 900; color: #7048E8; margin-bottom: 6px; }
+  .gram-ref .gr-line { font-size: 16px; font-weight: 800; line-height: 1.5; margin-bottom: 8px; }
+  .gram-ref .gr-line .zh { display: block; font-size: 13px; color: var(--soft, #8D7357); font-weight: 700; margin-top: 2px; }
+
+  /* 完成情况总结 */
+  .sum-hero {
+    display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; padding: 12px 14px;
+    border: 3px solid var(--edge, #4A3B2A); border-radius: 18px;
+    background: linear-gradient(135deg, var(--line, #FFF1DB), var(--card, #FFFDF7));
+  }
+  .sum-hero-num { font-size: 46px; font-weight: 900; color: var(--acc-deep, #E8590C); line-height: 1; }
+  .sum-hero-num small { font-size: 16px; color: var(--soft, #8D7357); font-weight: 800; margin-left: 3px; }
+  .sum-hero-txt { font-size: 16px; font-weight: 900; color: var(--ink, #4A3B2A); line-height: 1.5; }
+  .sum-hero-txt small { display: block; font-size: 12px; color: var(--soft, #8D7357); font-weight: 700; margin-top: 2px; }
+  .sum-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sum-big { font-size: 30px; font-weight: 900; color: var(--acc-deep, #E8590C); line-height: 1.3; }
+  .sum-big small { font-size: 15px; color: var(--soft, #8D7357); font-weight: 800; }
+  .sum-bar { flex: 1; min-width: 140px; height: 18px; border-radius: 999px; border: 3px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); overflow: hidden; }
+  .sum-bar i { display: block; height: 100%; background: #51CF66; width: 0; }
+  .sum-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .sum-stat { flex: 1; min-width: 92px; text-align: center; border: 2.5px solid var(--edge, #4A3B2A); border-radius: 14px; padding: 8px 6px; background: var(--card, #FFFDF7); }
+  .sum-stat b { display: block; font-size: 22px; font-weight: 900; color: var(--ink, #4A3B2A); line-height: 1.2; }
+  .sum-stat span { font-size: 12px; font-weight: 800; color: var(--soft, #8D7357); }
+  .sum-group { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; font-weight: 800; }
+  .sum-group .sg-name { flex: none; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sum-group .sg-bar { flex: 1; height: 12px; border-radius: 999px; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); overflow: hidden; }
+  .sum-group .sg-bar i { display: block; height: 100%; background: #F76707; width: 0; }
+  .sum-group .sg-num { flex: none; font-size: 13px; color: var(--soft, #8D7357); }
+  .sum-tip { margin-top: 10px; font-size: 13px; font-weight: 700; color: var(--soft, #8D7357); line-height: 1.7; }
+
+  /* 家长 PK 榜 */
+  .pk-wrap {
+    margin-top: 12px; padding: 12px 14px; border: 3px solid var(--edge, #4A3B2A);
+    border-radius: 18px; background: linear-gradient(135deg, #FFF7EF, var(--card, #FFFDF7));
+  }
+  .pk-title { font-size: 15px; font-weight: 900; color: var(--acc-deep, #E8590C); margin-bottom: 8px; }
+  .pk-row { display: flex; align-items: center; gap: 9px; margin: 8px 0; font-size: 14px; font-weight: 800; }
+  .pk-name { flex: none; width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pk-bar { flex: 1; height: 16px; border-radius: 999px; border: 2.5px solid var(--edge, #4A3B2A); background: var(--line, #FFF1DB); overflow: hidden; }
+  .pk-bar i { display: block; height: 100%; width: 0; }
+  .pk-bar.child i { background: #4DABF7; }
+  .pk-bar.parent i { background: #FF922B; }
+  .pk-num { flex: none; font-size: 18px; font-weight: 900; color: var(--ink, #4A3B2A); }
+  .pk-tally { margin-top: 6px; font-size: 13px; font-weight: 800; color: var(--soft, #8D7357); }
+  .pk-tally b { color: var(--acc-deep, #E8590C); }
+  .pk-verdict { margin-top: 8px; text-align: center; font-size: 16px; font-weight: 900; color: var(--acc-deep, #E8590C); line-height: 1.7; }
+
   #celebrate {
     position: fixed; inset: 0; z-index: 99;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
@@ -266,17 +379,21 @@
 
     <div class="card" id="unitCard"></div>
 
+    <div class="card" id="homeworkCard"></div>
+
+    <div class="card" id="materialsCard"></div>
+
+    <div class="card" id="songCard"></div>
+
     <div class="card" id="roadmapCard"></div>
 
-    <div id="sectionCards"></div>
+    <div class="card" id="shadowCard"></div>
 
-    <div class="card" id="homeworkCard"></div>
+    <div class="card" id="summaryCard"></div>
 
     <div class="card" id="hwCard"></div>
 
     <div class="card" id="dictationCard"></div>
-
-    <div class="card" id="materialsCard"></div>
   </div>
 </div>
 
@@ -293,6 +410,8 @@ let WEEKLY_TARGET = '';
 let ROADMAP = [];
 let UNITS = [];
 let RECORDS = {};
+let SPEECH = {};             // 跟读记录：key=<单元id>:<板块id>:<序号>，值含 best/last/attempts/words…
+let PASS_SCORE = 60;         // 跟读及格分（取服务端 speechEval.passScore，缺省 60）
 let unitIdx = 0;
 let SEL_DATE = '';            // 当前查看哪一天的作业（默认今天）
 let CAL_Y = 0, CAL_M = 0;     // 日历当前显示的月份
@@ -329,9 +448,14 @@ function todayRec() { return getDay(todayStr()); }
 function selDay() { return SEL_DATE || todayStr(); }
 
 // ===== 打卡点＝每个知识点板块（key = "<单元id>:<板块id>"，如 l2-u2:items 物品词汇）=====
-// 每个板块末尾有一个打卡标志，勾的就是那一块；不再用笼统的听/说/读/写四个按钮。
+// 打卡不再用手动按钮：在「跟读练习」里把这一块的每个词/句都读到及格分，就自动打卡（见 autoCheckin）。
 // 老的 listen/speak/read/write 四维记录只作兼容读（日历圆点、连续天数照旧认它们），新打卡一律记在板块上。
 function unitSections(u) { return (u && u.sections) || []; }
+// 参与打卡的板块：排除「语法小知识」（中文讲解，不跟读），以及没有可跟读内容的空板块
+function checkSections(u) {
+  return unitSections(u).filter(s =>
+    s && s.id !== 'grammar' && ((s.items || []).length + (s.sentences || []).length) > 0);
+}
 function secKey(unitId, secId) { return (unitId || '') + ':' + (secId || ''); }
 function secDone(u, sec, ds) {
   const rec = RECORDS[ds || selDay()] || {};
@@ -339,13 +463,13 @@ function secDone(u, sec, ds) {
 }
 function dayAnyOn(ds) {
   const u = unitForDate(ds);
-  if (unitSections(u).some(s => secDone(u, s, ds))) return true;
+  if (checkSections(u).some(s => secDone(u, s, ds))) return true;
   const rec = RECORDS[ds] || {};
   return DIMS.some(d => !!rec[d]);          // 兼容改造前那几天
 }
 function dayDoneOn(ds) {
   const u = unitForDate(ds);
-  const secs = unitSections(u);
+  const secs = checkSections(u);
   if (secs.length) return secs.every(s => secDone(u, s, ds));
   const rec = RECORDS[ds] || {};
   return DIMS.every(d => !!rec[d]);
@@ -389,13 +513,13 @@ function renderStreak() {
   const ds = selDay();
   const isToday = ds === todayStr();
   const u = unitForDate(ds);
-  const secs = unitSections(u);
+  const secs = checkSections(u);
   const doneCount = secs.filter(s => secDone(u, s, ds)).length;
   $('streak').textContent = streak >= 2
     ? '🔥 连续 ' + streak + ' 天'
     : (doneCount
       ? '🌱 ' + (isToday ? '今日' : '这天') + ' ' + doneCount + '/' + secs.length + ' 个知识点完成'
-      : (isToday ? '🌱 今天先学一个知识点吧' : '🌱 这天没有打卡记录'));
+      : (isToday ? '🌱 今天先把一块知识点跟读达标吧' : '🌱 这天没有打卡记录'));
   const box = $('dots');
   const names = ['日', '一', '二', '三', '四', '五', '六'];
   let html = '';
@@ -525,7 +649,7 @@ function renderUnit() {
     '<div class="unit-info"><div class="u-title">' + rubyHtml((u.title || '') + ' · ' + (u.subtitle || '')) + '</div>' +
     '<div class="u-date">' + escapeHtml(rangeLabel(u)) + '</div></div>' +
     '</div>' +
-    '<div class="sec-desc">📌 这一课有 ' + unitSections(u).length + ' 个知识点，每个学完就在那张卡的最后点一下「学完了，打卡」。</div>';
+    '<div class="sec-desc">📌 这一课有 ' + checkSections(u).length + ' 个知识点。到下面的「跟读练习」里，把每个知识点的词和句都读到 ' + PASS_SCORE + ' 分以上，就自动打卡啦。</div>';
   const back = $('dbBack');
   if (back) back.addEventListener('click', () => gotoDate(todayS));
 }
@@ -555,87 +679,12 @@ function itemVisual(it) {
   return '';
 }
 
-function renderSections() {
-  const box = $('sectionCards');
-  const secs = UNIT.sections || [];
-  const ds = selDay();
-  box.innerHTML = secs.map(sec => {
-    const done = secDone(UNIT, sec, ds);
-    let html = '<div class="card' + (done ? ' sec-done' : '') + '" data-sec="' + escapeHtml(sec.id) + '"><div class="sec-head"><span class="s-emoji">' + (sec.emoji || '📌') + '</span>' +
-      '<span class="s-title">' + rubyHtml(sec.title || '') + '</span></div>' +
-      (sec.desc ? '<div class="sec-desc">' + escapeHtml(sec.desc) + '</div>' : '');
-    if (sec.letters && sec.letters.length) {
-      html += '<div class="letters">' + sec.letters.map(l => '<span class="lchip">' + escapeHtml(l) + '</span>').join('') + '</div>';
-    }
-    (sec.items || []).forEach((it, i) => {
-      html += '<div class="item" data-a="' + sec.id + '-i' + i + '">' +
-        itemVisual(it) +
-        '<div class="i-txt"><div class="i-en">' + escapeHtml(fillName(it.en)) + '</div>' +
-        '<div class="i-zh">' + escapeHtml(fillName(it.zh)) + '</div></div>' +
-        '<button class="ab" type="button">🔊</button></div>';
-    });
-    (sec.sentences || []).forEach((s, i) => {
-      html += '<div class="sen" data-a="' + sec.id + '-s' + i + '">' +
-        '<div class="i-txt"><div class="i-en">' + escapeHtml(fillName(s.en)) + '</div>' +
-        '<div class="i-zh">' + escapeHtml(fillName(s.zh)) + '</div></div>' +
-        '<button class="ab" type="button">🔊</button></div>';
-    });
-    // 这个知识点学完了就在这里打卡（打卡标志跟在每一块知识点后面）
-    html += '<div class="sec-check"><button class="sec-btn' + (done ? ' done' : '') +
-      '" data-sec-check="' + escapeHtml(sec.id) + '" type="button">' +
-      (done ? '✅ 已打卡' : '✋ 学完了，打卡') + '</button></div>';
-    html += '</div>';
-    return html;
-  }).join('');
-
-  if (secs.length && secs.every(s => secDone(UNIT, s, ds))) {
-    box.innerHTML += '<div class="all-done">🎉 这个单元的知识点都打卡啦，太棒了！</div>';
-  }
-
-  box.querySelectorAll('[data-a]').forEach(el => {
-    const btn = el.querySelector('.ab');
-    btn.addEventListener('click', () => {
-      const enEl = el.querySelector('.i-en');
-      if (enEl) speak(fillName(enEl.textContent), 'en');
-    });
-  });
-  box.querySelectorAll('[data-sec-check]').forEach(btn => {
-    btn.addEventListener('click', () => toggleSection(btn, btn.getAttribute('data-sec-check')));
-  });
-}
-
-function renderDialogue() {
-  const d = UNIT.dialogue;
-  if (!d) return;
-  const card = document.createElement('div');
-  card.className = 'card';
-  let html = '<div class="sub-title">💬 ' + rubyHtml(d.title) +
-    (d.audio ? '<button class="chip" id="ch_dialog" type="button" style="background:#F76707;border:none;cursor:pointer">▶️ 听音频</button>' : '') + '</div>' +
-    (d.note ? '<div class="sec-desc">' + escapeHtml(d.note) + '</div>' : '');
-  (d.lines || []).forEach((ln, i) => {
-    html += '<div class="dl-line" data-dl="' + i + '">' +
-      '<span class="spk">' + escapeHtml(ln.speaker) + '</span>' +
-      '<span class="txt">' + escapeHtml(ln.text) + '</span></div>';
-  });
-  html += '</div>';
-  card.innerHTML = html;
-  const sc = $('sectionCards');
-  sc.appendChild(card);
-  const ch = $('ch_dialog');
-  if (ch) ch.addEventListener('click', () => { audioEl.src = d.audio; audioEl.play().catch(() => {}); });
-  card.querySelectorAll('[data-dl]').forEach(el => {
-    el.addEventListener('click', () => {
-      const txt = el.querySelector('.txt');
-      if (txt) speak(txt.textContent, 'en');
-    });
-  });
-}
-
+// 课文对话 / 歌曲：对话已并入上面的「跟读练习」逐句跟读，这里只保留「听歌曲」。
 function renderSong() {
+  const box = $('songCard');
   const s = UNIT.song;
-  if (!s) return;
-  const card = document.createElement('div');
-  card.className = 'card';
+  if (!s || !(s.lines || []).length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
   let html = '<div class="sub-title">🎵 ' + rubyHtml(s.name || '儿歌') +
     '<button class="chip" id="ch_song" type="button" style="background:#E64980;border:none;cursor:pointer">▶️ 听歌曲</button></div>' +
     '<div class="song-lines">';
@@ -643,18 +692,15 @@ function renderSong() {
     html += '<div data-sg="' + i + '" style="cursor:pointer">' + escapeHtml(ln) + '</div>';
   });
   html += '</div>';
-  card.innerHTML = html;
-  const sc = $('sectionCards');
-  sc.appendChild(card);
+  box.innerHTML = html;
   const ch = $('ch_song');
   if (ch) ch.addEventListener('click', () => { audioEl.src = s.audio; audioEl.play().catch(() => {}); });
-  card.querySelectorAll('[data-sg]').forEach(el => {
+  box.querySelectorAll('[data-sg]').forEach(el => {
     el.addEventListener('click', () => speak(el.textContent, 'en'));
   });
 }
 
-// 「这次的要求」：只列老师给的听/说/读/写要求，**不用它打卡**（原来那四个大按钮已按用户要求去掉）；
-// 打卡改成每个知识点板块末尾那一个标志（见 renderSections / toggleSection）。
+// 「这次的要求」：只列老师给的听/说/读/写要求，**不用它打卡**（打卡跟着读走，见 autoCheckin）。
 function renderHomework() {
   const hw = UNIT.homework || {};
   let html = '<div class="sub-title">📋 这次的要求（听 / 说 / 读 / 写）</div>';
@@ -664,61 +710,48 @@ function renderHomework() {
       '<span class="hr-body"><span class="hr-name">' + escapeHtml(cfg.name || dim) + '</span>' +
       '<span class="hr-desc">' + escapeHtml(cfg.desc || '') + '</span></span></div>';
   });
-  html += '<div class="sec-desc">👆 上面每个知识点学完，就在那张卡的最后点一下「学完了，打卡」。</div>';
+  html += '<div class="sec-desc">👆 把下面的「跟读练习」里每个知识点的词和句都读到 ' + PASS_SCORE + ' 分以上，这一块就自动打卡啦。</div>';
   $('homeworkCard').innerHTML = html;
 }
 
-// 知识点打卡：点一下 = 这一块今天学完了。写服务器（跨设备同步），
-// 按钮就地更新、不整块重画（页面长，重画会打断孩子），失败再画回原样。
-// 架构 v2 第 3 步：打卡走 core 统一打卡服务 /api/checkins（skill=class，key=<单元id>:<板块id>）。
-async function toggleSection(btn, secId) {
-  const ds = selDay();
-  const u = UNIT;
+// 跟读达标 → 自动打卡（写 core 统一打卡服务 /api/checkins，跨设备同步）。
+// 判定：某个知识点板块的每个跟读项，孩子在「这一天」都有 >= 及格分 的记录；全部达标就把这一块记为已打卡。
+// 板块 key 仍是 <单元id>:<板块id>（如 l2-u2:items），和旧的打卡记录、日历、连续天数完全兼容。
+// 返回这次新打卡的板块数（供调用处决定要不要再报分数）。
+async function autoCheckin(u, ds) {
+  if (!u) return 0;
+  const groups = shadowGroups(u).filter(g => g.sec);
+  if (!groups.length) return 0;
   const rec = recOf(ds);
-  const k = secKey(u && u.id, secId);
-  const sec = unitSections(u).find(s => s.id === secId) || {};
-  const next = !rec[k];
-  const wasDone = dayDoneOn(ds);
-  rec[k] = next;
-  btn.classList.toggle('done', next);
-  btn.textContent = next ? '✅ 已打卡' : '✋ 学完了，打卡';
-  const card = btn.closest ? btn.closest('.card') : null;
-  if (card) card.classList.toggle('sec-done', next);
-  renderStreak();
-  renderCalendar();
-  if (window.HwSection) HwSection.refreshDay();
+  const newly = groups.filter(g => !rec[secKey(u.id, g.secId)] && groupProgress(g, ds).all);
+  if (!newly.length) return 0;
+  newly.forEach(g => { rec[secKey(u.id, g.secId)] = true; });   // 先本地标记，界面立刻反映
   try {
     const r = await fetch('/api/checkins', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ records: [{ skill: 'class', key: k, date: ds, v: next ? 1 : 0, ts: Date.now() }] })
+      body: JSON.stringify({
+        records: newly.map(g => ({ skill: 'class', key: secKey(u.id, g.secId), date: ds, v: 1, ts: Date.now() }))
+      })
     });
     const j = await r.json();
     if (!(j && j.ok)) throw new Error((j && j.error) || '保存失败');
   } catch (e) {
-    rec[k] = !next;
-    renderStreak();
-    renderCalendar();
-    renderSections();
-    if (window.HwSection) HwSection.refreshDay();
-    speak('没保存上，再试一次', 'zh');
-    return;
+    newly.forEach(g => { delete rec[secKey(u.id, g.secId)]; });   // 写失败就回滚，不假装已打卡
+    return 0;
   }
-  const secs = unitSections(u);
-  const allDone = !!secs.length && secs.every(s => secDone(u, s, ds));
-  const box = $('sectionCards');
-  const tip = box.querySelector('.all-done');
-  if (allDone && !tip) box.insertAdjacentHTML('beforeend', '<div class="all-done">🎉 这个单元的知识点都打卡啦，太棒了！</div>');
-  if (!allDone && tip) tip.remove();
-  if (next) {
-    if (!wasDone && allDone) {
-      showCelebration('🎉', (ds === todayStr() ? '今天' : cnDate(ds)) + '的 ' + secs.length + ' 个知识点全打卡，你真棒！');
-    } else {
-      speak((sec.title || '这个知识点') + '，打卡成功', 'zh');
-    }
+  renderStreak();
+  renderCalendar();
+  refreshGroupBadges();
+  if (window.HwSection) HwSection.refreshDay();
+  const allSecs = checkSections(u);
+  const allDone = allSecs.length > 0 && allSecs.every(s => secDone(u, s, ds));
+  if (allDone && ds === todayStr()) {
+    showCelebration('🎉', '今天的跟读全部达标，你真棒！');
   } else {
-    speak('已取消，没关系', 'zh');
+    speak('这一块跟读达标，自动打卡成功！', 'zh');
   }
+  return newly.length;
 }
 
 function renderDictation() {
@@ -794,17 +827,399 @@ audioEl.addEventListener('ended', () => {
   document.querySelectorAll('.ab.play').forEach(b => { b.textContent = '▶️'; b.classList.remove('on'); });
 });
 
+// ===== 跟读练习 + 完成情况总结 =====
+// 跟读材料＝每个知识点板块的「物品 / 词汇 / 指示代词」+「重点句型」+ 课文对话。
+// （语法小知识是中文讲解，不跟读，放在跟读卡末尾当参考。）
+// 每条一个录音按钮：录完上传 /api/class/speech/eval，服务器本机识别 + 评分，
+// 记录落服务器（跨设备同步），回来画逐词对错和三个维度分数；全部达标就自动打卡。
+function sectionShadowItems(u, sec) {
+  const items = [];
+  (sec.items || []).forEach((it, i) => {
+    items.push({
+      key: (u.id || '') + ':' + sec.id + ':w' + i,
+      en: fillName(it.en), zh: fillName(it.zh || ''),
+      img: it.img || '', emoji: it.emoji || '', tag: '', kind: 'word'
+    });
+  });
+  (sec.sentences || []).forEach((s, i) => {
+    items.push({
+      // 句型沿用原来的 key（<单元id>:<板块id>:<序号>），改造前录过的记录不会丢
+      key: (u.id || '') + ':' + sec.id + ':' + i,
+      en: fillName(s.en), zh: fillName(s.zh || ''),
+      img: '', emoji: '', tag: '', kind: 'sentence'
+    });
+  });
+  return items;
+}
+
+function shadowGroups(u) {
+  if (!u) return [];
+  const groups = [];
+  (u.sections || []).forEach(sec => {
+    if (sec.id === 'grammar') return;      // 语法小知识是中文讲解，不跟读
+    const items = sectionShadowItems(u, sec);
+    if (!items.length) return;
+    groups.push({
+      sec: sec, secId: sec.id,
+      title: (sec.emoji ? sec.emoji + ' ' : '') + (sec.title || '句型'),
+      desc: sec.desc || '', letters: sec.letters || [],
+      items: items
+    });
+  });
+  const d = u.dialogue;
+  if (d && (d.lines || []).length) {
+    groups.push({
+      sec: null, secId: 'dialogue',
+      title: '💬 ' + (d.title || '课文对话'), desc: d.note || '', letters: [],
+      audio: d.audio || '',
+      items: d.lines.map((ln, i) => ({
+        key: (u.id || '') + ':dialogue:' + i,
+        en: ln.text || '', zh: '', img: '', emoji: '', tag: ln.speaker || '', kind: 'sentence'
+      }))
+    });
+  }
+  return groups;
+}
+function shadowAllItems(u) {
+  return shadowGroups(u).reduce((a, g) => a.concat(g.items), []);
+}
+
+// 某条跟读项这一天是否「达标」：孩子当天录过，且最好成绩 >= 及格分
+function itemPassed(it, ds) {
+  const r = SPEECH[it.key];
+  if (!r || !r.attempts) return false;
+  const best = Number(r.best != null ? r.best : r.last) || 0;
+  return best >= PASS_SCORE && r.date === ds;
+}
+// 某个板块这一天的达标进度
+function groupProgress(g, ds) {
+  let ok = 0;
+  g.items.forEach(it => { if (itemPassed(it, ds)) ok++; });
+  return { ok: ok, total: g.items.length, all: g.items.length > 0 && ok === g.items.length };
+}
+// 板块标题右侧的「x/N 达标」小徽标（就地更新，不重画整块）
+function refreshGroupBadges() {
+  const box = $('shadowCard');
+  if (!box) return;
+  const u = UNIT, ds = selDay();
+  shadowGroups(u).filter(g => g.sec).forEach(g => {
+    const el = box.querySelector('[data-gsec="' + g.secId + '"] .sh-gprog');
+    if (!el) return;
+    const pr = groupProgress(g, ds);
+    const done = secDone(u, g.sec, ds) || pr.all;
+    el.className = 'sh-gprog' + (pr.all ? ' ok' : '');
+    el.textContent = (done ? '✅ 已打卡 · ' : '') + pr.ok + '/' + pr.total + ' 达标';
+  });
+}
+function scoreClass(sc) { return sc >= 85 ? 'great' : sc >= 60 ? 'ok' : 'try'; }
+function scoreStars(sc) { return sc >= 85 ? '⭐️⭐️⭐️' : sc >= 70 ? '⭐️⭐️' : sc >= 60 ? '⭐️' : ''; }
+
+// 跟读 PK：同一句，孩子和家长各录一条。孩子沿用原来的 key（老记录不丢），
+// 家长用「:parent」后缀（clean_key 允许冒号，服务端无需改动）。
+const SH_ROLES = [
+  { id: 'child', label: '👦 我读', cls: 'child' },
+  { id: 'parent', label: '👨👩 家长读', cls: 'parent' }
+];
+function roleKey(key, role) { return role === 'parent' ? key + ':parent' : key; }
+
+function paintShadowSide(sideEl, rec) {
+  const wEl = sideEl.querySelector('[data-words]');
+  const sEl = sideEl.querySelector('[data-score]');
+  if (!wEl || !sEl) return;
+  if (!rec) { wEl.innerHTML = ''; sEl.innerHTML = ''; return; }
+  const words = rec.words || rec.targetWords || [];
+  wEl.innerHTML = words.map(w =>
+    '<span class="w ' + escapeHtml(w.mark || 'miss') + '">' + escapeHtml(w.w || w.word || '') + '</span>').join('');
+  const sc = Number(rec.last != null ? rec.last : rec.score) || 0;
+  const acc = Number(rec.accuracy) || 0, flu = Number(rec.fluency) || 0, comp = Number(rec.completeness) || 0;
+  let html = '<span class="sc-badge ' + scoreClass(sc) + '">' + sc + ' 分</span>' +
+    '<span class="sc-sub">准确 ' + acc + ' · 流利 ' + flu + ' · 完整 ' + comp + '</span>';
+  const star = scoreStars(sc);
+  if (star) html += '<span class="sc-star">' + star + '</span>';
+  if (rec.attempts) html += '<span class="sc-try">已练 ' + rec.attempts + ' 次 · 最高 ' + (rec.best || sc) + ' 分</span>';
+  sEl.innerHTML = html;
+}
+
+// 每句的胜者小皇冠：两人都读过这句才评，打平给握手。
+function refreshCrowns() {
+  const box = $('shadowCard');
+  if (!box) return;
+  box.querySelectorAll('.sh-row').forEach(rowEl => {
+    const key = rowEl.getAttribute('data-key');
+    const c = SPEECH[key], p = SPEECH[roleKey(key, 'parent')];
+    const cb = c && c.attempts ? Number(c.best) || 0 : null;
+    const pb = p && p.attempts ? Number(p.best) || 0 : null;
+    rowEl.querySelectorAll('.sh-side').forEach(sideEl => {
+      const crown = sideEl.querySelector('[data-crown]');
+      if (!crown) return;
+      const role = sideEl.getAttribute('data-role');
+      if (cb == null || pb == null) { crown.textContent = ''; return; }
+      const mine = role === 'child' ? cb : pb, other = role === 'child' ? pb : cb;
+      crown.textContent = cb === pb ? '🤝' : (mine > other ? '👑' : '');
+    });
+  });
+}
+
+function renderShadow() {
+  const box = $('shadowCard');
+  const groups = shadowGroups(UNIT);
+  if (!groups.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const u = UNIT, ds = selDay();
+  const secGroups = groups.filter(g => g.sec);
+  const okGroups = secGroups.filter(g => secDone(u, g.sec, ds) || groupProgress(g, ds).all).length;
+
+  let html = '<div class="sub-title">🎤 跟读练习 <span class="sh-hint">读一句 · 录一句 · 家长一起比</span></div>';
+  if (secGroups.length) {
+    html += '<div class="sec-desc">这一课有 ' + secGroups.length + ' 个知识点，已达标 ' + okGroups + ' 个。' +
+      '把每个词、每句话都读到 ' + PASS_SCORE + ' 分以上，这一块就自动打卡。</div>';
+  }
+  groups.forEach(g => {
+    const pr = groupProgress(g, ds);
+    const done = g.sec ? (secDone(u, g.sec, ds) || pr.all) : false;
+    html += '<div class="sh-group" data-gsec="' + escapeHtml(g.secId) + '">' +
+      '<div class="sh-gtitle">' + escapeHtml(g.title) +
+      (g.sec ? '<span class="sh-gprog' + (pr.all ? ' ok' : '') + '">' +
+        (done ? '✅ 已打卡 · ' : '') + pr.ok + '/' + pr.total + ' 达标</span>' : '') +
+      '</div>';
+    if (g.desc) html += '<div class="sec-desc">' + escapeHtml(g.desc) + '</div>';
+    if (g.letters && g.letters.length) {
+      html += '<div class="letters">' + g.letters.map(l => '<span class="lchip">' + escapeHtml(l) + '</span>').join('') + '</div>';
+    }
+    if (g.audio) {
+      html += '<div style="margin:0 0 10px"><button class="chip" data-listen="' + escapeHtml(g.secId) +
+        '" type="button" style="background:#F76707;border:none;cursor:pointer">▶️ 先听整段音频</button></div>';
+    }
+    g.items.forEach(it => {
+      html += '<div class="sh-row" data-key="' + escapeHtml(it.key) + '">' +
+        '<div class="sh-line">' +
+        itemVisual(it) +
+        (it.tag ? '<span class="sh-tag">' + escapeHtml(it.tag) + '</span>' : '') +
+        '<div class="sh-txt"><div class="sh-en">' + escapeHtml(it.en) + '</div>' +
+        (it.zh ? '<div class="sh-zh">' + escapeHtml(it.zh) + '</div>' : '') + '</div>' +
+        '<button class="ab sh-play" type="button" title="听一遍">🔊</button>' +
+        '</div>' +
+        '<div class="sh-pk">' +
+        SH_ROLES.map(r =>
+          '<div class="sh-side ' + r.cls + '" data-role="' + r.id + '">' +
+          '<div class="sh-role">' + escapeHtml(r.label) + '<span class="sh-crown" data-crown></span></div>' +
+          '<div class="sh-words" data-words></div>' +
+          '<div class="sh-score" data-score></div>' +
+          '<div class="sh-rec" data-rec></div>' +
+          '</div>').join('') +
+        '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+  });
+
+  // 语法小知识：中文讲解，不跟读，放在跟读卡末尾当参考
+  const gram = (u.sections || []).find(s => s.id === 'grammar');
+  const gramLines = gram ? (gram.sentences || []).concat(gram.items || []) : [];
+  if (gramLines.length) {
+    html += '<div class="gram-ref"><div class="gr-t">' +
+      escapeHtml((gram.emoji ? gram.emoji + ' ' : '') + (gram.title || '语法小知识')) + '（看一看就好，不用跟读）</div>';
+    gramLines.forEach(x => {
+      html += '<div class="gr-line">' + escapeHtml(fillName(x.en)) +
+        (x.zh ? '<span class="zh">' + escapeHtml(fillName(x.zh)) + '</span>' : '') + '</div>';
+    });
+    html += '</div>';
+  }
+  box.innerHTML = html;
+
+  const items = shadowAllItems(u);
+  box.querySelectorAll('.sh-row').forEach(rowEl => {
+    const key = rowEl.getAttribute('data-key');
+    const item = items.find(x => x.key === key) || { en: '' };
+    rowEl.querySelector('.sh-play').addEventListener('click', () => speak(item.en, 'en'));
+    rowEl.querySelectorAll('.sh-side').forEach(sideEl => {
+      const role = sideEl.getAttribute('data-role');
+      const rk = roleKey(key, role);
+      paintShadowSide(sideEl, SPEECH[rk]);
+      if (!window.Voice) return;
+      Voice.attach({
+        mount: sideEl.querySelector('[data-rec]'),
+        scope: 'class-speech',
+        lang: 'en',
+        compact: true,
+        deletable: false,          // 跟读记录由服务器统一管理，不在这里删
+        busyText: '正在识别并评分',
+        endpoint: '/api/class/speech/eval',
+        fields: function () {
+          // date 用当前正在看的那一天：切到过去的日期跟读，就能给那天补打卡
+          return { target: item.en, key: rk, date: selDay(), lang: 'en', role: role };
+        },
+        meta: { page: '英语辅导班', unit: (u && u.id) || '', role: role },
+        onSaved: function (rec) {
+          applySpeechRecord(rk, rec);
+          if (rec.passScore) PASS_SCORE = Number(rec.passScore) || PASS_SCORE;
+          paintShadowSide(sideEl, SPEECH[rk]);
+          refreshCrowns();
+          refreshGroupBadges();
+          renderSummary();
+          // 达标就自动打卡；打卡成功会自己庆祝，就不再重复报分
+          autoCheckin(u, selDay()).then(function (n) {
+            if (n > 0) return;
+            if (role === 'parent') speak('家长 ' + rec.score + ' 分', 'zh');
+            else if (rec.score >= 85) showCelebration('🌟', '好棒！' + rec.score + ' 分！');
+            else if (rec.passed) speak(rec.score + ' 分，不错哦', 'zh');
+            else speak(rec.score + ' 分，再读一遍会更好', 'zh');
+          });
+        }
+      });
+    });
+  });
+  // 整段音频（课文/歌曲）：点了就用老师给的 mp3
+  box.querySelectorAll('[data-listen]').forEach(btn => {
+    const g = groups.find(x => x.secId === btn.getAttribute('data-listen'));
+    if (!g || !g.audio) return;
+    btn.addEventListener('click', () => { audioEl.src = g.audio; audioEl.play().catch(() => {}); });
+  });
+  refreshCrowns();
+}
+
+function applySpeechRecord(key, rec) {
+  SPEECH[key] = {
+    ts: Date.now(), date: rec.date || '',
+    last: Number(rec.score) || 0, best: Number(rec.best) || Number(rec.score) || 0,
+    attempts: Number(rec.attempts) || 0, seconds: Number(rec.seconds) || 0,
+    accuracy: Number(rec.accuracy) || 0, fluency: Number(rec.fluency) || 0,
+    completeness: Number(rec.completeness) || 0,
+    words: rec.targetWords || rec.words || []
+  };
+}
+
+// 按角色汇总（加权总分：句长＝权重，长句占比更大）
+function roleStats(role) {
+  const all = shadowAllItems(UNIT);
+  let done = 0, bestSum = 0, attempts = 0, seconds = 0, wSum = 0, wTot = 0;
+  all.forEach(it => {
+    const r = SPEECH[roleKey(it.key, role)];
+    if (r && r.attempts) {
+      const best = Number(r.best) || 0;
+      const w = Math.max(1, (String(it.en).match(/[A-Za-z']+/g) || []).length);
+      done++;
+      bestSum += best;
+      attempts += Number(r.attempts) || 0;
+      seconds += Number(r.seconds) || 0;
+      wSum += best * w;
+      wTot += w;
+    }
+  });
+  return {
+    done: done, total: all.length, attempts: attempts, seconds: seconds,
+    avg: done ? Math.round(bestSum / done) : 0,
+    weighted: wTot ? Math.round(wSum / wTot) : null
+  };
+}
+
+// 家长 PK 榜：两人加权总分对比 + 领先句数 + 结论
+function pkBlock() {
+  const all = shadowAllItems(UNIT);
+  const me = roleStats('child'), pa = roleStats('parent');
+  const kid = CHILD_NAME || '小朋友';
+  if (!me.done && !pa.done) {
+    return '<div class="pk-wrap"><div class="pk-title">👨👩👦 家长 PK 榜</div>' +
+      '<div class="pk-verdict">孩子读一条、家长读一条，读完这里就出两人的比分啦～</div></div>';
+  }
+  const cw = me.weighted == null ? 0 : me.weighted;
+  const pw = pa.weighted == null ? 0 : pa.weighted;
+  const maxv = Math.max(cw, pw, 1);
+  let cWin = 0, pWin = 0, tie = 0;
+  all.forEach(it => {
+    const c = SPEECH[it.key], p = SPEECH[roleKey(it.key, 'parent')];
+    const cb = c && c.attempts ? Number(c.best) || 0 : null;
+    const pb = p && p.attempts ? Number(p.best) || 0 : null;
+    if (cb == null || pb == null) return;
+    if (cb > pb) cWin++; else if (pb > cb) pWin++; else tie++;
+  });
+  let verdict;
+  if (me.weighted == null) verdict = '家长先读啦，等 ' + kid + ' 来比一比 👀';
+  else if (pa.weighted == null) verdict = kid + ' 已经读了 ' + cw + ' 分，等家长来应战 💪';
+  else if (cw > pw) verdict = '🏆 ' + kid + ' 领先 ' + (cw - pw) + ' 分！家长要加油咯～';
+  else if (pw > cw) verdict = '🏆 家长领先 ' + (pw - cw) + ' 分，' + kid + ' 再读一遍追上去！';
+  else verdict = '🤝 打平啦！' + cw + ' 分对 ' + pw + ' 分，真是好搭档～';
+
+  return '<div class="pk-wrap">' +
+    '<div class="pk-title">👨👩👦 家长 PK 榜</div>' +
+    '<div class="pk-row"><span class="pk-name">👦 ' + escapeHtml(kid) + '</span>' +
+    '<span class="pk-bar child"><i style="width:' + Math.round(100 * cw / maxv) + '%"></i></span>' +
+    '<span class="pk-num">' + (me.weighted == null ? '—' : cw) + '</span></div>' +
+    '<div class="pk-row"><span class="pk-name">👨👩 家长</span>' +
+    '<span class="pk-bar parent"><i style="width:' + Math.round(100 * pw / maxv) + '%"></i></span>' +
+    '<span class="pk-num">' + (pa.weighted == null ? '—' : pw) + '</span></div>' +
+    '<div class="pk-tally">孩子领先 <b>' + cWin + '</b> 项 · 家长领先 <b>' + pWin + '</b> 项' +
+    (tie ? ' · 打平 <b>' + tie + '</b> 项' : '') + '</div>' +
+    '<div class="pk-verdict">' + escapeHtml(verdict) + '</div>' +
+    '</div>';
+}
+
+function renderSummary() {
+  const box = $('summaryCard');
+  const groups = shadowGroups(UNIT);
+  const all = shadowAllItems(UNIT);
+  if (!all.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+
+  const me = roleStats('child');
+  const done = me.done, attempts = me.attempts, seconds = me.seconds;
+  const avg = me.avg, weighted = me.weighted;
+  const pct = Math.round(100 * done / all.length);
+  const mins = Math.floor(seconds / 60), secs = Math.round(seconds % 60);
+
+  let html = '<div class="sub-title">📊 完成情况总结</div>' +
+    '<div class="sum-hero">' +
+    '<div class="sum-hero-num">' + (weighted == null ? '—' : weighted) + '<small>分</small></div>' +
+    '<div class="sum-hero-txt">我的加权总分<small>按内容长短加权 · 只统计已跟读的内容</small></div>' +
+    '</div>' +
+    '<div class="sum-top">' +
+    '<div class="sum-big">' + done + '<small> / ' + all.length + ' 项</small></div>' +
+    '<div class="sum-bar"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="sum-big">' + pct + '<small>%</small></div>' +
+    '</div>' +
+    '<div class="sum-stats">' +
+    '<div class="sum-stat"><b>' + (done ? avg : '—') + '</b><span>平均最高分</span></div>' +
+    '<div class="sum-stat"><b>' + attempts + '</b><span>累计跟读次数</span></div>' +
+    '<div class="sum-stat"><b>' + (seconds ? (mins ? mins + '分' + secs + '秒' : secs + '秒') : '—') + '</b><span>累计用时</span></div>' +
+    '</div>';
+
+  groups.forEach(g => {
+    let gd = 0;
+    g.items.forEach(it => { const r = SPEECH[it.key]; if (r && r.attempts) gd++; });
+    const gp = Math.round(100 * gd / g.items.length);
+    html += '<div class="sum-group"><span class="sg-name">' + escapeHtml(g.title) + '</span>' +
+      '<span class="sg-bar"><i style="width:' + gp + '%"></i></span>' +
+      '<span class="sg-num">' + gd + '/' + g.items.length + '</span></div>';
+  });
+
+  html += pkBlock();
+
+  html += '<div class="sum-tip">' + (done === 0
+    ? '还没有跟读记录，挑一条点「🎤 录音」试试吧；家长也可以点「家长读」陪孩子比一比。'
+    : (done === all.length ? '🎉 这一课的词和句都跟读过了，真棒！' : '还有 ' + (all.length - done) + ' 项没读，继续加油！')) +
+    '</div>';
+  box.innerHTML = html;
+}
+
+async function loadSpeech() {
+  try {
+    const r = await fetch('/api/class/speech/records', { cache: 'no-store' });
+    const j = await r.json();
+    if (j && j.ok && j.records) SPEECH = j.records;
+  } catch (e) { /* 连不上服务器就先用本机已有的记录 */ }
+}
+
 function renderAll() {
   renderStreak();
   renderCalendar();
   renderUnit();
-  renderRoadmap();
-  renderSections();
-  renderDialogue();
-  renderSong();
   renderHomework();
-  renderDictation();
   renderMaterials();
+  renderSong();
+  renderRoadmap();
+  renderShadow();
+  renderSummary();
+  renderDictation();
 }
 
 // 「作业」区块：把作业打卡 + 添加作业挂到本页，只显示归属「辅导班英语」的作业卡；
@@ -836,12 +1251,12 @@ async function mountHomework() {
     dayDetail: true,       // 但「点某天 → 那天打卡的所有内容」要有，放在日历下面那张卡里
     panelMount: '#dayCard',
     // 辅导班自己的打卡项＝每个知识点板块（物品词汇、重点句型……）交给模块按同一套样式列出来，
-    // 这样和语文页的「点某天看当天打卡内容」长得一样
+    // 这样和语文页的「点某天看当天打卡内容」长得一样；语法小知识不打卡，不列出来
     dayChecks: function (iso) {
       const u = unitForDate(iso) || {};
       const rec = RECORDS[iso] || {};
       const unitLabel = (u.title || '') + (u.subtitle ? ' · ' + u.subtitle : '');
-      return unitSections(u).map(function (s) {
+      return checkSections(u).map(function (s) {
         return {
           name: (s.emoji ? s.emoji + ' ' : '') + (s.title || s.id),
           detail: (s.desc || '') + (unitLabel ? '（' + unitLabel + '）' : ''),
@@ -864,6 +1279,7 @@ async function init() {
     ROADMAP = data.roadmap || [];
     if (data.goal) GOAL = data.goal;
     if (data.weeklyTarget) WEEKLY_TARGET = data.weeklyTarget;
+    if (data.passScore) PASS_SCORE = Number(data.passScore) || PASS_SCORE;
   } catch (e) {
     err.style.display = 'block';
     err.textContent = '加载失败：请确认门户服务器已启动（python preview_server.py）。';
@@ -882,6 +1298,7 @@ async function init() {
   $('heroGoal').innerHTML = rubyHtml(GOAL);
   $('heroTarget').textContent = WEEKLY_TARGET;
   $('app').style.display = 'block';
+  await loadSpeech();
   renderAll();
   mountHomework();
 }

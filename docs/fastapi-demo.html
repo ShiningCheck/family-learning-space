@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>换 FastAPI 前后对比 · 家庭学习空间</title>
+<style>
+  :root{
+    --paper:#FBF7F0; --card:#FFFFFF; --ink:#3A322A; --soft:#8A7F70;
+    --edge:#E6DCCB; --line:#EFE7DA;
+    --acc:#E8863C; --acc-deep:#C96A22;
+    --blue:#4A90D9; --live:#7C5CE0; --ok:#3FA46A; --warn:#D9534F;
+    --radius:16px; --shadow:0 6px 22px rgba(90,70,40,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:0 16px 64px; background:var(--paper); color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding:34px 0 10px}
+  h1{font-size:26px;margin:0 0 8px;letter-spacing:.5px}
+  .sub{color:var(--soft);font-size:15px;margin:0}
+  .callout{
+    margin:22px 0 8px; padding:16px 18px; background:#FFF6EA; border:2px solid #F3DCBE;
+    border-radius:var(--radius); font-size:15px;
+  }
+  .callout b{color:var(--acc-deep)}
+  .callout ul{margin:8px 0 0;padding-left:20px}
+  .callout li{margin:3px 0}
+
+  .arena{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+  @media(max-width:820px){.arena{grid-template-columns:1fr}}
+
+  .col{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    border:2px solid var(--edge); overflow:hidden; display:flex; flex-direction:column;
+  }
+  .col.now{border-color:#DED6C8}
+  .col.fast{border-color:#CBBEF5}
+  .col-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .col.now .col-head{background:#F6F2EA}
+  .col.fast .col-head{background:#F3EFFE}
+  .col-head h2{margin:0;font-size:17px}
+  .tag{font-size:12px;padding:3px 9px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .tag.gray{background:#E9E2D6;color:#6B6154}
+  .tag.violet{background:#E4DBFB;color:#5B3FC4}
+  .col-body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:16px;flex:1}
+
+  .badge{
+    font-size:13.5px;padding:9px 12px;border-radius:10px;border:1.5px dashed var(--edge);
+    background:#FCFAF6;color:var(--soft);transition:.25s;min-height:40px;display:flex;align-items:center;gap:8px;
+  }
+  .badge.ok{background:#EFF9F2;border-color:#BEE4CB;border-style:solid;color:#2E7A50}
+  .badge.pending{background:#FFF6E6;border-color:#F0D9A8;border-style:solid;color:#9A6A18}
+  .badge.bad{background:#FDEEED;border-color:#F2C3C0;border-style:solid;color:#B23B37}
+  .badge.live{background:#F1ECFE;border-color:#CDBEF7;border-style:solid;color:#5B3FC4}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.g{background:var(--ok)} .dot.y{background:#E0A32B} .dot.r{background:var(--warn)} .dot.v{background:var(--live)}
+  .pulse{animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .devices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .device{background:#FAF7F1;border:1.5px solid var(--edge);border-radius:12px;padding:12px 12px 14px;text-align:center}
+  .device .name{font-size:12.5px;color:var(--soft);margin-bottom:8px}
+  .check{
+    height:54px;border-radius:10px;border:2px dashed #DED4C4;display:flex;align-items:center;
+    justify-content:center;font-size:13.5px;color:#B7AB98;transition:.3s;background:#fff;
+  }
+  .check.on{border-style:solid;border-color:#9FD8B4;background:#EFF9F2;color:#2E7A50;font-weight:600}
+
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;transition:.2s}
+  .big{
+    width:100%;padding:15px 16px;font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(180deg,var(--acc),var(--acc-deep));box-shadow:0 4px 12px rgba(200,110,40,.28);
+  }
+  .big:active{transform:translateY(1px)}
+  .big:disabled{opacity:.65;cursor:default}
+  .ghost{
+    padding:10px 14px;font-size:14px;background:#fff;border:1.5px solid var(--edge);color:var(--ink);width:100%;
+  }
+  .ghost:active{transform:translateY(1px)}
+  .row{display:flex;gap:10px;align-items:center}
+  .hint{font-size:12.5px;color:var(--soft);margin:0}
+  .meter{height:10px;border-radius:999px;background:#EFE9DE;overflow:hidden;margin-top:9px}
+  .meter>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8B6BE8,#7C5CE0);transition:width .12s linear}
+  .meter.hidden{display:none}
+  .spin{width:15px;height:15px;border:2.5px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-3px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .switch{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--soft);user-select:none;cursor:pointer}
+  .switch input{display:none}
+  .track{width:42px;height:24px;border-radius:999px;background:#DED6C8;position:relative;transition:.2s;flex:none}
+  .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .switch input:checked+.track{background:var(--warn)}
+  .switch input:checked+.track::after{transform:translateX(18px)}
+
+  .section-title{font-size:18px;margin:34px 0 6px}
+  .panel{background:var(--card);border:2px solid var(--edge);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--soft);font-weight:600;font-size:13px}
+  td.y{color:#9A6A18} td.f{color:#5B3FC4;font-weight:600}
+  code{background:#F4EFE6;padding:1.5px 6px;border-radius:6px;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+
+  .docs{margin-top:12px;border:1.5px solid var(--edge);border-radius:12px;overflow:hidden;display:none}
+  .docs.open{display:block}
+  .docs-head{background:#21303D;color:#DCE7F0;padding:10px 14px;font-size:13.5px;display:flex;justify-content:space-between}
+  .ep{display:flex;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13.5px;background:#fff}
+  .ep:last-child{border-bottom:none}
+  .m{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;color:#fff;flex:none;font-family:ui-monospace,monospace}
+  .m.get{background:#3FA46A}.m.post{background:#4A90D9}
+  .ep code{background:transparent;padding:0;color:#3A322A}
+  .ep .desc{margin-left:auto;color:var(--soft);font-size:12.5px}
+  footer{margin-top:34px;color:var(--soft);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>换成 FastAPI 之后，页面会有什么变化？</h1>
+    <p class="sub">一个可点的对比 demo · 左边是现在的实现，右边是换 FastAPI 后的效果（全部为前端模拟）</p>
+  </header>
+
+  <div class="callout">
+    <b>先说结论：FastAPI 不会让页面变好看。</b>它是后端框架，页面的颜色、按钮、布局一行都不会变。
+    它改变的是页面的<b>「反应」</b>——同步更跟手、上传有反馈、断线自己恢复、接口自带文档。
+    <ul>
+      <li>现在：Python 标准库 <code>http.server</code>，单线程，页面每 <b>12 秒</b>轮询一次。</li>
+      <li>换后：<code>FastAPI + uvicorn</code>，异步 + 长连接，改动可<b>即时推送</b>到其他设备。</li>
+    </ul>
+  </div>
+
+  <div class="arena">
+
+    <!-- ============ 左：现在 ============ -->
+    <div class="col now">
+      <div class="col-head">
+        <h2>现在的实现</h2>
+        <span class="tag gray">http.server · 轮询</span>
+      </div>
+      <div class="col-body">
+
+        <div class="badge" id="n-badge"><span class="dot g"></span>☁️ 已同步 · 每 12 秒拉一次</div>
+
+        <div class="devices">
+          <div class="device">
+            <div class="name">孩子手机</div>
+            <div class="check" id="n-phone">未打卡</div>
+          </div>
+          <div class="device">
+            <div class="name">家长平板</div>
+            <div class="check" id="n-tablet">未打卡</div>
+          </div>
+        </div>
+
+        <div>
+          <button class="big" id="n-btn">打卡：读单词 three</button>
+          <p class="hint" style="margin-top:9px">点一下，看平板要等多久才亮 —— <span id="n-count">距下次拉取 3.0s</span></p>
+        </div>
+
+        <div>
+          <button class="ghost" id="n-up-btn">录一段跟读（上传）</button>
+          <div class="meter hidden" id="n-meter"><i></i></div>
+          <p class="hint" style="margin-top:8px" id="n-up-hint">单线程读取整段请求，中途没有进度可报。</p>
+        </div>
+
+        <label class="switch"><input type="checkbox" id="n-jitter"><span class="track"></span>模拟 WiFi 抖动（断网）</label>
+      </div>
+    </div>
+
+    <!-- ============ 右：FastAPI ============ -->
+    <div class="col fast">
+      <div class="col-head">
+        <h2>换 FastAPI 之后</h2>
+        <span class="tag violet">uvicorn · 实时推送</span>
+      </div>
+      <div class="col-body">
+
+        <div class="badge live" id="f-badge"><span class="dot v pulse"></span>⚡ 长连接已建立 · ws://…/api/portal/live</div>
+
+        <div class="devices">
+          <div class="device">
+            <div class="name">孩子手机</div>
+            <div class="check" id="f-phone">未打卡</div>
+          </div>
+          <div class="device">
+            <div class="name">家长平板</div>
+            <div class="check" id="f-tablet">未打卡</div>
+          </div>
+        </div>
+
+        <div>
+          <button class="big" id="f-btn">打卡：读单词 three</button>
+          <p class="hint" style="margin-top:9px">点一下，平板几乎同时亮起。</p>
+        </div>
+
+        <div>
+          <button class="ghost" id="f-up-btn">录一段跟读（上传）</button>
+          <div class="meter hidden" id="f-meter"><i></i></div>
+          <p class="hint" style="margin-top:8px" id="f-up-hint">流式解析上传，能报进度、能续传。</p>
+        </div>
+
+        <label class="switch"><input type="checkbox" id="f-jitter"><span class="track"></span>模拟 WiFi 抖动（断网）</label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ 自动 API 文档 ============ -->
+  <h2 class="section-title">附带好处：接口文档自动生成</h2>
+  <div class="panel">
+    <p class="hint" style="margin:0 0 4px">现在每加一个接口，都要靠人手写文档；换 FastAPI 后，接口按契约声明，<code>/docs</code> 自动就有（只给开发者看，孩子页面不受影响）。</p>
+    <button class="ghost" id="docs-btn" style="width:auto;margin-top:10px">查看自动生成的 /docs（示意）</button>
+    <div class="docs" id="docs">
+      <div class="docs-head"><span>家庭学习空间 API · v2</span><span>OpenAPI 3.1</span></div>
+      <div class="ep"><span class="m post">POST</span><code>/api/checkins</code><span class="desc">批量打卡（ts 合并）</span></div>
+      <div class="ep"><span class="m get">GET</span><code>/api/checkins</code><span class="desc">按 skill+date 取记录</span></div>
+      <div class="ep"><span class="m get">GET</span><code>/api/english-class/data</code><span class="desc">辅导班单元内容</span></div>
+      <div class="ep"><span class="m post">POST</span><code>/api/english-class/speech/eval</code><span class="desc">跟读录音评分</span></div>
+      <div class="ep"><span class="m get">GET</span><code>/api/portal/home</code><span class="desc">首页聚合数据</span></div>
+      <div class="ep"><span class="m get">GET</span><code>/api/tts/status</code><span class="desc">配音清单状态</span></div>
+    </div>
+  </div>
+
+  <!-- ============ 差异清单 ============ -->
+  <h2 class="section-title">差异清单</h2>
+  <div class="panel">
+    <table>
+      <thead>
+        <tr><th style="width:24%">方面</th><th style="width:38%">现在（http.server）</th><th>换 FastAPI 之后</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>多设备同步</td><td class="y">每 12 秒轮询，改动最慢要等一轮</td><td class="f">长连接推送，通常 &lt;0.2 秒</td></tr>
+        <tr><td>断网恢复</td><td class="y">显示「暂时连不上」，等下一轮才恢复</td><td class="f">自动重连，恢复后立刻补推积压改动</td></tr>
+        <tr><td>录音上传</td><td class="y">转圈等，没有进度</td><td class="f">真实进度条，可续传</td></tr>
+        <tr><td>多设备并发</td><td class="y">单线程，几个人同时点会排队</td><td class="f">异步，几十个连接互不阻塞</td></tr>
+        <tr><td>接口文档</td><td class="y">靠手写、容易过期</td><td class="f"><code>/docs</code> 自动生成，永远同步</td></tr>
+        <tr><td>出错提示</td><td class="y">多半是一句笼统的失败</td><td class="f">按字段返回「哪一项不对」</td></tr>
+        <tr><td>安装代价</td><td class="f">零依赖，装好 Python 就能跑</td><td class="y">首次 <code>setup.py</code> 要建 venv、装 uvicorn（约 1–2 分钟）</td></tr>
+      </tbody>
+    </table>
+    <p class="hint" style="margin-top:12px">一句话：<b>现在能用，换完更跟手。</b>功能一个不少，代价是首次安装多一步依赖安装。</p>
+  </div>
+
+  <footer>本页是纯前端模拟 demo，用来说明差异，不连任何真实服务器。看完可直接删除。</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+
+  /* ==================== 左栏：轮询 ==================== */
+  var N_POLL = 3000;              // 演示加速；真实为 12000ms
+  var n = { checked: false, synced: false, online: true, elapsed: 0, pending: false };
+
+  function nBadge(cls, dot, text) {
+    var b = $('n-badge');
+    b.className = 'badge ' + cls;
+    b.innerHTML = '<span class="dot ' + dot + '"></span>' + text;
+  }
+  function nTick() {
+    if (!n.online) {
+      n.elapsed = 0;
+      $('n-count').textContent = '离线中，等网络恢复';
+      return;
+    }
+    n.elapsed += 100;
+    if (n.elapsed >= N_POLL) { n.elapsed = 0; nPoll(); }
+    $('n-count').textContent = '距下次拉取 ' + ((N_POLL - n.elapsed) / 1000).toFixed(1) + 's';
+  }
+  function nPoll() {
+    if (n.checked && !n.synced) {
+      n.synced = true;
+      $('n-tablet').textContent = '✓ 已打卡';
+      $('n-tablet').classList.add('on');
+      nBadge('ok', 'g', '☁️ 已同步（这一轮才拉到平板）');
+    } else if (!n.pending) {
+      nBadge('ok', 'g', '☁️ 已同步 · 每 12 秒拉一次');
+    }
+  }
+  setInterval(nTick, 100);
+
+  $('n-btn').addEventListener('click', function () {
+    if (n.checked) return;
+    n.checked = true;
+    $('n-phone').textContent = '✓ 已打卡';
+    $('n-phone').classList.add('on');
+    if (!n.online) {
+      nBadge('bad', 'r', '⚠️ 暂时连不上服务器（改动只在本机）');
+    } else {
+      nBadge('pending', 'y', '⏳ 本机已记录，等下一轮同步（≤12 秒）');
+    }
+  });
+
+  $('n-up-btn').addEventListener('click', function () {
+    var b = $('n-up-btn');
+    b.disabled = true;
+    b.innerHTML = '<span class="spin"></span> 上传中…（无进度反馈）';
+    $('n-up-hint').textContent = '整段请求读完了才知道成没成，中途只能转圈。';
+    setTimeout(function () {
+      b.innerHTML = '✓ 已保存';
+      $('n-up-hint').textContent = '上传完成。若中途断网，得从头再来。';
+      setTimeout(function () { b.disabled = false; b.textContent = '录一段跟读（上传）'; }, 1200);
+    }, 2200);
+  });
+
+  $('n-jitter').addEventListener('change', function () {
+    n.online = !this.checked;
+    if (!n.online) {
+      n.elapsed = 0;
+      nBadge('bad', 'r', '⚠️ 暂时连不上服务器');
+    } else {
+      nBadge('pending', 'y', '🔄 网络回来了，等下一轮拉取…');
+    }
+  });
+
+  /* ==================== 右栏：实时 ==================== */
+  var f = { checked: false, online: true, queue: false };
+
+  function fBadge(cls, dot, text) {
+    var b = $('f-badge');
+    b.className = 'badge ' + cls;
+    b.innerHTML = '<span class="dot ' + dot + (dot === 'v' ? ' pulse' : '') + '"></span>' + text;
+  }
+  function fPush() {
+    $('f-tablet').textContent = '✓ 已打卡';
+    $('f-tablet').classList.add('on');
+    fBadge('ok', 'g', '☁️ 已同步 · 实时推送');
+  }
+
+  $('f-btn').addEventListener('click', function () {
+    if (f.checked) return;
+    f.checked = true;
+    $('f-phone').textContent = '✓ 已打卡';
+    $('f-phone').classList.add('on');
+    if (!f.online) {
+      f.queue = true;
+      fBadge('live', 'v', '🔄 正在重连…改动已排队，连上就补推');
+      return;
+    }
+    fBadge('live', 'v', '⚡ 推送中…');
+    setTimeout(fPush, 140);
+  });
+
+  $('f-up-btn').addEventListener('click', function () {
+    var b = $('f-up-btn'), bar = $('f-meter').querySelector('i');
+    b.disabled = true;
+    $('f-meter').classList.remove('hidden');
+    var p = 0;
+    var timer = setInterval(function () {
+      p += 4;
+      if (p > 100) p = 100;
+      bar.style.width = p + '%';
+      b.innerHTML = '<span class="spin"></span> 上传中 ' + p + '%';
+      $('f-up-hint').textContent = '进度实时可见，断了也能接着传。';
+      if (p >= 100) {
+        clearInterval(timer);
+        setTimeout(function () {
+          b.innerHTML = '✓ 已保存';
+          $('f-up-hint').textContent = '上传完成。断点续传，不必重录。';
+          setTimeout(function () {
+            b.disabled = false;
+            b.textContent = '录一段跟读（上传）';
+            $('f-meter').classList.add('hidden');
+            bar.style.width = '0';
+          }, 1400);
+        }, 180);
+      }
+    }, 55);
+  });
+
+  $('f-jitter').addEventListener('change', function () {
+    f.online = !this.checked;
+    if (!f.online) {
+      fBadge('live', 'v', '🔄 连接断开，正在自动重连…');
+    } else {
+      fBadge('live', 'v', '⚡ 重连成功，正在补推积压改动…');
+      setTimeout(function () {
+        if (f.queue) { f.queue = false; fPush(); }
+        else { fBadge('live', 'v', '⚡ 长连接已建立 · ws://…/api/portal/live'); }
+      }, 500);
+    }
+  });
+
+  /* ==================== 文档面板 ==================== */
+  $('docs-btn').addEventListener('click', function () {
+    var d = $('docs');
+    d.classList.toggle('open');
+    this.textContent = d.classList.contains('open') ? '收起 /docs' : '查看自动生成的 /docs（示意）';
+  });
+})();
+</script>
+</body>
+</html>

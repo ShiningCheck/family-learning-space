@@ -53,6 +53,11 @@ def skill_data(skill):
     """某技能的数据目录（data-root 下）。"""
     return str(data_paths.skill_dir(skill) / "data")
 
+
+def core_data():
+    """架构 v2 的 core 命名空间数据目录（统一打卡服务，不属任何技能）。"""
+    return str(data_paths.namespace_dir("core") / "data")
+
 VOICE_EN = "en-US-JennyNeural"
 VOICE_ZH = "zh-CN-XiaoxiaoNeural"
 CHILD_NAME_FALLBACK = "小朋友"
@@ -64,6 +69,9 @@ FIXED_ZH = [
     "英语打卡成功，你真棒！",
     "听说读写全打卡，你真棒！",
     "今天英语听练全打卡，你真棒！",
+    # 辅导班跟读：达标即自动打卡（页面 autoCheckin 会念这两句）
+    "这一块跟读达标，自动打卡成功！",
+    "今天的跟读全部达标，你真棒！",
     # 打卡页
     "录音保存好啦！",
     "请允许使用麦克风",
@@ -151,7 +159,8 @@ class Collector:
 
     # ---- 各数据源 ----
     def collect_english_class(self):
-        d = load_json(os.path.join(DATA_DIR, "english_class.json")) or {}
+        # 内容已随架构 v2 归位到 english-class 技能自己的 data/（不再是 web/data 下的旧副本）
+        d = load_json(os.path.join(skill_data("english-class"), "english_class.json")) or {}
         for u in d.get("units", []):
             uid = u.get("id")
             for sec in u.get("sections", []):
@@ -172,7 +181,8 @@ class Collector:
 
     def collect_growth_home_dynamic(self):
         """各学科页（语文/数学/辅导班英语/学校英语）里带科目名、作业名的庆祝语。"""
-        acts = load_json(os.path.join(DATA_DIR, "activities.json")) or {}
+        # 门户菜单/标签配置已归 core 命名空间（架构 v2），不是 web/data 下的旧副本
+        acts = load_json(os.path.join(core_data(), "activities.json")) or {}
         for t in acts.get("tabs", []):
             n = (t.get("name") or "").strip()
             if n:
@@ -182,18 +192,21 @@ class Collector:
             n = (s.get("name") or "").strip()
             if n:
                 self.add("%s作业全部完成，你真棒！" % n, "zh", "sentence", "subjects")
-        hw = load_json(os.path.join(DATA_DIR, "homework.json")) or {}
-        for it in hw.get("items", []):
-            n = (it.get("name") or "").strip()
-            if n:
-                self.add("%s 打卡成功，你真棒！" % n, "zh", "sentence", "homework")
+        # 作业项已按学科拆到各自技能的 data/homework.json
+        for subj in ("subject-chinese", "subject-math", "english-class"):
+            hw = load_json(os.path.join(skill_data(subj), "homework.json")) or {}
+            for it in hw.get("items", []):
+                n = (it.get("name") or "").strip()
+                if n:
+                    self.add("%s 打卡成功，你真棒！" % n, "zh", "sentence", "homework")
 
     def collect_booklist(self):
         """书单：每一章的名字都要配音——勾一章就念出这一章叫什么（不是笼统的"读完一章"）。
 
         新书单同样生效：往 booklist.json 加书加章节，服务器就会自动补上这些音频。
         """
-        d = load_json(os.path.join(DATA_DIR, "booklist.json")) or {}
+        # 书单已归 reading 技能（架构 v2 第 3 步拆出），读它自己的 data/
+        d = load_json(os.path.join(skill_data("reading"), "booklist.json")) or {}
         for b in d.get("books", []):
             for ch in (b.get("chapters") or []):
                 self.add(ch, "zh", "word", "booklist")
@@ -368,11 +381,4 @@ async def main():
           % (len(manifest["en"]), len(manifest["zh"]), total_bytes / 1048576.0, removed))
     print("清单: %s" % INDEX_FILE)
     if stats["fail"]:
-        print("\n失败 %d 条：" % len(stats["fail"]))
-        for t, e in stats["fail"][:10]:
-            print("  - %s : %s" % (t, e))
-        sys.exit(2)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        print("\n失败 %d �
